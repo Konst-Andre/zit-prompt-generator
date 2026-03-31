@@ -421,7 +421,11 @@ function buildUser() {
 // ═══════════════════════════════════════════════════
 
 function stripThink(text) {
-  return text.replace(/<think[\s\S]*?<\/think>/gi, '').trim();
+  return text
+    .replace(/<think>[\s\S]*?<\/think>/gi, '')    // Qwen3: <think>...</think>
+    .replace(/Thought:[\s\S]*?(?=<[a-z]|$)/gi, '') // LLaMA: Thought: ...
+    .replace(/\[Thinking[^\]]*\]/gi, '')            // some models: [Thinking...]
+    .trim();
 }
 
 function extractTag(text, tag) {
@@ -431,7 +435,7 @@ function extractTag(text, tag) {
 }
 
 function parseResponse(raw) {
-  // 1. Strip <think> ALWAYS, ALL models, FIRST
+  // 1. Strip think blocks ALWAYS, ALL models, FIRST
   var cleaned = stripThink(raw);
 
   // 2. XML — safeguard: only attempt if <positive> tag is present
@@ -460,12 +464,36 @@ function parseResponse(raw) {
     } catch(e) {}
   }
 
-  // 4. Plaintext fallback
-  if (cleaned.length > 40) {
-    return { positive:cleaned.slice(0,800), negative:'blurry, watermark, text',
+  // 4. Markdown strip + XML retry (model wrapped response in ```xml ... ```)
+  var stripped = cleaned.replace(/```(?:xml)?/gi, '').trim();
+  if (stripped !== cleaned && stripped.indexOf('<positive') !== -1) {
+    var p2 = extractTag(stripped, 'positive');
+    if (p2) {
+      return {
+        positive: p2,
+        negative: extractTag(stripped, 'negative') || 'blurry, watermark, text',
+        notes:    extractTag(stripped, 'notes')    || '',
+        changes:  extractTag(stripped, 'changes') || null,
+        via: 'xml_retry',
+      };
+    }
+  }
+
+  // 5. Plaintext fallback
+  var pt = stripped.length > cleaned.length ? stripped : cleaned;
+  if (pt.length > 40) {
+    return { positive:pt.slice(0,800), negative:'blurry, watermark, text',
              notes:'\u26a0 Plain text fallback \u2014 check debug', changes:null, via:'plaintext' };
   }
-  return null;
+
+  // 6. Hard fallback — NEVER return null, never crash
+  return {
+    positive: 'Failed to parse response \u2014 check debug panel',
+    negative: 'blurry, watermark',
+    notes: 'Hard fallback triggered. Open debug to see raw API response.',
+    changes: null,
+    via: 'hard_fallback',
+  };
 }
 
 // ═══════════════════════════════════════════════════
@@ -554,12 +582,7 @@ async function callGroqOnce(signal) {
   }
 
   var parsed = parseResponse(raw);
-  if (!parsed) {
-    log.error = 'Could not parse response (XML \u2192 JSON \u2192 plaintext all failed)';
-    var ep = new Error(log.error); ep.log=log;
-    throw ep;
-  }
-
+  // parseResponse never returns null — hard_fallback is the final safety net
   return Object.assign({}, parsed, {log:log});
 }
 
