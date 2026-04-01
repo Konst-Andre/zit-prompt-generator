@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>ZIT Prompt Generator v10</title>
+  <title>ZIT Prompt Generator v11</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -14,29 +14,29 @@
        DESIGN TOKENS
     ═══════════════════════════════════════ */
     :root {
-      /* Backgrounds */
+      /* Backgrounds — explicit 3-layer hierarchy */
       --bg:       #0D1117;
-      --bg2:      #161C24;   /* cards, panels — slightly lifted */
-      --bg3:      #080C10;   /* inputs — clearly darker */
-      --bg4:      #1E2535;   /* lighter surface — more distinct */
+      --bg2:      #161C24;   /* cards/panels  — MIDDLE layer */
+      --bg3:      #070B0F;   /* inputs        — DEEPEST (sunken, slightly darker) */
+      --bg4:      #232E42;   /* icon tiles    — HIGHEST surface (lifted, brighter) */
 
       /* Borders */
-      --bdr:      #2A3140;   /* slightly more visible baseline */
-      --bdr2:     #3E4D62;   /* hover border — stronger */
-      --bdr-light: rgba(255,255,255,.06); /* top-edge light for cards */
+      --bdr:      #2A3140;
+      --bdr2:     #3E4D62;
+      --bdr-light: rgba(255,255,255,.07);
 
       /* Text */
-      --t1:  #ECF2F8;        /* primary — slightly brighter */
-      --t2:  #A8B4C2;        /* secondary — lifted +10% */
-      --t3:  #7A8694;        /* muted — lifted */
-      --t4:  #505860;        /* very muted — lifted slightly */
+      --t1:  #ECF2F8;
+      --t2:  #B0BCCC;        /* ↑ slightly lighter than v10 for tile labels */
+      --t3:  #7A8694;
+      --t4:  #505860;
 
-      /* Accent — ONE color only */
+      /* Accent */
       --acc:      #2F81F7;
-      --acc-hi:   #388BFF;   /* hover +10% */
-      --acc-lo:   #1B6FE5;   /* active -10% */
-      --acc-bg:   #0D1F3C;   /* accent surface */
-      --acc-txt:  #79B8FF;   /* accent light text */
+      --acc-hi:   #4696FF;   /* hover — more contrast vs v10 */
+      --acc-lo:   #1B6FE5;
+      --acc-bg:   #0C1E3A;
+      --acc-txt:  #79B8FF;
 
       /* Semantic */
       --red:      #F85149;
@@ -58,7 +58,7 @@
       --r-md: 10px;
       --r-lg: 12px;
 
-      /* Spacing scale (8px base) */
+      /* Spacing */
       --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px;
       --s5: 24px; --s6: 32px; --s7: 48px;
 
@@ -151,12 +151,7 @@
     .pill.p-active { border-color: var(--amber-bdr); color: var(--amber-txt); background: var(--amber-bg); }
     .pill.p-ok     { border-color: var(--green-bdr); color: var(--green-txt); background: var(--green-bg); }
     .pill.p-miss   { border-color: var(--red-bdr);   color: var(--red-txt);   background: var(--red-bg); }
-
-    /* dot indicator */
-    .pill .dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: currentColor; flex-shrink: 0;
-    }
+    .pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 
     /* ═══════════════════════════════════════
        SLIDE PANELS
@@ -179,12 +174,13 @@
     .sp-title {
       font-size: 11px;
       font-weight: 700;
-      letter-spacing: .12em;
+      /* [FIX 5] section titles: stronger tracking + contrast */
+      letter-spacing: .16em;
       text-transform: uppercase;
-      color: var(--t2);
+      color: var(--t1);
     }
     .sp-title.green { color: var(--green-txt); }
-    .sp-title.muted { color: var(--t3); }
+    .sp-title.muted { color: var(--t2); }
 
     /* ═══════════════════════════════════════
        TAB BAR
@@ -234,19 +230,21 @@
       align-items: baseline;
       margin-bottom: var(--s2);
     }
+
+    /* [FIX 5] Section labels as visual anchors — stronger contrast + tracking */
     .lbl {
       font-size: 12px;
       font-weight: 700;
-      color: var(--t2);
-      letter-spacing: .1em;
+      color: var(--t1);          /* ↑ was t2 — now clearly visible anchors */
+      letter-spacing: .13em;     /* ↑ slightly more tracking */
       text-transform: uppercase;
     }
     .hint { font-size: 11px; color: var(--t4); }
     .grp-lbl {
       font-size: 10px;
       font-weight: 700;
-      color: var(--t3);
-      letter-spacing: .12em;
+      color: var(--t2);          /* ↑ was t3 */
+      letter-spacing: .14em;
       text-transform: uppercase;
       margin-bottom: var(--s2);
       margin-top: var(--s3);
@@ -255,11 +253,12 @@
     }
 
     /* ═══════════════════════════════════════
-       INPUTS — 16px prevents iOS zoom
+       INPUTS — deepest layer (sunken feel)
     ═══════════════════════════════════════ */
     input, textarea, select {
       width: 100%;
       padding: var(--s2) var(--s3);
+      /* [FIX 2] inputs use deepest bg3 — already token, now stronger shadow */
       background: var(--bg3);
       color: var(--t1);
       border: 1px solid var(--bdr);
@@ -270,11 +269,12 @@
       transition: border-color var(--tr), box-shadow var(--tr);
       appearance: none;
       -webkit-appearance: none;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,.25);
+      /* stronger inset shadow → clearly "dug in" */
+      box-shadow: inset 0 2px 6px rgba(0,0,0,.38), inset 0 1px 2px rgba(0,0,0,.25);
     }
     input:focus, textarea:focus, select:focus {
       border-color: var(--acc);
-      box-shadow: 0 0 0 3px rgba(47,129,247,.12);
+      box-shadow: 0 0 0 3px rgba(47,129,247,.12), inset 0 2px 5px rgba(0,0,0,.3);
     }
     input:hover:not(:focus), textarea:hover:not(:focus), select:hover:not(:focus) {
       border-color: var(--bdr2);
@@ -298,11 +298,9 @@
     input::placeholder, textarea::placeholder { color: var(--t4); font-size: 13px; }
 
     /* ═══════════════════════════════════════
-       BUTTONS — full state hierarchy
-       Priority: disabled > loading > active > focus > hover > normal
+       BUTTONS
     ═══════════════════════════════════════ */
 
-    /* BASE — shared geometry */
     .btn-primary, .btn-ghost, .btn-copy, .btn-text {
       font-family: inherit;
       cursor: pointer;
@@ -311,43 +309,44 @@
                   box-shadow var(--tr), transform 0.12s ease, opacity var(--tr);
     }
 
-    /* PRIMARY — main action, must dominate */
+    /* [FIX 3] PRIMARY — stronger top highlight + clearer hover + subtle glow spread */
     .btn-primary {
       display: block;
       width: 100%;
       padding: 13px 20px;
-      /* subtle top-to-bottom gradient: top slightly lighter */
-      background: linear-gradient(180deg, #388BFF 0%, #2F81F7 50%, #2676E8 100%);
-      border: 1px solid transparent;
+      background: linear-gradient(180deg, #4696FF 0%, #2F81F7 45%, #2270E0 100%);
+      border: 1px solid rgba(47,129,247,.3);
       color: #fff;
       font-size: 15px;
       font-weight: 700;
       letter-spacing: .04em;
       text-align: center;
       margin-top: var(--s1);
-      box-shadow: 0 2px 6px rgba(47,129,247,.18);
     }
-    /* normal: subtle resting shadow — not loud */
+    /* resting — clear top edge + subtle glow */
     .btn-primary:not(:disabled):not(.loading) {
-      box-shadow: 0 2px 6px rgba(47,129,247,.18), inset 0 1px 0 rgba(255,255,255,.12);
+      box-shadow:
+        0 2px 8px rgba(47,129,247,.22),
+        0 0 0 1px rgba(47,129,247,.08),
+        inset 0 1px 0 rgba(255,255,255,.22);  /* ↑ stronger top highlight vs v10 */
     }
-    /* hover */
+    /* hover — clearly more contrast + spread glow */
     .btn-primary:not(:disabled):not(.loading):hover {
-      background: linear-gradient(180deg, #4695FF 0%, #388BFF 50%, #2F81F7 100%);
-      box-shadow: 0 4px 16px rgba(47,129,247,.32), inset 0 1px 0 rgba(255,255,255,.15);
+      background: linear-gradient(180deg, #58A4FF 0%, #4696FF 45%, #388BFF 100%);
+      box-shadow:
+        0 6px 20px rgba(47,129,247,.38),      /* ↑ spread glow on hover */
+        0 2px 6px rgba(47,129,247,.25),
+        inset 0 1px 0 rgba(255,255,255,.28);
     }
-    /* focus */
     .btn-primary:not(:disabled):not(.loading):focus-visible {
       outline: none;
       box-shadow: 0 0 0 3px rgba(47,129,247,.38);
     }
-    /* active */
     .btn-primary:not(:disabled):not(.loading):active {
       transform: scale(0.97);
       background: linear-gradient(180deg, #2F81F7 0%, #1B6FE5 100%);
-      box-shadow: 0 1px 4px rgba(47,129,247,.12);
+      box-shadow: 0 1px 4px rgba(47,129,247,.12), inset 0 1px 3px rgba(0,0,0,.2);
     }
-    /* loading */
     .btn-primary.loading {
       background: #1A4A8A;
       border-color: transparent;
@@ -355,7 +354,6 @@
       cursor: not-allowed;
       box-shadow: none;
     }
-    /* disabled */
     .btn-primary:disabled:not(.loading) {
       background: var(--bg4);
       border-color: var(--bdr);
@@ -364,7 +362,7 @@
       box-shadow: none;
     }
 
-    /* SECONDARY variant */
+    /* SECONDARY */
     .btn-primary.btn-secondary {
       background: transparent;
       border-color: var(--bdr2);
@@ -383,7 +381,7 @@
       background: rgba(255,255,255,.08);
     }
 
-    /* GHOST — utility buttons, no shadow */
+    /* GHOST */
     .btn-ghost {
       padding: 6px var(--s3);
       background: transparent;
@@ -396,7 +394,7 @@
     .btn-ghost:hover { border-color: var(--bdr2); color: var(--t2); background: rgba(255,255,255,.03); }
     .btn-ghost:active { transform: scale(0.96); }
 
-    /* TEXT — lowest priority */
+    /* TEXT */
     .btn-text {
       background: transparent;
       border: none;
@@ -408,7 +406,7 @@
     .btn-text:hover { color: var(--acc-txt); }
     .btn-text:active { transform: scale(0.97); }
 
-    /* COPY — inline output action */
+    /* COPY */
     .btn-copy {
       padding: 4px 11px;
       background: transparent;
@@ -425,42 +423,72 @@
     .btn-copy.copied { border-color: var(--green-bdr); color: var(--green-txt); background: var(--green-bg); }
 
     /* ═══════════════════════════════════════
-       SCENE ICON GRID — interactive tiles
+       SCENE ICON GRID
+       [FIX 1] tiles: vertical gradient + hover depth + stronger active
+       [FIX 2] bg4 is lifted — tiles clearly above cards
+       [FIX 4] glyphs: bigger + more contrast
     ═══════════════════════════════════════ */
     .icon-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: var(--s1); }
+
     .icon-tile {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: var(--s2) var(--s1);
-      background: var(--bg4);
+      /* [FIX 1] subtle vertical gradient — top lighter = "raised" feel */
+      background: linear-gradient(180deg, #2A3548 0%, #1E2C3E 100%);
       border: 1px solid var(--bdr);
       border-radius: var(--r-sm);
       cursor: pointer;
       gap: 3px;
       transition: border-color var(--tr), background var(--tr), box-shadow var(--tr);
       user-select: none;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+      /* top edge highlight → surface catches light */
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 1px 3px rgba(0,0,0,.2);
     }
+
     .icon-tile:hover {
       border-color: var(--bdr2);
-      background: #232D3F;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 0 0 1px rgba(47,129,247,.1);
+      /* [FIX 1] hover: brighter top + stronger accent tint */
+      background: linear-gradient(180deg, #303F58 0%, #263348 100%);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.12),
+        0 0 0 1px rgba(47,129,247,.15),
+        0 2px 6px rgba(47,129,247,.08);
     }
     .icon-tile:active { transform: scale(0.95); }
+
     .icon-tile.active {
-      background: var(--acc-bg);
+      /* [FIX 1] active: strong accent-bg, clearly distinguished */
+      background: linear-gradient(180deg, #132543 0%, #0C1E3A 100%);
       border-color: var(--acc);
-      box-shadow: inset 0 1px 0 rgba(47,129,247,.15), 0 0 8px rgba(47,129,247,.12);
+      box-shadow:
+        inset 0 1px 0 rgba(47,129,247,.25),
+        0 0 10px rgba(47,129,247,.18),
+        0 0 0 1px rgba(47,129,247,.1);
     }
-    .i-glyph { font-size: 13px; line-height: 1; color: var(--t3); }
-    .i-label { font-size: 8px; color: var(--t3); text-align: center; line-height: 1.2; }
+
+    /* [FIX 4] glyphs: +2px, more contrast in normal state */
+    .i-glyph {
+      font-size: 15px;   /* ↑ was 13px */
+      line-height: 1;
+      color: var(--t2);  /* ↑ was t3 — stronger signal */
+    }
+    .i-label {
+      font-size: 9px;    /* ↑ was 8px */
+      color: var(--t3);
+      text-align: center;
+      line-height: 1.2;
+    }
     .icon-tile.active .i-glyph { color: var(--acc-txt); }
     .icon-tile.active .i-label { color: var(--acc-txt); }
+    /* hover state glyph */
+    .icon-tile:hover .i-glyph { color: var(--t1); }
+    .icon-tile:hover .i-label { color: var(--t2); }
 
     /* ═══════════════════════════════════════
-       STYLE PILLS — selectable controls
+       STYLE PILLS
     ═══════════════════════════════════════ */
     .pill-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: var(--s2); }
     .st-pill {
@@ -499,14 +527,13 @@
     .three-col { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: var(--s3); }
     .row       { display: flex; gap: var(--s2); align-items: center; }
 
-    /* SECTION BLOCK — visual grouping (Variant A) */
+    /* SECTION BLOCK — middle layer */
     .sec-block {
       background: var(--bg2);
       border: 1px solid var(--bdr);
       border-radius: var(--r-md);
       padding: var(--s4);
       margin-bottom: var(--s4);
-      /* top-edge light: surface catches light from above */
       box-shadow:
         inset 0 1px 0 var(--bdr-light),
         inset 0 -1px 0 rgba(0,0,0,.15);
@@ -628,7 +655,7 @@
     }
     .out-txt.accent {
       border-color: rgba(47,129,247,.25);
-      background: #0A1625;
+      background: #09162A;
       color: #A8C8FF;
     }
 
@@ -801,10 +828,6 @@
 <script>
 'use strict';
 
-// ═══════════════════════════════════════════════════
-// DATA
-// ═══════════════════════════════════════════════════
-
 const SCENES = [
   { id:'portrait',     label:'Portrait',    icon:'◎', camera:'85mm portrait lens',  detail:'sharp focus, skin texture, shallow depth of field' },
   { id:'half_body',    label:'Half-body',   icon:'◑', camera:'50mm lens',            detail:'sharp focus, upper body detail' },
@@ -882,10 +905,6 @@ const GROQ_MODELS = [
   { id:'llama-4-scout-17b-16e-instruct',   name:'Llama 4 Scout',   note:'Fast',          qwen:false },
 ];
 
-// ═══════════════════════════════════════════════════
-// SCENE-AWARE NEGATIVE PROMPTS
-// ═══════════════════════════════════════════════════
-
 const SCENE_NEGATIVES = {
   portrait:     'blurry, bad anatomy, deformed hands, extra fingers, distorted face, asymmetrical eyes, text, watermark',
   half_body:    'blurry, bad anatomy, deformed hands, extra fingers, distorted face, asymmetrical eyes, text, watermark',
@@ -916,10 +935,6 @@ var S = {
   steps:'12', cfg:'1.5', sampler:'euler_ancestral', scheduler:'beta', seed:'',
   loading:false, result:null, error:'', dbgLog:null,
 };
-
-// ═══════════════════════════════════════════════════
-// STORAGE
-// ═══════════════════════════════════════════════════
 
 function loadKey() {
   try {
@@ -954,10 +969,6 @@ function clearKey() {
   } catch(e) {}
 }
 
-// ═══════════════════════════════════════════════════
-// PROMPT BUILDERS
-// ═══════════════════════════════════════════════════
-
 function buildSystem() {
   return 'You are a prompt engineer for ZIT (Z-Image Turbo), a Lumina2-based diffusion model with Qwen3-4B text encoder.\n\nArchitecture rules:\n- CFG 1.5 optimal (not 6–8 like SDXL)\n- Steps 10–15 (turbo)\n- Qwen3-4B understands full natural prose — no comma-spam tags\n- Never output SDXL tags: masterpiece, best quality, highres, 8k\n- LoRA trigger = single word only\n\nNegative prompt rules (ZIT / CFG 1.5 specific):\n- Use the suggested negative provided in the user message as your base\n- Keep it short: 10–18 words maximum\n- Focus on concrete errors: anatomy, hands, face distortion, artifacts, text\n- Do NOT add: oversharpened, noisy (unless specifically needed)\n- Do NOT use general quality tags like "low quality, worst quality"\n- Adapt to scene: portrait scenes → anatomy/face focus; landscape/urban → artifact focus; product/macro → distortion/reflection focus\n\nLanguage rule: always translate input to English; output prompts in English only.\n\nOUTPUT CONTRACT — you MUST follow this exactly:\n1. Output ONLY the XML tags below — no other text before, between, or after them\n2. All tags must always be present, even if content is minimal\n3. Do not include greetings, explanations, markdown, or any text outside the XML tags\n4. Do not nest XML tags — tag content is plain text only\n5. If you cannot generate, still return all tags with minimal content\n\n<positive>60–120 word natural English prompt</positive>\n<negative>scene-appropriate negative, max 18 words</negative>\n<notes>one ZIT-specific tip</notes>';
 }
@@ -981,10 +992,6 @@ function buildUser() {
     '\nSampler: ' + S.sampler + ' + ' + S.scheduler +
     '\nSuggested negative (adapt if needed): ' + buildNegative();
 }
-
-// ═══════════════════════════════════════════════════
-// PARSER
-// ═══════════════════════════════════════════════════
 
 function stripThink(text) {
   return text
@@ -1055,10 +1062,6 @@ function parseResponse(raw) {
     via: 'hard_fallback',
   };
 }
-
-// ═══════════════════════════════════════════════════
-// API
-// ═══════════════════════════════════════════════════
 
 var _busy = false;
 var _ac   = null;
@@ -1216,10 +1219,6 @@ async function generate() {
   _busy = false; S.loading = false; render();
 }
 
-// ═══════════════════════════════════════════════════
-// CLIPBOARD
-// ═══════════════════════════════════════════════════
-
 function copyText(text, btn) {
   navigator.clipboard.writeText(text).then(function() {
     var orig = btn.textContent;
@@ -1228,19 +1227,11 @@ function copyText(text, btn) {
   });
 }
 
-// ═══════════════════════════════════════════════════
-// HTML ESCAPING
-// ═══════════════════════════════════════════════════
-
 function esc(s) {
   return String(s == null ? '' : s)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-// ═══════════════════════════════════════════════════
-// RENDER
-// ═══════════════════════════════════════════════════
 
 function render() {
   document.getElementById('app').innerHTML = buildHTML();
@@ -1257,7 +1248,7 @@ function buildHTML() {
   var h = '<div class="hdr">' +
     '<div class="hdr-brand">' +
       '<div class="hdr-eyebrow">ZIT · Lumina2 · Qwen3-4B · CFG 1.5</div>' +
-      '<div class="hdr-title">Prompt Generator <span class="hdr-ver">v10</span></div>' +
+      '<div class="hdr-title">Prompt Generator <span class="hdr-ver">v11</span></div>' +
     '</div>' +
     '<div class="hdr-acts">' +
       '<div class="pill btn ' + (keyOk?'p-ok':'p-miss') + '" id="b-api">' +
@@ -1328,7 +1319,7 @@ function buildHTML() {
       '</div>' + dbInner + '</div>';
   }
 
-  // ── MODE TABS (desktop) ──
+  // ── MODE TABS ──
   if (!mob) {
     h += '<div class="tab-bar">' +
       '<button class="tab-btn' + (S.mode==='generate'?' active':'') + '" data-mode="generate">Generate</button>' +
@@ -1338,11 +1329,10 @@ function buildHTML() {
 
   h += '<div class="body-grid">';
 
-  // ── LEFT (params) ──
+  // ── LEFT ──
   var pHide = mob && S.mobilePane !== 'params';
   h += '<div class="col col-l' + (pHide?' pane-hidden':'') + '">';
 
-  // Mobile mode switch
   if (mob) {
     h += '<div class="two-col mob-mode-sw" style="display:grid;margin-bottom:16px">' +
       '<button class="btn-primary' + (S.mode==='generate'?'':' btn-secondary') + '" data-mode="generate" style="margin-top:0">Generate</button>' +
@@ -1351,8 +1341,7 @@ function buildHTML() {
   }
 
   if (S.mode === 'generate') {
-    // Scene grid
-    var tiles=SCENES.map(function(s) {
+    var tiles = SCENES.map(function(s) {
       return '<div class="icon-tile' + (S.scene===s.id?' active':'') + '" data-scene="' + s.id + '" title="' + esc(s.label) + '">' +
         '<span class="i-glyph">' + s.icon + '</span>' +
         '<span class="i-label">' + esc(s.label) + '</span></div>';
@@ -1360,7 +1349,6 @@ function buildHTML() {
     h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">Scene</label></div>' +
          '<div class="icon-grid">' + tiles + '</div></div>';
 
-    // Style pills grouped
     var grps = [];
     STYLES.forEach(function(s){ if(grps.indexOf(s.grp)<0) grps.push(s.grp); });
     var stylePills = grps.map(function(g) {
@@ -1371,12 +1359,10 @@ function buildHTML() {
     }).join('');
     h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">Visual Style</label></div>' + stylePills + '</div>';
 
-    // Subject
     h += '<div class="field"><div class="f-hdr"><label class="lbl">Subject</label>' +
          '<span class="hint">Можна українською</span></div>' +
          '<textarea id="inp-sub" rows="3" placeholder="Examples:&#10;• красива жінка під дощем у Токіо&#10;• ancient wizard tower on a stormy cliff">' + esc(S.subject) + '</textarea></div>';
 
-    // Lighting + Mood
     h += '<div class="two-col">' +
       '<div class="field"><div class="f-hdr"><label class="lbl">Lighting</label></div>' +
       '<select id="sel-light">' + LIGHTINGS.map(function(l){return '<option'+(S.lighting===l?' selected':'')+'>'+esc(l)+'</option>';}).join('') + '</select></div>' +
@@ -1384,7 +1370,6 @@ function buildHTML() {
       '<select id="sel-mood">' + MOODS.map(function(m){return '<option value="'+esc(m)+'"'+(S.mood===m?' selected':'')+'>'+(m||'— none —')+'</option>';}).join('') + '</select></div>' +
     '</div>';
 
-    // Genre + Resolution
     h += '<div class="two-col">' +
       '<div class="field"><div class="f-hdr"><label class="lbl">Genre</label></div>' +
       '<select id="sel-genre">' + GENRES.map(function(g){return '<option value="'+esc(g)+'"'+(S.genre===g?' selected':'')+'>'+(g||'— none —')+'</option>';}).join('') + '</select></div>' +
@@ -1403,7 +1388,7 @@ function buildHTML() {
 
   h += '<hr>';
 
-  // LoRA stack
+  // LoRA
   var loraRows = S.loras.map(function(l,i) {
     return '<div class="lora-row">' +
       '<input type="text" data-ln="'+i+'" value="'+esc(l.name)+'" placeholder="lora_filename (no .safetensors)" style="flex:3;font-family:\'JetBrains Mono\',monospace;font-size:13px">' +
@@ -1413,7 +1398,7 @@ function buildHTML() {
   h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">LoRA Stack</label></div>' +
        loraRows + '<button class="btn-text" id="b-add-lora" style="margin-top:4px">+ Add LoRA</button></div>';
 
-  // Sampler + Scheduler + Steps/CFG/Seed
+  // Sampler
   h += '<div class="sec-block">' +
     '<div class="field"><div class="f-hdr"><label class="lbl">Sampler + Scheduler</label></div>' +
     '<div class="two-col">' +
@@ -1439,7 +1424,7 @@ function buildHTML() {
          '</div>';
   }
 
-  // Negative preview (generate mode only)
+  // Neg preview
   if (S.mode === 'generate') {
     h += '<div class="neg-preview">' +
          '<span class="neg-preview-label">NEG</span>' +
@@ -1447,8 +1432,11 @@ function buildHTML() {
          '</div>';
   }
 
-  // Generate button
-  h += '<button class="btn-primary' + (S.loading ? ' loading' : '') + '" id="b-gen"' + (S.loading?' disabled':'') + '>' +
+  // [FIX 6] FOCAL POINT — Generate button: slightly elevated, stronger border
+  h += '<button class="btn-primary' + (S.loading ? ' loading' : '') + '" id="b-gen"' + (S.loading?' disabled':'') +
+    // extra glow via inline style to make it the clear focal point
+    (!S.loading ? ' style="box-shadow:0 4px 24px rgba(47,129,247,.28),0 2px 8px rgba(47,129,247,.18),inset 0 1px 0 rgba(255,255,255,.22)"' : '') +
+    '>' +
     (S.loading
       ? '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center">' +
         '<span style="display:inline-block;animation:spin .65s linear infinite;opacity:.7">⟳</span> Generating…</span>'
@@ -1457,11 +1445,10 @@ function buildHTML() {
 
   h += '</div>'; // col-l
 
-  // ── RIGHT (output) ──
+  // ── RIGHT ──
   var oHide = mob && S.mobilePane !== 'output';
   h += '<div class="col' + (oHide?' pane-hidden':'') + '">';
 
-  // Mobile pane switcher
   if (mob) {
     h += '<div class="two-col" style="display:grid;margin-bottom:16px">' +
       '<button class="btn-primary' + (S.mobilePane==='params'?'':' btn-secondary') + '" data-pane="params" style="margin-top:0">Params</button>' +
@@ -1503,19 +1490,16 @@ function buildHTML() {
       h += '<div class="warn-strip">⚠ Parsed via ' + esc(r.via) + ' — open Debug for details</div>';
     }
 
-    // Positive
     h += '<div class="sec-block" style="margin-bottom:var(--s3)">' +
          '<div class="out-hdr"><span class="lbl">Positive Prompt</span>' +
          '<button class="btn-copy" id="b-cp-pos">⎘ Copy</button></div>' +
          '<div class="out-txt accent" id="out-pos">' + esc(r.positive) + '</div></div>';
 
-    // Negative
     h += '<div class="sec-block" style="margin-bottom:var(--s3)">' +
          '<div class="out-hdr"><span class="lbl">Negative Prompt</span>' +
          '<button class="btn-copy" id="b-cp-neg">⎘ Copy</button></div>' +
          '<div class="out-txt" id="out-neg">' + esc(r.negative) + '</div></div>';
 
-    // Params
     var pp = r.params;
     var pcards = [['Steps',pp.steps],['CFG',pp.cfg],['Sampler',pp.sampler],
                   ['Scheduler',pp.scheduler],['Resolution',pp.resolution],['Seed',pp.seed]];
@@ -1542,21 +1526,15 @@ function buildHTML() {
   return h;
 }
 
-// ═══════════════════════════════════════════════════
-// EVENTS
-// ═══════════════════════════════════════════════════
-
 function attachEvents() {
   function on(id, ev, fn) { var el=document.getElementById(id); if(el) el.addEventListener(ev,fn); }
 
-  // Header toggles
   on('b-api',       'click', function(){ S.apiOpen=!S.apiOpen; render(); });
   on('b-dbg',       'click', function(){ S.dbgOpen=!S.dbgOpen; render(); });
   on('b-api-close', 'click', function(){ S.apiOpen=false; S.dbgOpen=false; render(); });
   on('b-open-api',  'click', function(){ S.apiOpen=true; render(); });
   on('b-open-dbg',  'click', function(){ S.dbgOpen=true; render(); });
 
-  // Pane / mode tabs
   document.querySelectorAll('[data-pane]').forEach(function(el) {
     el.addEventListener('click', function(){ S.mobilePane=el.dataset.pane; render(); });
   });
@@ -1564,7 +1542,6 @@ function attachEvents() {
     el.addEventListener('click', function(){ S.mode=el.dataset.mode; S.result=null; S.error=''; render(); });
   });
 
-  // Scene + Style
   document.querySelectorAll('[data-scene]').forEach(function(el) {
     el.addEventListener('click', function(){ S.scene=el.dataset.scene; render(); });
   });
@@ -1572,7 +1549,6 @@ function attachEvents() {
     el.addEventListener('click', function(){ S.style=el.dataset.style; render(); });
   });
 
-  // Text inputs
   function live(id,key){ var el=document.getElementById(id); if(el) el.addEventListener('input',function(){S[key]=el.value;}); }
   live('inp-sub',   'subject');
   var existEl = document.getElementById('inp-exist');
@@ -1591,7 +1567,6 @@ function attachEvents() {
   live('inp-cfg',   'cfg');
   live('inp-seed',  'seed');
 
-  // Selects
   function lsel(id,key){ var el=document.getElementById(id); if(el) el.addEventListener('change',function(){S[key]=el.value; render();}); }
   lsel('sel-light', 'lighting');
   lsel('sel-mood',  'mood');
@@ -1600,7 +1575,6 @@ function attachEvents() {
   lsel('sel-samp',  'sampler');
   lsel('sel-sch',   'scheduler');
 
-  // LoRA
   document.querySelectorAll('[data-ln]').forEach(function(el) {
     el.addEventListener('input', function(){ S.loras[+el.dataset.ln].name = el.value; });
   });
@@ -1616,14 +1590,12 @@ function attachEvents() {
   });
   on('b-add-lora', 'click', function(){ S.loras.push({name:'',weight:'0.85'}); render(); });
 
-  // Seed
   on('b-seed', 'click', function() {
     S.seed = String(Math.floor(Math.random()*1e9));
     var el = document.getElementById('inp-seed');
     if (el) el.value = S.seed;
   });
 
-  // API key
   var ki = document.getElementById('inp-key');
   if (ki) {
     ki.addEventListener('input', function() {
@@ -1640,16 +1612,13 @@ function attachEvents() {
   }
   on('b-key-clr', 'click', function(){ clearKey(); render(); });
 
-  // Model radio
   document.querySelectorAll('input[name="mdl"]').forEach(function(el) {
     el.addEventListener('change', function(){ S.model=el.value; render(); });
   });
 
-  // Generate
   on('b-gen',   'click', generate);
   on('b-regen', 'click', generate);
 
-  // Copy
   on('b-cp-pos', 'click', function(e){ if(S.result) copyText(S.result.positive, e.currentTarget); });
   on('b-cp-neg', 'click', function(e){ if(S.result) copyText(S.result.negative, e.currentTarget); });
   on('b-cp-all', 'click', function(e) {
@@ -1668,10 +1637,6 @@ function attachEvents() {
     if (S.dbgLog) navigator.clipboard.writeText(JSON.stringify(S.dbgLog, null, 2));
   });
 }
-
-// ═══════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════
 
 loadKey();
 render();
