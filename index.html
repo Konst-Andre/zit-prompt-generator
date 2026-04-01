@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>ZIT Prompt Generator v8</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ═══════════════════════════════════════
+       DESIGN TOKENS
+    ═══════════════════════════════════════ */
+    :root {
+      /* Backgrounds */
+      --bg:       #0D1117;
+      --bg2:      #161B22;   /* cards, panels */
+      --bg3:      #090D12;   /* inputs — clearly darker than cards */
+      --bg4:      #1A2030;   /* lighter surface variant */
+
+      /* Borders */
+      --bdr:      #262C33;   /* baseline — quieter, less visual noise */
+      --bdr2:     #3A4250;   /* hover border */
+
+      /* Text */
+      --t1:  #E6EDF3;        /* primary */
+      --t2:  #9DA7B3;        /* secondary */
+      --t3:  #6E7681;        /* muted */
+      --t4:  #484F58;        /* very muted / disabled */
+
+      /* Accent — ONE color only */
+      --acc:      #2F81F7;
+      --acc-hi:   #388BFF;   /* hover +10% */
+      --acc-lo:   #1B6FE5;   /* active -10% */
+      --acc-bg:   #0D1F3C;   /* accent surface */
+      --acc-txt:  #79B8FF;   /* accent light text */
+
+      /* Semantic */
+      --red:      #F85149;
+      --red-bg:   #1A0F0E;
+      --red-bdr:  #6E2020;
+      --red-txt:  #FFA198;
+      --green:    #3FB950;
+      --green-bg: #0A1F0A;
+      --green-bdr:#204620;
+      --green-txt:#8FD19E;
+      --amber:    #E3B341;
+      --amber-bg: #1F1500;
+      --amber-bdr:#4A3300;
+      --amber-txt:#E3B341;
+
+      /* Geometry */
+      --r-sm: 6px;
+      --r:    8px;
+      --r-md: 10px;
+      --r-lg: 12px;
+
+      /* Spacing scale (8px base) */
+      --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px;
+      --s5: 24px; --s6: 32px; --s7: 48px;
+
+      /* Transitions */
+      --tr: 0.18s ease;
+    }
+
+    /* ═══════════════════════════════════════
+       BASE
+    ═══════════════════════════════════════ */
+    html, body {
+      background: var(--bg);
+      color: var(--t1);
+      font-family: 'Outfit', system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.55;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ═══════════════════════════════════════
+       SCROLLBAR
+    ═══════════════════════════════════════ */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: var(--bdr);
+      border-radius: 2px;
+      transition: background var(--tr);
+    }
+    ::-webkit-scrollbar-thumb:hover { background: var(--acc); }
+
+    /* ═══════════════════════════════════════
+       HEADER
+    ═══════════════════════════════════════ */
+    .hdr {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--s4) var(--s5);
+      border-bottom: 1px solid var(--bdr);
+      flex-wrap: wrap;
+      gap: var(--s3);
+      background: var(--bg2);
+    }
+    .hdr-brand { display: flex; flex-direction: column; gap: 2px; }
+    .hdr-eyebrow {
+      font-size: 10px;
+      color: var(--t3);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+    .hdr-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--t1);
+      letter-spacing: -.02em;
+      line-height: 1.2;
+    }
+    .hdr-ver {
+      font-size: 11px;
+      color: var(--acc);
+      font-weight: 500;
+      margin-left: 6px;
+      letter-spacing: 0;
+    }
+    .hdr-acts { display: flex; gap: var(--s2); align-items: center; flex-wrap: wrap; }
+
+    /* ═══════════════════════════════════════
+       STATUS PILLS
+    ═══════════════════════════════════════ */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 11px;
+      border-radius: 20px;
+      background: var(--bg);
+      border: 1px solid var(--bdr);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--t3);
+      user-select: none;
+      white-space: nowrap;
+      letter-spacing: .02em;
+    }
+    .pill.btn { cursor: pointer; transition: border-color var(--tr), color var(--tr), background var(--tr); }
+    .pill.btn:hover { border-color: var(--bdr2); color: var(--t2); }
+    .pill.p-active { border-color: var(--amber-bdr); color: var(--amber-txt); background: var(--amber-bg); }
+    .pill.p-ok     { border-color: var(--green-bdr); color: var(--green-txt); background: var(--green-bg); }
+    .pill.p-miss   { border-color: var(--red-bdr);   color: var(--red-txt);   background: var(--red-bg); }
+
+    /* dot indicator */
+    .pill .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: currentColor; flex-shrink: 0;
+    }
+
+    /* ═══════════════════════════════════════
+       SLIDE PANELS
+    ═══════════════════════════════════════ */
+    .slide-panel {
+      padding: var(--s4) var(--s5);
+      border-bottom: 1px solid var(--bdr);
+      background: var(--bg2);
+    }
+    .slide-panel.api-bg   { border-left: 3px solid var(--green-bdr); }
+    .slide-panel.debug-bg { border-left: 3px solid var(--bdr2); }
+    .sp-hdr {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: var(--s2);
+      margin-bottom: var(--s3);
+    }
+    .sp-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--t2);
+    }
+    .sp-title.green { color: var(--green-txt); }
+    .sp-title.muted { color: var(--t3); }
+
+    /* ═══════════════════════════════════════
+       TAB BAR
+    ═══════════════════════════════════════ */
+    .tab-bar {
+      display: flex;
+      padding: 0 var(--s5);
+      border-bottom: 1px solid var(--bdr);
+      background: var(--bg2);
+      gap: 2px;
+    }
+    .tab-btn {
+      padding: var(--s3) var(--s4);
+      background: transparent;
+      border: none;
+      color: var(--t3);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color var(--tr), border-color var(--tr);
+      letter-spacing: .01em;
+    }
+    .tab-btn:hover { color: var(--t2); }
+    .tab-btn.active { color: var(--t1); border-bottom-color: var(--acc); }
+
+    /* ═══════════════════════════════════════
+       LAYOUT
+    ═══════════════════════════════════════ */
+    .body-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: calc(100vh - 53px);
+    }
+    .col { padding: var(--s5); }
+    .col-l { border-right: 1px solid var(--bdr); }
+
+    /* ═══════════════════════════════════════
+       FORM FIELDS
+    ═══════════════════════════════════════ */
+    .field { margin-bottom: var(--s4); }
+    .f-hdr {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: var(--s2);
+    }
+    .lbl {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--t3);
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+    .hint { font-size: 11px; color: var(--t4); }
+    .grp-lbl {
+      font-size: 10px;
+      color: var(--t4);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin-bottom: var(--s1);
+      margin-top: var(--s2);
+    }
+
+    /* ═══════════════════════════════════════
+       INPUTS — 16px prevents iOS zoom
+    ═══════════════════════════════════════ */
+    input, textarea, select {
+      width: 100%;
+      padding: var(--s2) var(--s3);
+      background: var(--bg3);
+      color: var(--t1);
+      border: 1px solid var(--bdr);
+      border-radius: var(--r);
+      font-size: 16px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color var(--tr), box-shadow var(--tr);
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--acc);
+      box-shadow: 0 0 0 3px rgba(47,129,247,.12);
+    }
+    input:hover:not(:focus), textarea:hover:not(:focus), select:hover:not(:focus) {
+      border-color: var(--bdr2);
+    }
+    textarea {
+      resize: vertical;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+    select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236E7681' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
+      font-size: 13px;
+    }
+    select option { background: var(--bg4); font-size: 13px; }
+    input::placeholder, textarea::placeholder { color: var(--t4); font-size: 13px; }
+
+    /* ═══════════════════════════════════════
+       BUTTONS
+    ═══════════════════════════════════════ */
+    .btn-primary {
+      width: 100%;
+      padding: 13px 20px;
+      background: var(--acc);
+      border: 1px solid var(--acc-hi);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: var(--r);
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: .04em;
+      transition: background var(--tr), transform var(--tr), box-shadow var(--tr), opacity var(--tr);
+      margin-top: var(--s1);
+    }
+    .btn-primary:not(:disabled):hover {
+      background: var(--acc-hi);
+      box-shadow: 0 4px 20px rgba(47,129,247,.35);
+    }
+    .btn-primary:not(:disabled):active { transform: scale(0.98); background: var(--acc-lo); box-shadow: none; }
+    .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-primary.btn-secondary {
+      background: transparent;
+      border-color: var(--bdr2);
+      color: var(--t2);
+    }
+    .btn-primary.btn-secondary:not(:disabled):hover {
+      background: rgba(255,255,255,.04);
+      border-color: var(--bdr2);
+      color: var(--t1);
+    }
+
+    .btn-ghost {
+      padding: 6px var(--s3);
+      background: transparent;
+      border: 1px solid var(--bdr);
+      color: var(--t3);
+      border-radius: var(--r-sm);
+      cursor: pointer;
+      font-size: 12px;
+      font-family: inherit;
+      flex-shrink: 0;
+      transition: border-color var(--tr), color var(--tr), background var(--tr);
+    }
+    .btn-ghost:hover { border-color: var(--bdr2); color: var(--t2); background: rgba(255,255,255,.03); }
+    .btn-ghost:active { transform: scale(0.97); }
+
+    .btn-text {
+      background: transparent;
+      border: none;
+      color: var(--t3);
+      font-size: 12px;
+      cursor: pointer;
+      font-family: inherit;
+      padding: 0;
+      transition: color var(--tr);
+    }
+    .btn-text:hover { color: var(--acc-txt); }
+
+    .btn-copy {
+      padding: 3px 10px;
+      background: transparent;
+      border: 1px solid var(--bdr);
+      color: var(--t3);
+      border-radius: var(--r-sm);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 500;
+      font-family: inherit;
+      letter-spacing: .03em;
+      transition: border-color var(--tr), color var(--tr), background var(--tr);
+      white-space: nowrap;
+    }
+    .btn-copy:hover { border-color: var(--acc); color: var(--acc-txt); }
+    .btn-copy.copied {
+      border-color: var(--green-bdr);
+      color: var(--green-txt);
+      background: var(--green-bg);
+    }
+
+    /* ═══════════════════════════════════════
+       SCENE ICON GRID
+    ═══════════════════════════════════════ */
+    .icon-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: var(--s1); }
+    .icon-tile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--s2) var(--s1);
+      background: var(--bg);
+      border: 1px solid #1E2429;
+      border-radius: var(--r-sm);
+      cursor: pointer;
+      gap: 3px;
+      transition: border-color var(--tr), background var(--tr);
+      user-select: none;
+    }
+    .icon-tile:hover { border-color: var(--bdr); background: var(--bg3); }
+    .icon-tile.active { background: var(--acc-bg); border-color: var(--acc); }
+    .i-glyph { font-size: 13px; line-height: 1; color: var(--t4); }
+    .i-label { font-size: 8px; color: var(--t4); text-align: center; line-height: 1.2; }
+    .icon-tile.active .i-glyph { color: var(--acc-txt); }
+    .icon-tile.active .i-label { color: var(--acc-txt); }
+
+    /* ═══════════════════════════════════════
+       STYLE PILLS
+    ═══════════════════════════════════════ */
+    .pill-row { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: var(--s2); }
+    .st-pill {
+      padding: 3px 10px;
+      background: transparent;
+      border: 1px solid #1E2429;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--t4);
+      cursor: pointer;
+      transition: border-color var(--tr), color var(--tr), background var(--tr);
+      user-select: none;
+    }
+    .st-pill:hover { border-color: var(--bdr); color: var(--t3); background: var(--bg3); }
+    .st-pill.active { background: var(--acc-bg); border-color: var(--acc); color: var(--acc-txt); font-weight: 500; }
+
+    /* ═══════════════════════════════════════
+       LAYOUT HELPERS
+    ═══════════════════════════════════════ */
+    hr { border: none; border-top: 1px solid var(--bdr); margin: var(--s3) 0 var(--s4); }
+    .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: var(--s3); }
+    .row       { display: flex; gap: var(--s2); align-items: center; }
+
+    /* ═══════════════════════════════════════
+       NEG PREVIEW
+    ═══════════════════════════════════════ */
+    .neg-preview {
+      padding: var(--s2) var(--s3);
+      background: var(--bg);
+      border: 1px solid #1E2429;
+      border-radius: var(--r-sm);
+      margin-bottom: var(--s3);
+      display: flex;
+      align-items: flex-start;
+      gap: var(--s2);
+    }
+    .neg-preview-label {
+      font-size: 10px;
+      color: var(--t4);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .neg-preview-text {
+      font-size: 11px;
+      color: var(--t3);
+      font-family: 'JetBrains Mono', monospace;
+      line-height: 1.5;
+    }
+
+    /* ═══════════════════════════════════════
+       LORA ROWS
+    ═══════════════════════════════════════ */
+    .lora-row { display: flex; gap: var(--s2); margin-bottom: var(--s2); align-items: center; }
+
+    /* ═══════════════════════════════════════
+       SAMPLER HINT
+    ═══════════════════════════════════════ */
+    .s-hint {
+      font-size: 11px;
+      font-weight: 500;
+      margin-top: var(--s2);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* ═══════════════════════════════════════
+       ERROR BOX
+    ═══════════════════════════════════════ */
+    .err-box {
+      padding: var(--s3) var(--s4);
+      background: var(--red-bg);
+      border: 1px solid var(--red-bdr);
+      border-radius: var(--r);
+      margin-bottom: var(--s3);
+    }
+    .err-title {
+      font-size: 10px;
+      color: var(--red);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .err-msg { font-size: 12px; color: var(--red-txt); line-height: 1.55; word-break: break-word; }
+
+    /* ═══════════════════════════════════════
+       OUTPUT SECTION
+    ═══════════════════════════════════════ */
+    .ph {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 280px;
+      gap: var(--s3);
+      text-align: center;
+    }
+    .ph-icon { font-size: 32px; color: var(--bdr2); }
+    .ph-text { font-size: 13px; color: var(--t4); line-height: 1.7; }
+    .ph-sub  { font-size: 11px; color: var(--t4); font-family: 'JetBrains Mono', monospace; }
+
+    .spinner {
+      width: 32px; height: 32px;
+      border: 2px solid var(--bdr);
+      border-top-color: var(--acc);
+      border-radius: 50%;
+      animation: spin .65s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .out-hdr {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--s2);
+    }
+    .out-block { margin-bottom: var(--s4); }
+
+    .out-txt {
+      padding: var(--s3) var(--s4);
+      border-radius: var(--r);
+      border: 1px solid var(--bdr);
+      background: var(--bg3);
+      font-size: 12.5px;
+      line-height: 1.8;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      color: var(--t2);
+    }
+    .out-txt.accent {
+      border-color: rgba(47,129,247,.25);
+      background: #0A1625;
+      color: #A8C8FF;
+    }
+
+    /* ═══════════════════════════════════════
+       PARAMS GRID
+    ═══════════════════════════════════════ */
+    .params-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s1);
+      margin-bottom: var(--s4);
+    }
+    .p-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--s2) var(--s3);
+      background: var(--bg3);
+      border: 1px solid var(--bdr);
+      border-radius: var(--r-sm);
+      gap: var(--s2);
+    }
+    .p-key { font-size: 10px; color: var(--t3); letter-spacing: .05em; text-transform: uppercase; }
+    .p-val {
+      font-size: 11px;
+      color: var(--acc-txt);
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ═══════════════════════════════════════
+       INFO / NOTES CARDS
+    ═══════════════════════════════════════ */
+    .info-card {
+      padding: var(--s3) var(--s4);
+      background: var(--bg3);
+      border: 1px solid var(--bdr);
+      border-radius: var(--r);
+      margin-bottom: var(--s3);
+    }
+    .info-card .lbl { display: block; margin-bottom: 5px; }
+    .info-card p { font-size: 12px; color: var(--t2); line-height: 1.65; white-space: pre-wrap; }
+
+    .warn-strip {
+      padding: 6px var(--s3);
+      background: var(--amber-bg);
+      border: 1px solid var(--amber-bdr);
+      border-radius: var(--r-sm);
+      font-size: 11px;
+      color: var(--amber-txt);
+      margin-bottom: var(--s3);
+    }
+
+    /* ═══════════════════════════════════════
+       DEBUG
+    ═══════════════════════════════════════ */
+    .dbg-badges { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .dbadge {
+      padding: 3px 8px;
+      border-radius: var(--r-sm);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: .05em;
+    }
+    .dbg-sec { margin-bottom: var(--s3); }
+    .dbg-lbl {
+      font-size: 10px;
+      color: var(--t4);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin-bottom: var(--s1);
+    }
+    pre.dbg-pre {
+      font-size: 11px;
+      color: var(--t2);
+      background: #060A0E;
+      padding: var(--s2) var(--s3);
+      border-radius: var(--r-sm);
+      overflow: auto;
+      white-space: pre-wrap;
+      line-height: 1.5;
+      max-height: 200px;
+      border: 1px solid var(--bdr);
+      font-family: 'JetBrains Mono', monospace;
+      word-break: break-all;
+    }
+    pre.dbg-pre.ok  { border-color: var(--green-bdr); }
+    pre.dbg-pre.err { border-color: var(--red-bdr); color: var(--red-txt); }
+    details > summary {
+      font-size: 11px;
+      color: var(--t3);
+      cursor: pointer;
+      margin-bottom: var(--s1);
+      list-style: none;
+      user-select: none;
+    }
+    details > summary::before { content: '▶ '; }
+    details[open] > summary::before { content: '▼ '; }
+
+    /* ═══════════════════════════════════════
+       API PANEL
+    ═══════════════════════════════════════ */
+    .model-opt {
+      display: flex;
+      align-items: center;
+      gap: var(--s3);
+      padding: var(--s2) var(--s3);
+      background: var(--bg3);
+      border: 1px solid var(--bdr);
+      border-radius: var(--r);
+      cursor: pointer;
+      margin-bottom: var(--s2);
+      transition: border-color var(--tr), background var(--tr);
+    }
+    .model-opt:hover { border-color: var(--bdr2); background: var(--bg4); }
+    .model-opt.active { background: var(--acc-bg); border-color: var(--acc); }
+    .model-opt input[type=radio] { width: auto; accent-color: var(--acc); }
+    .model-name { font-size: 12px; font-weight: 600; color: var(--t1); }
+    .model-note { font-size: 11px; color: var(--t3); }
+    .model-opt.active .model-note { color: var(--acc-txt); }
+    .model-id {
+      font-size: 10px;
+      color: var(--t4);
+      font-family: 'JetBrains Mono', monospace;
+      margin-left: auto;
+      text-align: right;
+    }
+    .chk-row { display: flex; align-items: center; gap: var(--s2); margin-top: var(--s3); }
+    .chk-row label { font-size: 12px; color: var(--t3); cursor: pointer; }
+    .chk-row input[type=checkbox] { width: auto; accent-color: var(--acc); cursor: pointer; }
+
+    /* ═══════════════════════════════════════
+       ONBOARDING
+    ═══════════════════════════════════════ */
+    .onboard {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 55vh;
+      gap: var(--s4);
+      padding: var(--s7) var(--s5);
+      text-align: center;
+    }
+    .onboard-icon { font-size: 40px; }
+    .onboard h2 { font-size: 18px; font-weight: 700; color: var(--t1); }
+    .onboard p  { font-size: 13px; color: var(--t3); line-height: 1.7; max-width: 360px; }
+    .onboard a  { color: var(--acc-txt); }
+    .onboard .btn-primary { max-width: 260px; margin-top: var(--s1); }
+
+    /* ═══════════════════════════════════════
+       MOBILE
+    ═══════════════════════════════════════ */
+    @media (max-width: 680px) {
+      .body-grid { grid-template-columns: 1fr; }
+      .col-l { border-right: none; }
+      .icon-grid { grid-template-columns: repeat(4,1fr); }
+      .col { padding: var(--s4); }
+      .hdr { padding: var(--s3) var(--s4); }
+      .pane-hidden { display: none; }
+    }
+    @media (min-width: 681px) {
+      .mob-mode-sw { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════
+
+const SCENES = [
+  { id:'portrait',     label:'Portrait',    icon:'◎', camera:'85mm portrait lens',  detail:'sharp focus, skin texture, shallow depth of field' },
+  { id:'half_body',    label:'Half-body',   icon:'◑', camera:'50mm lens',            detail:'sharp focus, upper body detail' },
+  { id:'full_body',    label:'Full body',   icon:'▭', camera:'35mm lens',            detail:'full figure, environment context' },
+  { id:'landscape',    label:'Landscape',   icon:'⬟', camera:'wide angle lens',      detail:'sweeping depth, ultra detailed, rich atmosphere' },
+  { id:'urban',        label:'Urban',       icon:'⬡', camera:'35mm lens',            detail:'urban detail, street atmosphere' },
+  { id:'interior',     label:'Interior',    icon:'⬔', camera:'24mm wide lens',       detail:'architectural detail, ambient light' },
+  { id:'architecture', label:'Architect.',  icon:'◻', camera:'35mm tilt-shift',      detail:'structural precision, sharp geometry' },
+  { id:'macro',        label:'Macro',       icon:'◉', camera:'macro lens',           detail:'extreme close-up, fine surface detail, bokeh' },
+  { id:'animal',       label:'Animal',      icon:'◈', camera:'85mm portrait lens',   detail:'fur/feather texture, sharp eyes, bokeh' },
+  { id:'product',      label:'Product',     icon:'◇', camera:'85mm macro lens',      detail:'clean product shot, studio precision' },
+  { id:'concept',      label:'Concept',     icon:'◆', camera:'',                     detail:'painterly detail, dynamic composition' },
+  { id:'manual',       label:'Manual',      icon:'◌', camera:'',                     detail:'' },
+];
+
+const STYLES = [
+  { id:'photorealistic', label:'Photorealistic',  grp:'Real' },
+  { id:'cinematic',      label:'Cinematic',        grp:'Real' },
+  { id:'documentary',    label:'Documentary',       grp:'Real' },
+  { id:'fashion',        label:'Fashion Editorial', grp:'Real' },
+  { id:'analog',         label:'Analog Film',       grp:'Real' },
+  { id:'digital_art',    label:'Digital Art',       grp:'Illustrated' },
+  { id:'concept_art',    label:'Concept Art',       grp:'Illustrated' },
+  { id:'illustration',   label:'Illustration',      grp:'Illustrated' },
+  { id:'oil_painting',   label:'Oil Painting',      grp:'Illustrated' },
+  { id:'watercolor',     label:'Watercolor',        grp:'Illustrated' },
+  { id:'anime',          label:'Anime',             grp:'Stylized' },
+  { id:'manga',          label:'Manga',             grp:'Stylized' },
+  { id:'comic',          label:'Comic Book',        grp:'Stylized' },
+  { id:'flat_design',    label:'Flat Design',       grp:'Stylized' },
+  { id:'low_poly',       label:'Low Poly 3D',       grp:'3D / Render' },
+  { id:'3d_render',      label:'3D Render',         grp:'3D / Render' },
+  { id:'isometric',      label:'Isometric',         grp:'3D / Render' },
+  { id:'pixel_art',      label:'Pixel Art',         grp:'3D / Render' },
+];
+
+const LIGHTINGS = [
+  'Cinematic lighting','Soft natural light','Golden hour','Blue hour / dusk',
+  'Overcast diffused','Dramatic rim light','Neon / LED glow','Volumetric rays',
+  'Studio softbox','Candlelight','Moonlight','Harsh midday sun',
+];
+
+const GENRES = ['','Cyberpunk','Fantasy','Dark Fantasy','Sci-Fi','Solarpunk',
+  'Noir','Post-Apocalyptic','Historical','Mythological','Surreal','Horror',
+  'Contemporary','Futuristic'];
+
+const MOODS = ['','Moody & atmospheric','Ethereal & dreamy','Tense & dramatic',
+  'Serene & peaceful','Mysterious','Epic & grand',
+  'Melancholic','Joyful & vibrant','Gritty & raw'];
+
+const RESOLUTIONS = [
+  { label:'896 × 1152 — portrait ★', value:'896x1152' },
+  { label:'768 × 1024 — portrait',   value:'768x1024'  },
+  { label:'1024 × 1024 — square',    value:'1024x1024' },
+  { label:'1152 × 896 — landscape',  value:'1152x896'  },
+  { label:'1280 × 768 — wide',       value:'1280x768'  },
+  { label:'1024 × 1536 — tall',      value:'1024x1536' },
+];
+
+const SAMPLERS   = ['euler_ancestral','euler','dpm_2','heun','dpm_2_ancestral'];
+const SCHEDULERS = ['beta','linear','karras','sgm_uniform','FlowMatchEulerDiscrete'];
+
+const SAMPLER_HINTS = {
+  'euler_ancestral+beta':                   { text:'★ Etalon quality (~23s)',        c:'#3FB950' },
+  'euler+linear':                           { text:'⚡ Max speed',                   c:'#E3B341' },
+  'euler+FlowMatchEulerDiscrete':           { text:'✦ Architecturally native',       c:'#79B8FF' },
+  'euler_ancestral+FlowMatchEulerDiscrete': { text:'✦ Native + ancestral',           c:'#79B8FF' },
+  'dpm_2+karras':                           { text:'○ Classic quality',              c:'#6E7681' },
+  'heun+beta':                              { text:'△ Slow / high quality',          c:'#6E7681' },
+};
+
+const GROQ_MODELS = [
+  { id:'qwen/qwen3-32b',                   name:'Qwen3 32B',       note:'Recommended ★', qwen:true  },
+  { id:'llama-3.3-70b-versatile',          name:'Llama 3.3 70B',   note:'Versatile',     qwen:false },
+  { id:'llama-4-scout-17b-16e-instruct',   name:'Llama 4 Scout',   note:'Fast',          qwen:false },
+];
+
+// ═══════════════════════════════════════════════════
+// SCENE-AWARE NEGATIVE PROMPTS
+// ═══════════════════════════════════════════════════
+
+const SCENE_NEGATIVES = {
+  portrait:     'blurry, bad anatomy, deformed hands, extra fingers, distorted face, asymmetrical eyes, text, watermark',
+  half_body:    'blurry, bad anatomy, deformed hands, extra fingers, distorted face, asymmetrical eyes, text, watermark',
+  full_body:    'blurry, bad anatomy, deformed hands, extra fingers, mutated hands, text, watermark',
+  landscape:    'blurry, out of focus, noise, compression artifacts, overexposed, text, watermark',
+  urban:        'blurry, noise, compression artifacts, overexposed, text, watermark',
+  interior:     'blurry, out of focus, distortion, noise, text, watermark',
+  architecture: 'blurry, distortion, noise, compression artifacts, overexposed, text, watermark',
+  macro:        'blurry, out of focus, distortion, reflection artifacts, uneven lighting, text, watermark',
+  animal:       'blurry, bad anatomy, deformed, extra limbs, text, watermark',
+  product:      'blurry, distortion, reflection artifacts, uneven lighting, out of focus, text, watermark',
+  concept:      'blurry, bad anatomy, deformed hands, extra fingers, text, watermark',
+  manual:       'blurry, out of focus, bad anatomy, deformed hands, text, watermark',
+};
+
+function buildNegative() {
+  return SCENE_NEGATIVES[S.scene] || SCENE_NEGATIVES.manual;
+}
+
+var S = {
+  apiKey:'', rememberKey:false, model:'qwen/qwen3-32b',
+  apiOpen:false, dbgOpen:false, mobilePane:'params',
+  mode:'generate',
+  scene:'portrait', style:'photorealistic', subject:'',
+  lighting:'Cinematic lighting', mood:'', genre:'', resolution:'896x1152',
+  existing:'',
+  loras:[{name:'',weight:'0.85'}],
+  steps:'12', cfg:'1.5', sampler:'euler_ancestral', scheduler:'beta', seed:'',
+  loading:false, result:null, error:'', dbgLog:null,
+};
+
+// ═══════════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════════
+
+function loadKey() {
+  try {
+    var rm = localStorage.getItem('zit_remember') === '1';
+    var ls = localStorage.getItem('zit_key');
+    var ss = sessionStorage.getItem('zit_key');
+    if (rm && ls) { S.apiKey = ls; S.rememberKey = true; }
+    else if (ss)  { S.apiKey = ss; }
+  } catch(e) {}
+}
+
+function saveKey(key, remember) {
+  S.apiKey = key; S.rememberKey = remember;
+  try {
+    sessionStorage.setItem('zit_key', key);
+    if (remember) {
+      localStorage.setItem('zit_key', key);
+      localStorage.setItem('zit_remember', '1');
+    } else {
+      localStorage.removeItem('zit_key');
+      localStorage.removeItem('zit_remember');
+    }
+  } catch(e) {}
+}
+
+function clearKey() {
+  S.apiKey = ''; S.rememberKey = false;
+  try {
+    sessionStorage.removeItem('zit_key');
+    localStorage.removeItem('zit_key');
+    localStorage.removeItem('zit_remember');
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════
+// PROMPT BUILDERS
+// ═══════════════════════════════════════════════════
+
+function buildSystem() {
+  return 'You are a prompt engineer for ZIT (Z-Image Turbo), a Lumina2-based diffusion model with Qwen3-4B text encoder.\n\nArchitecture rules:\n- CFG 1.5 optimal (not 6–8 like SDXL)\n- Steps 10–15 (turbo)\n- Qwen3-4B understands full natural prose — no comma-spam tags\n- Never output SDXL tags: masterpiece, best quality, highres, 8k\n- LoRA trigger = single word only\n\nNegative prompt rules (ZIT / CFG 1.5 specific):\n- Use the suggested negative provided in the user message as your base\n- Keep it short: 10–18 words maximum\n- Focus on concrete errors: anatomy, hands, face distortion, artifacts, text\n- Do NOT add: oversharpened, noisy (unless specifically needed)\n- Do NOT use general quality tags like "low quality, worst quality"\n- Adapt to scene: portrait scenes → anatomy/face focus; landscape/urban → artifact focus; product/macro → distortion/reflection focus\n\nLanguage rule: always translate input to English; output prompts in English only.\n\nOUTPUT CONTRACT — you MUST follow this exactly:\n1. Output ONLY the XML tags below — no other text before, between, or after them\n2. All tags must always be present, even if content is minimal\n3. Do not include greetings, explanations, markdown, or any text outside the XML tags\n4. Do not nest XML tags — tag content is plain text only\n5. If you cannot generate, still return all tags with minimal content\n\n<positive>60–120 word natural English prompt</positive>\n<negative>scene-appropriate negative, max 18 words</negative>\n<notes>one ZIT-specific tip</notes>';
+}
+
+function buildUser() {
+  var sc = SCENES.find(function(x){return x.id===S.scene;}) || {};
+  var st = STYLES.find(function(x){return x.id===S.style;}) || {};
+  var parts = S.resolution.split('x');
+  var w = parts[0], h = parts[1];
+  var orient = (+w < +h) ? 'portrait' : (+w > +h) ? 'landscape' : 'square';
+
+  if (S.mode === 'enhance') {
+    return 'Improve this prompt for ZIT/Lumina2. Fix SDXL tags, rewrite as natural prose for Qwen3-4B.\nAfter <notes> add: <changes>bullet list of improvements</changes>\n\nPrompt: "' + S.existing.slice(0, 1500) + '"';
+  }
+
+  return 'Generate ZIT prompt:\nSubject (translate to English if needed): ' + S.subject +
+    '\nScene: ' + (sc.label||S.scene) + ' | Style: ' + (st.label||S.style) +
+    '\nCamera: ' + (sc.camera||'standard') + ' | Detail: ' + (sc.detail||'high detail') +
+    '\nLighting: ' + S.lighting + ' | Mood: ' + (S.mood||'neutral') + ' | Genre: ' + (S.genre||'none') +
+    '\nResolution: ' + w + '×' + h + ' (' + orient + ') | CFG: ' + S.cfg + ' | Steps: ' + S.steps +
+    '\nSampler: ' + S.sampler + ' + ' + S.scheduler +
+    '\nSuggested negative (adapt if needed): ' + buildNegative();
+}
+
+// ═══════════════════════════════════════════════════
+// PARSER
+// ═══════════════════════════════════════════════════
+
+function stripThink(text) {
+  return text
+    .replace(/<think>[\s\S]*?<\/think>/gi, '')
+    .replace(/Thought:[\s\S]*?(?=<[a-z]|$)/gi, '')
+    .replace(/\[Thinking[^\]]*\]/gi, '')
+    .trim();
+}
+
+function extractTag(text, tag) {
+  var re = new RegExp('<' + tag + '[^>]*>([\\s\\S]*?)<\\/' + tag + '>', 'i');
+  var m = text.match(re);
+  return m ? m[1].trim() : null;
+}
+
+function parseResponse(raw) {
+  var cleaned = stripThink(raw);
+
+  if (cleaned.indexOf('<positive') !== -1) {
+    var positive = extractTag(cleaned, 'positive');
+    if (positive) {
+      return {
+        positive: positive,
+        negative: extractTag(cleaned, 'negative') || 'blurry, watermark, text',
+        notes:    extractTag(cleaned, 'notes')    || '',
+        changes:  extractTag(cleaned, 'changes') || null,
+        via: 'xml',
+      };
+    }
+  }
+
+  var jm = cleaned.match(/\{[\s\S]*\}/);
+  if (jm) {
+    try {
+      var j = JSON.parse(jm[0]);
+      if (j && j.positive) {
+        return { positive:j.positive, negative:j.negative||'blurry, watermark, text',
+                 notes:j.notes||'', changes:j.changes||null, via:'json' };
+      }
+    } catch(e) {}
+  }
+
+  var stripped = cleaned.replace(/```(?:xml)?/gi, '').trim();
+  if (stripped !== cleaned && stripped.indexOf('<positive') !== -1) {
+    var p2 = extractTag(stripped, 'positive');
+    if (p2) {
+      return {
+        positive: p2,
+        negative: extractTag(stripped, 'negative') || 'blurry, watermark, text',
+        notes:    extractTag(stripped, 'notes')    || '',
+        changes:  extractTag(stripped, 'changes') || null,
+        via: 'xml_retry',
+      };
+    }
+  }
+
+  var pt = stripped.length > cleaned.length ? stripped : cleaned;
+  if (pt.length > 40) {
+    return { positive:pt.slice(0,800), negative:'blurry, watermark, text',
+             notes:'⚠ Plain text fallback — check debug', changes:null, via:'plaintext' };
+  }
+
+  return {
+    positive: 'Failed to parse response — check debug panel',
+    negative: 'blurry, watermark',
+    notes: 'Hard fallback triggered. Open debug to see raw API response.',
+    changes: null,
+    via: 'hard_fallback',
+  };
+}
+
+// ═══════════════════════════════════════════════════
+// API
+// ═══════════════════════════════════════════════════
+
+var _busy = false;
+var _ac   = null;
+
+function sleep(ms) { return new Promise(function(r){setTimeout(r,ms);}); }
+
+async function callGroqOnce(signal) {
+  var log = { model:S.model, httpStatus:null, httpOk:null, responseMs:null,
+              rawText:'', strippedText:'', contentField:'', error:null };
+
+  var sysMsg  = buildSystem();
+  var userMsg = buildUser();
+  var mdl = GROQ_MODELS.find(function(m){return m.id===S.model;});
+  if (mdl && mdl.qwen) userMsg += '\n\n/no_think';
+
+  var body = {
+    model: S.model, max_tokens: 2048,
+    messages: [
+      { role:'system', content:sysMsg  },
+      { role:'user',   content:userMsg },
+    ],
+  };
+
+  var t0 = Date.now(), res;
+  try {
+    res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+S.apiKey },
+      body: JSON.stringify(body),
+      signal: signal,
+    });
+  } catch(e) {
+    if (e.name === 'AbortError') {
+      var ae = new Error('__aborted__'); ae.aborted = true; ae.log = log;
+      throw ae;
+    }
+    log.error = 'Network error: ' + e.message;
+    var ne = new Error(log.error); ne.log = log;
+    throw ne;
+  }
+
+  log.httpStatus = res.status;
+  log.httpOk     = res.ok;
+  log.responseMs = Date.now() - t0;
+
+  var bodyText = await res.text();
+  log.rawText   = bodyText;
+
+  var data;
+  try { data = JSON.parse(bodyText); }
+  catch(e) {
+    log.error = 'Response is not JSON (HTTP ' + res.status + ')';
+    var je = new Error(log.error); je.log = log;
+    throw je;
+  }
+
+  if (res.status === 401) {
+    log.error = 'Invalid API key (401)';
+    var e401 = new Error('Невірний API ключ — перевірте в ⚙ API'); e401.log=log; e401.code=401;
+    throw e401;
+  }
+  if (res.status === 429) {
+    log.error = 'Rate limit (429)';
+    var e429 = new Error(log.error); e429.log=log; e429.code=429;
+    throw e429;
+  }
+  if (!res.ok || (data && data.error)) {
+    log.error = (data&&data.error&&data.error.message) || (data&&data.message) || res.statusText || 'Unknown';
+    var eapi = new Error('API ' + res.status + ': ' + log.error); eapi.log=log;
+    throw eapi;
+  }
+
+  var raw = (data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+  log.contentField  = raw;
+  log.strippedText  = stripThink(raw);
+
+  if (!raw) {
+    log.error = 'choices[0].message.content is empty';
+    var ee = new Error(log.error); ee.log=log;
+    throw ee;
+  }
+
+  var parsed = parseResponse(raw);
+  return Object.assign({}, parsed, {log:log});
+}
+
+async function generate() {
+  if (!S.apiKey.trim()) {
+    S.error = 'Введіть Groq API ключ — натисніть ⚙ API';
+    S.apiOpen = true; render(); return;
+  }
+  if (S.mode === 'generate' && !S.subject.trim()) {
+    S.error = 'Введіть Subject'; render(); return;
+  }
+  if (S.mode === 'enhance' && !S.existing.trim()) {
+    S.error = 'Вставте промпт для покращення'; render(); return;
+  }
+  if (_busy) {
+    if (_ac) { _ac.abort(); }
+    _busy = false;
+  }
+
+  _ac = new AbortController();
+  _busy = true;
+  S.loading = true; S.error = ''; S.result = null; S.dbgLog = null;
+  if (window.innerWidth <= 680) S.mobilePane = 'output';
+  render();
+
+  var attempts = 0;
+
+  while (attempts <= 2) {
+    attempts++;
+    try {
+      var out = await callGroqOnce(_ac.signal);
+      S.dbgLog = out.log;
+
+      var loraStr = S.loras
+        .filter(function(l){return l.name.trim();})
+        .map(function(l){return '<lora:'+l.name.trim()+':'+l.weight+'>'; })
+        .join(' ');
+
+      S.result = {
+        positive: loraStr ? out.positive + ' ' + loraStr : out.positive,
+        negative: out.negative,
+        notes:    out.notes,
+        changes:  out.changes,
+        via:      out.via,
+        params: {
+          steps:S.steps, cfg:S.cfg, sampler:S.sampler,
+          scheduler:S.scheduler, resolution:S.resolution,
+          seed: S.seed || String(Math.floor(Math.random()*1e9)),
+        },
+      };
+      break;
+
+    } catch(e) {
+      S.dbgLog = e.log || null;
+      if (e.aborted) { break; }
+      if (e.code === 429 && attempts <= 2) {
+        if (_ac && _ac.signal.aborted) { break; }
+        var delay = 3000 * attempts;
+        S.error = 'Rate limit — retry ' + attempts + '/2 in ' + (delay/1000) + 's...';
+        render();
+        await sleep(delay);
+        if (_ac && _ac.signal.aborted) { break; }
+        S.error = '';
+        continue;
+      }
+      if (e.code === 401) { S.error = e.message; S.apiOpen = true; }
+      else                 { S.error = e.message; }
+      break;
+    }
+  }
+
+  _busy = false; S.loading = false; render();
+}
+
+// ═══════════════════════════════════════════════════
+// CLIPBOARD
+// ═══════════════════════════════════════════════════
+
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(function() {
+    var orig = btn.textContent;
+    btn.textContent = '✓ Copied'; btn.classList.add('copied');
+    setTimeout(function(){ btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// HTML ESCAPING
+// ═══════════════════════════════════════════════════
+
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════
+
+function render() {
+  document.getElementById('app').innerHTML = buildHTML();
+  attachEvents();
+}
+
+function buildHTML() {
+  var mob = window.innerWidth <= 680;
+  var sk  = S.sampler + '+' + S.scheduler;
+  var sh  = SAMPLER_HINTS[sk] || { text:'Custom combination', c:'#6E7681' };
+  var keyOk = !!S.apiKey.trim();
+
+  // ── HEADER ──
+  var h = '<div class="hdr">' +
+    '<div class="hdr-brand">' +
+      '<div class="hdr-eyebrow">ZIT · Lumina2 · Qwen3-4B · CFG 1.5</div>' +
+      '<div class="hdr-title">Prompt Generator <span class="hdr-ver">v8</span></div>' +
+    '</div>' +
+    '<div class="hdr-acts">' +
+      '<div class="pill btn ' + (keyOk?'p-ok':'p-miss') + '" id="b-api">' +
+        '<span class="dot"></span>' + (keyOk ? 'Groq ✓' : 'API Key?') +
+      '</div>' +
+      '<div class="pill">🌐 UA→EN</div>' +
+      '<div class="pill btn' + (S.dbgOpen?' p-active':'') + '" id="b-dbg">' +
+        '🔬 Debug' + (S.dbgLog?(S.dbgLog.httpOk?' ✓':' ✗'):'') +
+      '</div>' +
+    '</div>' +
+  '</div>';
+
+  // ── API PANEL ──
+  if (S.apiOpen) {
+    var mOpts = GROQ_MODELS.map(function(m) {
+      return '<label class="model-opt' + (S.model===m.id?' active':'') + '">' +
+        '<input type="radio" name="mdl" value="' + esc(m.id) + '"' + (S.model===m.id?' checked':'') + '>' +
+        '<div><div class="model-name">' + esc(m.name) + '</div>' +
+        '<div class="model-note">' + esc(m.note) + '</div></div>' +
+        '<div class="model-id">' + esc(m.id) + '</div></label>';
+    }).join('');
+
+    h += '<div class="slide-panel api-bg">' +
+      '<div class="sp-hdr">' +
+        '<div class="sp-title green">GROQ API SETTINGS</div>' +
+        '<button class="btn-ghost" id="b-api-close" style="padding:3px 8px">✕</button>' +
+      '</div>' +
+      '<p style="font-size:11px;color:var(--t4);margin-bottom:12px">Free key: ' +
+        '<a href="https://console.groq.com/keys" target="_blank" style="color:var(--acc-txt)">console.groq.com/keys</a>' +
+        ' &nbsp;·&nbsp; Does not use Anthropic tokens</p>' +
+      '<div class="field">' +
+        '<div class="f-hdr"><label class="lbl">API Key</label></div>' +
+        '<div class="row">' +
+          '<input type="password" id="inp-key" value="' + esc(S.apiKey) + '" placeholder="gsk_..." style="flex:1;font-family:\'JetBrains Mono\',monospace;font-size:13px">' +
+          (S.apiKey ? '<button class="btn-ghost" id="b-key-clr" style="color:var(--red)">✕</button>' : '') +
+        '</div>' +
+        '<div class="chk-row"><input type="checkbox" id="chk-rem"' + (S.rememberKey?' checked':'') + '>' +
+          '<label for="chk-rem">Remember key (localStorage)</label></div>' +
+      '</div>' +
+      '<div class="field"><div class="f-hdr"><label class="lbl">Model</label></div>' + mOpts + '</div>' +
+    '</div>';
+  }
+
+  // ── DEBUG PANEL ──
+  if (S.dbgOpen) {
+    var lg = S.dbgLog;
+    var dbInner;
+    if (!lg) {
+      dbInner = '<p style="color:var(--t4);font-size:12px;margin:0">Press Generate — API request/response will appear here.</p>';
+    } else {
+      var badges = '';
+      if (lg.httpStatus != null) {
+        badges += '<span class="dbadge" style="background:' + (lg.httpOk?'var(--green-bg)':'var(--red-bg)') + ';color:' + (lg.httpOk?'var(--green-txt)':'var(--red-txt)') + ';border:1px solid '+(lg.httpOk?'var(--green-bdr)':'var(--red-bdr)') + '">HTTP '+lg.httpStatus+' '+(lg.httpOk?'✓':'✗')+'</span>';
+      }
+      if (lg.model)      badges += '<span class="dbadge" style="background:var(--acc-bg);color:var(--acc-txt);border:1px solid var(--acc)">' + esc(lg.model.split('/').pop()) + '</span>';
+      if (lg.responseMs) badges += '<span class="dbadge" style="background:var(--amber-bg);color:var(--amber-txt);border:1px solid var(--amber-bdr)">'+lg.responseMs+'ms</span>';
+      badges += '<button class="btn-ghost" id="b-cp-log" style="font-size:10px;padding:3px 8px">Copy log</button>';
+
+      dbInner = '<div class="dbg-badges" style="margin-bottom:12px">' + badges + '</div>' +
+        '<div class="dbg-sec"><div class="dbg-lbl">Stripped content (think removed)</div>' +
+        '<pre class="dbg-pre ' + (lg.strippedText?'ok':'err') + '">' + esc(lg.strippedText || '⚠ EMPTY — this is the problem') + '</pre></div>' +
+        '<details><summary>Full raw HTTP response</summary>' +
+        '<pre class="dbg-pre">' + esc(lg.rawText ? lg.rawText.slice(0,2000) : 'empty') + '</pre></details>';
+    }
+    h += '<div class="slide-panel debug-bg">' +
+      '<div class="sp-hdr"><div class="sp-title muted">DEBUG LOG</div>' +
+        '<button class="btn-ghost" id="b-api-close" style="padding:3px 8px">✕</button>' +
+      '</div>' + dbInner + '</div>';
+  }
+
+  // ── MODE TABS (desktop) ──
+  if (!mob) {
+    h += '<div class="tab-bar">' +
+      '<button class="tab-btn' + (S.mode==='generate'?' active':'') + '" data-mode="generate">Generate</button>' +
+      '<button class="tab-btn' + (S.mode==='enhance'?' active':'') + '" data-mode="enhance">Enhance</button>' +
+    '</div>';
+  }
+
+  h += '<div class="body-grid">';
+
+  // ── LEFT (params) ──
+  var pHide = mob && S.mobilePane !== 'params';
+  h += '<div class="col col-l' + (pHide?' pane-hidden':'') + '">';
+
+  // Mobile mode switch
+  if (mob) {
+    h += '<div class="two-col mob-mode-sw" style="display:grid;margin-bottom:16px">' +
+      '<button class="btn-primary' + (S.mode==='generate'?'':' btn-secondary') + '" data-mode="generate" style="margin-top:0">Generate</button>' +
+      '<button class="btn-primary' + (S.mode==='enhance'?'':' btn-secondary') + '" data-mode="enhance" style="margin-top:0">Enhance</button>' +
+    '</div>';
+  }
+
+  if (S.mode === 'generate') {
+    // Scene grid
+    var tiles = SCENES.map(function(s) {
+      return '<div class="icon-tile' + (S.scene===s.id?' active':'') + '" data-scene="' + s.id + '" title="' + esc(s.label) + '">' +
+        '<span class="i-glyph">' + s.icon + '</span>' +
+        '<span class="i-label">' + esc(s.label) + '</span></div>';
+    }).join('');
+    h += '<div class="field"><div class="f-hdr"><label class="lbl">Scene</label></div>' +
+         '<div class="icon-grid">' + tiles + '</div></div>';
+
+    // Style pills grouped
+    var grps = [];
+    STYLES.forEach(function(s){ if(grps.indexOf(s.grp)<0) grps.push(s.grp); });
+    var stylePills = grps.map(function(g) {
+      var pills = STYLES.filter(function(s){return s.grp===g;}).map(function(s) {
+        return '<div class="st-pill' + (S.style===s.id?' active':'') + '" data-style="' + s.id + '">' + esc(s.label) + '</div>';
+      }).join('');
+      return '<div class="grp-lbl">' + esc(g) + '</div><div class="pill-row">' + pills + '</div>';
+    }).join('');
+    h += '<div class="field"><div class="f-hdr"><label class="lbl">Visual Style</label></div>' + stylePills + '</div>';
+
+    // Subject
+    h += '<div class="field"><div class="f-hdr"><label class="lbl">Subject</label>' +
+         '<span class="hint">Можна українською</span></div>' +
+         '<textarea id="inp-sub" rows="3" placeholder="Examples:&#10;• красива жінка під дощем у Токіо&#10;• ancient wizard tower on a stormy cliff">' + esc(S.subject) + '</textarea></div>';
+
+    // Lighting + Mood
+    h += '<div class="two-col">' +
+      '<div class="field"><div class="f-hdr"><label class="lbl">Lighting</label></div>' +
+      '<select id="sel-light">' + LIGHTINGS.map(function(l){return '<option'+(S.lighting===l?' selected':'')+'>'+esc(l)+'</option>';}).join('') + '</select></div>' +
+      '<div class="field"><div class="f-hdr"><label class="lbl">Mood</label></div>' +
+      '<select id="sel-mood">' + MOODS.map(function(m){return '<option value="'+esc(m)+'"'+(S.mood===m?' selected':'')+'>'+(m||'— none —')+'</option>';}).join('') + '</select></div>' +
+    '</div>';
+
+    // Genre + Resolution
+    h += '<div class="two-col">' +
+      '<div class="field"><div class="f-hdr"><label class="lbl">Genre</label></div>' +
+      '<select id="sel-genre">' + GENRES.map(function(g){return '<option value="'+esc(g)+'"'+(S.genre===g?' selected':'')+'>'+(g||'— none —')+'</option>';}).join('') + '</select></div>' +
+      '<div class="field"><div class="f-hdr"><label class="lbl">Resolution</label></div>' +
+      '<select id="sel-res">' + RESOLUTIONS.map(function(r){return '<option value="'+esc(r.value)+'"'+(S.resolution===r.value?' selected':'')+'>'+esc(r.label)+'</option>';}).join('') + '</select></div>' +
+    '</div>';
+  }
+
+  if (S.mode === 'enhance') {
+    var ec = S.existing.length;
+    var ecColor = ec > 1400 ? 'var(--red)' : ec > 1000 ? 'var(--amber)' : 'var(--t4)';
+    h += '<div class="field"><div class="f-hdr"><label class="lbl">Existing Prompt</label>' +
+         '<span class="hint">Any language &nbsp;·&nbsp; <span style="color:' + ecColor + '">' + ec + '/1500</span></span></div>' +
+         '<textarea id="inp-exist" rows="6" style="min-height:130px" maxlength="1500" placeholder="e.g: beautiful girl, best quality, masterpiece...&#10;&#10;or: дівчина-кіборг у нічному місті">' + esc(S.existing) + '</textarea></div>';
+  }
+
+  h += '<hr>';
+
+  // LoRA stack
+  var loraRows = S.loras.map(function(l,i) {
+    return '<div class="lora-row">' +
+      '<input type="text" data-ln="'+i+'" value="'+esc(l.name)+'" placeholder="lora_filename (no .safetensors)" style="flex:3;font-family:\'JetBrains Mono\',monospace;font-size:13px">' +
+      '<input type="text" data-lw="'+i+'" value="'+esc(l.weight)+'" placeholder="0.85" style="flex:1;text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:13px">' +
+      '<button class="btn-ghost" data-lr="'+i+'" style="color:var(--t3)">✕</button></div>';
+  }).join('');
+  h += '<div class="field"><div class="f-hdr"><label class="lbl">LoRA Stack</label></div>' +
+       loraRows + '<button class="btn-text" id="b-add-lora">+ Add LoRA</button></div>';
+
+  // Sampler + Scheduler
+  h += '<div class="field"><div class="f-hdr"><label class="lbl">Sampler + Scheduler</label></div>' +
+    '<div class="two-col">' +
+    '<select id="sel-samp">' + SAMPLERS.map(function(s){return '<option'+(S.sampler===s?' selected':'')+'>'+s+'</option>';}).join('') + '</select>' +
+    '<select id="sel-sch">' + SCHEDULERS.map(function(s){return '<option'+(S.scheduler===s?' selected':'')+'>'+s+'</option>';}).join('') + '</select>' +
+    '</div><div class="s-hint" style="color:'+sh.c+'">' + sh.text + '</div></div>';
+
+  // Steps / CFG / Seed
+  h += '<div class="three-col">' +
+    '<div class="field"><div class="f-hdr"><label class="lbl">Steps</label></div>' +
+    '<input type="text" id="inp-steps" value="'+esc(S.steps)+'" style="font-family:\'JetBrains Mono\',monospace;font-size:13px;text-align:center"></div>' +
+    '<div class="field"><div class="f-hdr"><label class="lbl">CFG</label></div>' +
+    '<input type="text" id="inp-cfg" value="'+esc(S.cfg)+'" style="font-family:\'JetBrains Mono\',monospace;font-size:13px;text-align:center"></div>' +
+    '<div class="field"><div class="f-hdr"><label class="lbl">Seed</label></div>' +
+    '<div class="row"><input type="text" id="inp-seed" value="'+esc(S.seed)+'" placeholder="random" style="flex:1;font-family:\'JetBrains Mono\',monospace;font-size:13px">' +
+    '<button class="btn-ghost" id="b-seed" title="Random seed">🎲</button></div></div>' +
+  '</div>';
+
+  // Error
+  if (S.error) {
+    h += '<div class="err-box"><div class="err-title">⚠ Error</div>' +
+         '<div class="err-msg">' + esc(S.error) + '</div>' +
+         (!S.dbgOpen ? '<button class="btn-text" id="b-open-dbg" style="margin-top:6px;color:var(--amber-txt);font-size:12px">→ Open Debug Panel</button>' : '') +
+         '</div>';
+  }
+
+  // Negative preview (generate mode only)
+  if (S.mode === 'generate') {
+    h += '<div class="neg-preview">' +
+         '<span class="neg-preview-label">NEG</span>' +
+         '<span class="neg-preview-text">' + esc(buildNegative()) + '</span>' +
+         '</div>';
+  }
+
+  // Generate button
+  h += '<button class="btn-primary" id="b-gen"' + (S.loading?' disabled':'') + '>' +
+    (S.loading
+      ? '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center">' +
+        '<span style="display:inline-block;animation:spin .65s linear infinite">⟳</span> Generating…</span>'
+      : (S.mode==='generate' ? '⚡ Generate Prompt' : '✦ Enhance Prompt')) +
+  '</button>';
+
+  h += '</div>'; // col-l
+
+  // ── RIGHT (output) ──
+  var oHide = mob && S.mobilePane !== 'output';
+  h += '<div class="col' + (oHide?' pane-hidden':'') + '">';
+
+  // Mobile pane switcher
+  if (mob) {
+    h += '<div class="two-col" style="display:grid;margin-bottom:16px">' +
+      '<button class="btn-primary' + (S.mobilePane==='params'?'':' btn-secondary') + '" data-pane="params" style="margin-top:0">Params</button>' +
+      '<button class="btn-primary' + (S.mobilePane==='output'?'':' btn-secondary') + '" data-pane="output" style="margin-top:0">Output</button>' +
+    '</div>';
+  }
+
+  if (mob && S.error && S.mobilePane === 'output') {
+    h += '<div class="err-box"><div class="err-title">⚠ Error</div><div class="err-msg">' + esc(S.error) + '</div></div>';
+  }
+
+  if (!S.result && !S.loading) {
+    if (!keyOk) {
+      h += '<div class="onboard">' +
+        '<div class="onboard-icon">🔑</div>' +
+        '<h2>Add Groq API Key</h2>' +
+        '<p>Free key at <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a><br>' +
+        'Press ⚙ API in the top right corner</p>' +
+        '<p style="font-size:11px;color:var(--t4);font-family:\'JetBrains Mono\',monospace">Free · Fast · No Anthropic tokens used</p>' +
+        '<button class="btn-primary" id="b-open-api" style="max-width:240px;margin-top:8px">⚙ Open API Settings</button>' +
+      '</div>';
+    } else {
+      h += '<div class="ph">' +
+           '<div class="ph-icon">◎</div>' +
+           '<div class="ph-text">Fill in parameters<br>and press Generate</div>' +
+           '<div class="ph-sub">' + esc((GROQ_MODELS.find(function(m){return m.id===S.model;})||{name:S.model}).name) + ' · ZIT/Lumina2</div></div>';
+    }
+  }
+
+  if (S.loading) {
+    h += '<div class="ph"><div class="spinner"></div>' +
+         '<div class="ph-text">Generating prompt…</div>' +
+         '<div class="ph-sub">' + esc((GROQ_MODELS.find(function(m){return m.id===S.model;})||{name:S.model}).name) + '</div></div>';
+  }
+
+  if (S.result) {
+    var r = S.result;
+    if (r.via !== 'xml') {
+      h += '<div class="warn-strip">⚠ Parsed via ' + esc(r.via) + ' — open Debug for details</div>';
+    }
+
+    // Positive
+    h += '<div class="out-block">' +
+         '<div class="out-hdr"><span class="lbl">Positive Prompt</span>' +
+         '<button class="btn-copy" id="b-cp-pos">Copy</button></div>' +
+         '<div class="out-txt accent" id="out-pos">' + esc(r.positive) + '</div></div>';
+
+    // Negative
+    h += '<div class="out-block">' +
+         '<div class="out-hdr"><span class="lbl">Negative Prompt</span>' +
+         '<button class="btn-copy" id="b-cp-neg">Copy</button></div>' +
+         '<div class="out-txt" id="out-neg">' + esc(r.negative) + '</div></div>';
+
+    // Params
+    var pp = r.params;
+    var pcards = [['Steps',pp.steps],['CFG',pp.cfg],['Sampler',pp.sampler],
+                  ['Scheduler',pp.scheduler],['Resolution',pp.resolution],['Seed',pp.seed]];
+    h += '<div class="f-hdr" style="margin-bottom:8px"><span class="lbl">ComfyUI Params</span></div>' +
+         '<div class="params-grid">' +
+         pcards.map(function(x){
+           return '<div class="p-card"><span class="p-key">'+x[0]+'</span><span class="p-val">'+esc(x[1])+'</span></div>';
+         }).join('') + '</div>';
+
+    if (r.changes) {
+      h += '<div class="info-card"><span class="lbl">What changed</span><p>' + esc(r.changes) + '</p></div>';
+    }
+    if (r.notes) {
+      h += '<div class="info-card"><span class="lbl">ZIT tip</span><p>' + esc(r.notes) + '</p></div>';
+    }
+
+    h += '<button class="btn-primary btn-secondary" id="b-cp-all" style="margin-bottom:8px">⌘ Copy all for ComfyUI</button>';
+    h += '<button class="btn-text" id="b-regen" style="display:block;width:100%;text-align:center;margin-top:4px">↺ Regenerate</button>';
+  }
+
+  h += '</div>'; // col-right
+  h += '</div>'; // body-grid
+
+  return h;
+}
+
+// ═══════════════════════════════════════════════════
+// EVENTS
+// ═══════════════════════════════════════════════════
+
+function attachEvents() {
+  function on(id, ev, fn) { var el=document.getElementById(id); if(el) el.addEventListener(ev,fn); }
+
+  // Header toggles
+  on('b-api',       'click', function(){ S.apiOpen=!S.apiOpen; render(); });
+  on('b-dbg',       'click', function(){ S.dbgOpen=!S.dbgOpen; render(); });
+  on('b-api-close', 'click', function(){ S.apiOpen=false; S.dbgOpen=false; render(); });
+  on('b-open-api',  'click', function(){ S.apiOpen=true; render(); });
+  on('b-open-dbg',  'click', function(){ S.dbgOpen=true; render(); });
+
+  // Pane / mode tabs
+  document.querySelectorAll('[data-pane]').forEach(function(el) {
+    el.addEventListener('click', function(){ S.mobilePane=el.dataset.pane; render(); });
+  });
+  document.querySelectorAll('[data-mode]').forEach(function(el) {
+    el.addEventListener('click', function(){ S.mode=el.dataset.mode; S.result=null; S.error=''; render(); });
+  });
+
+  // Scene + Style
+  document.querySelectorAll('[data-scene]').forEach(function(el) {
+    el.addEventListener('click', function(){ S.scene=el.dataset.scene; render(); });
+  });
+  document.querySelectorAll('[data-style]').forEach(function(el) {
+    el.addEventListener('click', function(){ S.style=el.dataset.style; render(); });
+  });
+
+  // Text inputs
+  function live(id,key){ var el=document.getElementById(id); if(el) el.addEventListener('input',function(){S[key]=el.value;}); }
+  live('inp-sub',   'subject');
+  var existEl = document.getElementById('inp-exist');
+  if (existEl) {
+    existEl.addEventListener('input', function() {
+      S.existing = existEl.value;
+      var hint = existEl.closest('.field').querySelector('.hint span');
+      if (hint) {
+        var n = existEl.value.length;
+        hint.textContent = n + '/1500';
+        hint.style.color = n > 1400 ? 'var(--red)' : n > 1000 ? 'var(--amber)' : 'var(--t4)';
+      }
+    });
+  }
+  live('inp-steps', 'steps');
+  live('inp-cfg',   'cfg');
+  live('inp-seed',  'seed');
+
+  // Selects
+  function lsel(id,key){ var el=document.getElementById(id); if(el) el.addEventListener('change',function(){S[key]=el.value; render();}); }
+  lsel('sel-light', 'lighting');
+  lsel('sel-mood',  'mood');
+  lsel('sel-genre', 'genre');
+  lsel('sel-res',   'resolution');
+  lsel('sel-samp',  'sampler');
+  lsel('sel-sch',   'scheduler');
+
+  // LoRA
+  document.querySelectorAll('[data-ln]').forEach(function(el) {
+    el.addEventListener('input', function(){ S.loras[+el.dataset.ln].name = el.value; });
+  });
+  document.querySelectorAll('[data-lw]').forEach(function(el) {
+    el.addEventListener('input', function(){ S.loras[+el.dataset.lw].weight = el.value; });
+  });
+  document.querySelectorAll('[data-lr]').forEach(function(el) {
+    el.addEventListener('click', function() {
+      S.loras.splice(+el.dataset.lr, 1);
+      if (!S.loras.length) S.loras = [{name:'',weight:'0.85'}];
+      render();
+    });
+  });
+  on('b-add-lora', 'click', function(){ S.loras.push({name:'',weight:'0.85'}); render(); });
+
+  // Seed
+  on('b-seed', 'click', function() {
+    S.seed = String(Math.floor(Math.random()*1e9));
+    var el = document.getElementById('inp-seed');
+    if (el) el.value = S.seed;
+  });
+
+  // API key
+  var ki = document.getElementById('inp-key');
+  if (ki) {
+    ki.addEventListener('input', function() {
+      var chk = document.getElementById('chk-rem');
+      saveKey(ki.value, chk ? chk.checked : false);
+    });
+  }
+  var cr = document.getElementById('chk-rem');
+  if (cr) {
+    cr.addEventListener('change', function() {
+      var k = document.getElementById('inp-key');
+      saveKey(k ? k.value : S.apiKey, cr.checked);
+    });
+  }
+  on('b-key-clr', 'click', function(){ clearKey(); render(); });
+
+  // Model radio
+  document.querySelectorAll('input[name="mdl"]').forEach(function(el) {
+    el.addEventListener('change', function(){ S.model=el.value; render(); });
+  });
+
+  // Generate
+  on('b-gen',   'click', generate);
+  on('b-regen', 'click', generate);
+
+  // Copy
+  on('b-cp-pos', 'click', function(e){ if(S.result) copyText(S.result.positive, e.currentTarget); });
+  on('b-cp-neg', 'click', function(e){ if(S.result) copyText(S.result.negative, e.currentTarget); });
+  on('b-cp-all', 'click', function(e) {
+    if (!S.result) return;
+    var p = S.result.params;
+    copyText(
+      'Positive: ' + S.result.positive +
+      '\nNegative: ' + S.result.negative +
+      '\n\nSteps: ' + p.steps + ' | CFG: ' + p.cfg +
+      ' | Sampler: ' + p.sampler + ' | Scheduler: ' + p.scheduler +
+      '\nResolution: ' + p.resolution + ' | Seed: ' + p.seed,
+      e.currentTarget
+    );
+  });
+  on('b-cp-log', 'click', function() {
+    if (S.dbgLog) navigator.clipboard.writeText(JSON.stringify(S.dbgLog, null, 2));
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+
+loadKey();
+render();
+
+var _rt;
+window.addEventListener('resize', function() {
+  clearTimeout(_rt);
+  _rt = setTimeout(render, 150);
+});
+</script>
+</body>
+</html>
