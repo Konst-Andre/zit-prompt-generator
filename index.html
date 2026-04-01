@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>ZIT Prompt Generator v8</title>
+  <title>ZIT Prompt Generator v9</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -235,19 +235,22 @@
     }
     .lbl {
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--t3);
-      letter-spacing: .09em;
+      letter-spacing: .1em;
       text-transform: uppercase;
     }
     .hint { font-size: 11px; color: var(--t4); }
     .grp-lbl {
       font-size: 10px;
+      font-weight: 600;
       color: var(--t4);
-      letter-spacing: .1em;
+      letter-spacing: .12em;
       text-transform: uppercase;
-      margin-bottom: var(--s1);
-      margin-top: var(--s2);
+      margin-bottom: var(--s2);
+      margin-top: var(--s3);
+      padding-bottom: var(--s1);
+      border-bottom: 1px solid var(--bdr);
     }
 
     /* ═══════════════════════════════════════
@@ -276,8 +279,10 @@
     }
     textarea {
       resize: vertical;
-      line-height: 1.6;
+      line-height: 1.65;
       font-size: 14px;
+      min-height: 80px;
+      border-radius: var(--r);
     }
     select {
       cursor: pointer;
@@ -291,87 +296,130 @@
     input::placeholder, textarea::placeholder { color: var(--t4); font-size: 13px; }
 
     /* ═══════════════════════════════════════
-       BUTTONS
+       BUTTONS — full state hierarchy
+       Priority: disabled > loading > active > focus > hover > normal
     ═══════════════════════════════════════ */
+
+    /* BASE — shared geometry */
+    .btn-primary, .btn-ghost, .btn-copy, .btn-text {
+      font-family: inherit;
+      cursor: pointer;
+      border-radius: var(--r);
+      transition: background var(--tr), color var(--tr), border-color var(--tr),
+                  box-shadow var(--tr), transform 0.12s ease, opacity var(--tr);
+    }
+
+    /* PRIMARY — main action, must dominate */
     .btn-primary {
+      display: block;
       width: 100%;
       padding: 13px 20px;
       background: var(--acc);
-      border: 1px solid var(--acc-hi);
+      border: 1px solid transparent;
       color: #fff;
       font-size: 15px;
-      font-weight: 600;
-      border-radius: var(--r);
-      cursor: pointer;
-      font-family: inherit;
+      font-weight: 700;
       letter-spacing: .04em;
-      transition: background var(--tr), transform var(--tr), box-shadow var(--tr), opacity var(--tr);
+      text-align: center;
       margin-top: var(--s1);
+      box-shadow: 0 1px 4px rgba(47,129,247,.2), 0 0 0 0 rgba(47,129,247,0);
     }
-    .btn-primary:not(:disabled):hover {
+    /* normal: subtle resting glow */
+    .btn-primary:not(:disabled):not(.loading) {
+      box-shadow: 0 2px 8px rgba(47,129,247,.25);
+    }
+    /* hover */
+    .btn-primary:not(:disabled):not(.loading):hover {
       background: var(--acc-hi);
-      box-shadow: 0 4px 20px rgba(47,129,247,.35);
+      box-shadow: 0 4px 20px rgba(47,129,247,.45);
     }
-    .btn-primary:not(:disabled):active { transform: scale(0.98); background: var(--acc-lo); box-shadow: none; }
-    .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+    /* focus */
+    .btn-primary:not(:disabled):not(.loading):focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(47,129,247,.4);
+    }
+    /* active */
+    .btn-primary:not(:disabled):not(.loading):active {
+      transform: scale(0.97);
+      background: var(--acc-lo);
+      box-shadow: 0 1px 4px rgba(47,129,247,.15);
+    }
+    /* loading — reduced visual weight, no interaction */
+    .btn-primary.loading {
+      background: #1A4A8A;
+      border-color: transparent;
+      color: rgba(255,255,255,.55);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    /* disabled — different surface, not just opacity */
+    .btn-primary:disabled:not(.loading) {
+      background: var(--bg4);
+      border-color: var(--bdr);
+      color: var(--t4);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* SECONDARY variant */
     .btn-primary.btn-secondary {
       background: transparent;
-      border-color: var(--bdr2);
-      color: var(--t2);
+      border-color: var(--bdr);
+      color: var(--t3);
+      font-weight: 500;
+      box-shadow: none;
     }
     .btn-primary.btn-secondary:not(:disabled):hover {
       background: rgba(255,255,255,.04);
       border-color: var(--bdr2);
-      color: var(--t1);
+      color: var(--t2);
+      box-shadow: none;
+    }
+    .btn-primary.btn-secondary:not(:disabled):active {
+      transform: scale(0.98);
+      background: rgba(255,255,255,.06);
     }
 
+    /* GHOST — utility buttons, no shadow */
     .btn-ghost {
       padding: 6px var(--s3);
       background: transparent;
       border: 1px solid var(--bdr);
       color: var(--t3);
       border-radius: var(--r-sm);
-      cursor: pointer;
       font-size: 12px;
-      font-family: inherit;
       flex-shrink: 0;
-      transition: border-color var(--tr), color var(--tr), background var(--tr);
     }
     .btn-ghost:hover { border-color: var(--bdr2); color: var(--t2); background: rgba(255,255,255,.03); }
-    .btn-ghost:active { transform: scale(0.97); }
+    .btn-ghost:active { transform: scale(0.96); }
 
+    /* TEXT — lowest priority */
     .btn-text {
       background: transparent;
       border: none;
       color: var(--t3);
       font-size: 12px;
-      cursor: pointer;
-      font-family: inherit;
       padding: 0;
-      transition: color var(--tr);
+      border-radius: var(--r-sm);
     }
     .btn-text:hover { color: var(--acc-txt); }
+    .btn-text:active { transform: scale(0.97); }
 
+    /* COPY — inline output action */
     .btn-copy {
-      padding: 3px 10px;
+      padding: 4px 11px;
       background: transparent;
       border: 1px solid var(--bdr);
-      color: var(--t3);
+      color: var(--t4);
       border-radius: var(--r-sm);
-      cursor: pointer;
       font-size: 11px;
-      font-weight: 500;
-      font-family: inherit;
-      letter-spacing: .03em;
-      transition: border-color var(--tr), color var(--tr), background var(--tr);
+      font-weight: 600;
+      letter-spacing: .04em;
       white-space: nowrap;
     }
-    .btn-copy:hover { border-color: var(--acc); color: var(--acc-txt); }
-    .btn-copy.copied {
-      border-color: var(--green-bdr);
-      color: var(--green-txt);
-      background: var(--green-bg);
-    }
+    .btn-copy:hover { border-color: var(--acc); color: var(--acc-txt); background: var(--acc-bg); }
+    .btn-copy:active { transform: scale(0.95); }
+    .btn-copy.copied { border-color: var(--green-bdr); color: var(--green-txt); background: var(--green-bg); }
 
     /* ═══════════════════════════════════════
        SCENE ICON GRID
@@ -399,23 +447,30 @@
     .icon-tile.active .i-label { color: var(--acc-txt); }
 
     /* ═══════════════════════════════════════
-       STYLE PILLS
+       STYLE PILLS — selectable controls
     ═══════════════════════════════════════ */
-    .pill-row { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: var(--s2); }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: var(--s2); }
     .st-pill {
-      padding: 3px 10px;
+      padding: 4px 13px;
       background: transparent;
-      border: 1px solid #1E2429;
+      border: 1px solid var(--bdr);
       border-radius: 99px;
-      font-size: 11px;
-      font-weight: 400;
+      font-size: 12px;
+      font-weight: 600;
       color: var(--t4);
       cursor: pointer;
       transition: border-color var(--tr), color var(--tr), background var(--tr);
       user-select: none;
+      letter-spacing: .01em;
     }
-    .st-pill:hover { border-color: var(--bdr); color: var(--t3); background: var(--bg3); }
-    .st-pill.active { background: var(--acc-bg); border-color: var(--acc); color: var(--acc-txt); font-weight: 500; }
+    .st-pill:hover { border-color: var(--bdr2); color: var(--t2); background: rgba(255,255,255,.03); }
+    .st-pill:active { transform: scale(0.97); }
+    .st-pill.active {
+      background: var(--acc-bg);
+      border-color: var(--acc);
+      color: var(--acc-txt);
+      font-weight: 700;
+    }
 
     /* ═══════════════════════════════════════
        LAYOUT HELPERS
@@ -424,6 +479,18 @@
     .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
     .three-col { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: var(--s3); }
     .row       { display: flex; gap: var(--s2); align-items: center; }
+
+    /* SECTION BLOCK — visual grouping (Variant A) */
+    .sec-block {
+      background: var(--bg2);
+      border: 1px solid var(--bdr);
+      border-radius: var(--r-md);
+      padding: var(--s4);
+      margin-bottom: var(--s4);
+    }
+    .sec-block > .field:last-child,
+    .sec-block > .two-col:last-child,
+    .sec-block > .three-col:last-child { margin-bottom: 0; }
 
     /* ═══════════════════════════════════════
        NEG PREVIEW
@@ -1167,7 +1234,7 @@ function buildHTML() {
   var h = '<div class="hdr">' +
     '<div class="hdr-brand">' +
       '<div class="hdr-eyebrow">ZIT · Lumina2 · Qwen3-4B · CFG 1.5</div>' +
-      '<div class="hdr-title">Prompt Generator <span class="hdr-ver">v8</span></div>' +
+      '<div class="hdr-title">Prompt Generator <span class="hdr-ver">v9</span></div>' +
     '</div>' +
     '<div class="hdr-acts">' +
       '<div class="pill btn ' + (keyOk?'p-ok':'p-miss') + '" id="b-api">' +
@@ -1262,12 +1329,12 @@ function buildHTML() {
 
   if (S.mode === 'generate') {
     // Scene grid
-    var tiles = SCENES.map(function(s) {
+    var tiles=SCENES.map(function(s) {
       return '<div class="icon-tile' + (S.scene===s.id?' active':'') + '" data-scene="' + s.id + '" title="' + esc(s.label) + '">' +
         '<span class="i-glyph">' + s.icon + '</span>' +
         '<span class="i-label">' + esc(s.label) + '</span></div>';
     }).join('');
-    h += '<div class="field"><div class="f-hdr"><label class="lbl">Scene</label></div>' +
+    h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">Scene</label></div>' +
          '<div class="icon-grid">' + tiles + '</div></div>';
 
     // Style pills grouped
@@ -1279,7 +1346,7 @@ function buildHTML() {
       }).join('');
       return '<div class="grp-lbl">' + esc(g) + '</div><div class="pill-row">' + pills + '</div>';
     }).join('');
-    h += '<div class="field"><div class="f-hdr"><label class="lbl">Visual Style</label></div>' + stylePills + '</div>';
+    h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">Visual Style</label></div>' + stylePills + '</div>';
 
     // Subject
     h += '<div class="field"><div class="f-hdr"><label class="lbl">Subject</label>' +
@@ -1320,18 +1387,17 @@ function buildHTML() {
       '<input type="text" data-lw="'+i+'" value="'+esc(l.weight)+'" placeholder="0.85" style="flex:1;text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:13px">' +
       '<button class="btn-ghost" data-lr="'+i+'" style="color:var(--t3)">✕</button></div>';
   }).join('');
-  h += '<div class="field"><div class="f-hdr"><label class="lbl">LoRA Stack</label></div>' +
-       loraRows + '<button class="btn-text" id="b-add-lora">+ Add LoRA</button></div>';
+  h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">LoRA Stack</label></div>' +
+       loraRows + '<button class="btn-text" id="b-add-lora" style="margin-top:4px">+ Add LoRA</button></div>';
 
-  // Sampler + Scheduler
-  h += '<div class="field"><div class="f-hdr"><label class="lbl">Sampler + Scheduler</label></div>' +
+  // Sampler + Scheduler + Steps/CFG/Seed
+  h += '<div class="sec-block">' +
+    '<div class="field"><div class="f-hdr"><label class="lbl">Sampler + Scheduler</label></div>' +
     '<div class="two-col">' +
     '<select id="sel-samp">' + SAMPLERS.map(function(s){return '<option'+(S.sampler===s?' selected':'')+'>'+s+'</option>';}).join('') + '</select>' +
     '<select id="sel-sch">' + SCHEDULERS.map(function(s){return '<option'+(S.scheduler===s?' selected':'')+'>'+s+'</option>';}).join('') + '</select>' +
-    '</div><div class="s-hint" style="color:'+sh.c+'">' + sh.text + '</div></div>';
-
-  // Steps / CFG / Seed
-  h += '<div class="three-col">' +
+    '</div><div class="s-hint" style="color:'+sh.c+'">' + sh.text + '</div></div>' +
+    '<div class="three-col">' +
     '<div class="field"><div class="f-hdr"><label class="lbl">Steps</label></div>' +
     '<input type="text" id="inp-steps" value="'+esc(S.steps)+'" style="font-family:\'JetBrains Mono\',monospace;font-size:13px;text-align:center"></div>' +
     '<div class="field"><div class="f-hdr"><label class="lbl">CFG</label></div>' +
@@ -1339,6 +1405,7 @@ function buildHTML() {
     '<div class="field"><div class="f-hdr"><label class="lbl">Seed</label></div>' +
     '<div class="row"><input type="text" id="inp-seed" value="'+esc(S.seed)+'" placeholder="random" style="flex:1;font-family:\'JetBrains Mono\',monospace;font-size:13px">' +
     '<button class="btn-ghost" id="b-seed" title="Random seed">🎲</button></div></div>' +
+    '</div>' +
   '</div>';
 
   // Error
@@ -1358,10 +1425,10 @@ function buildHTML() {
   }
 
   // Generate button
-  h += '<button class="btn-primary" id="b-gen"' + (S.loading?' disabled':'') + '>' +
+  h += '<button class="btn-primary' + (S.loading ? ' loading' : '') + '" id="b-gen"' + (S.loading?' disabled':'') + '>' +
     (S.loading
       ? '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center">' +
-        '<span style="display:inline-block;animation:spin .65s linear infinite">⟳</span> Generating…</span>'
+        '<span style="display:inline-block;animation:spin .65s linear infinite;opacity:.7">⟳</span> Generating…</span>'
       : (S.mode==='generate' ? '⚡ Generate Prompt' : '✦ Enhance Prompt')) +
   '</button>';
 
@@ -1414,15 +1481,15 @@ function buildHTML() {
     }
 
     // Positive
-    h += '<div class="out-block">' +
+    h += '<div class="sec-block" style="margin-bottom:var(--s3)">' +
          '<div class="out-hdr"><span class="lbl">Positive Prompt</span>' +
-         '<button class="btn-copy" id="b-cp-pos">Copy</button></div>' +
+         '<button class="btn-copy" id="b-cp-pos">⎘ Copy</button></div>' +
          '<div class="out-txt accent" id="out-pos">' + esc(r.positive) + '</div></div>';
 
     // Negative
-    h += '<div class="out-block">' +
+    h += '<div class="sec-block" style="margin-bottom:var(--s3)">' +
          '<div class="out-hdr"><span class="lbl">Negative Prompt</span>' +
-         '<button class="btn-copy" id="b-cp-neg">Copy</button></div>' +
+         '<button class="btn-copy" id="b-cp-neg">⎘ Copy</button></div>' +
          '<div class="out-txt" id="out-neg">' + esc(r.negative) + '</div></div>';
 
     // Params
@@ -1442,8 +1509,8 @@ function buildHTML() {
       h += '<div class="info-card"><span class="lbl">ZIT tip</span><p>' + esc(r.notes) + '</p></div>';
     }
 
-    h += '<button class="btn-primary btn-secondary" id="b-cp-all" style="margin-bottom:8px">⌘ Copy all for ComfyUI</button>';
-    h += '<button class="btn-text" id="b-regen" style="display:block;width:100%;text-align:center;margin-top:4px">↺ Regenerate</button>';
+    h += '<button class="btn-primary btn-secondary" id="b-cp-all" style="margin-bottom:var(--s2)">⌘ Copy all for ComfyUI</button>';
+    h += '<button class="btn-text" id="b-regen" style="display:block;width:100%;text-align:center;margin-top:var(--s2);padding:var(--s2) 0">↺ Regenerate</button>';
   }
 
   h += '</div>'; // col-right
