@@ -476,17 +476,115 @@
     details > summary::before { content: '▶ '; }
     details[open] > summary::before { content: '▼ '; }
 
-    .model-opt { display: flex; align-items: center; gap: var(--s3); padding: var(--s2) var(--s3); background: var(--bg3); border: 1px solid var(--bdr); border-radius: var(--r); cursor: pointer; margin-bottom: var(--s2); transition: border-color var(--tr), background var(--tr); }
-    .model-opt:hover { border-color: var(--bdr2); background: var(--bg4); }
-    .model-opt.active { background: var(--acc-bg); border-color: var(--acc); }
-    .model-opt input[type=radio] { width: auto; accent-color: var(--acc); }
-    .model-name { font-size: 12px; font-weight: 600; color: var(--t1); }
-    .model-note { font-size: 11px; color: var(--t3); }
-    .model-opt.active .model-note { color: var(--acc-txt); }
-    .model-id { font-size: 10px; color: var(--t4); font-family: 'JetBrains Mono', monospace; margin-left: auto; text-align: right; }
+    /* ═══════════════════════════════════════
+       MODEL CARDS — API panel (replaces .model-opt)
+    ═══════════════════════════════════════ */
+    .model-card {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: var(--s3);
+      padding: var(--s3) var(--s4);
+      background: var(--bg2);
+      border: 1px solid var(--bdr);
+      border-radius: var(--r-lg);
+      cursor: pointer;
+      margin-bottom: var(--s2);
+      overflow: hidden;
+      transition: background var(--tr), border-color var(--tr),
+                  box-shadow var(--tr), transform 0.18s ease;
+    }
+    /* left indicator bar */
+    .model-card::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      border-radius: 3px 0 0 3px;
+      background: transparent;
+      transition: background var(--tr);
+    }
+    .model-card:hover {
+      background: var(--bg4);
+      border-color: var(--bdr2);
+    }
+    .model-card.active {
+      background: rgba(47, 129, 247, 0.12);
+      border-color: var(--acc);
+      box-shadow: 0 0 0 1px var(--acc),
+                  0 8px 24px rgba(47,129,247,.18);
+      transform: translateY(-1px);
+    }
+    .model-card.active::before {
+      background: var(--acc);
+    }
+    /* custom radio dot */
+    .model-radio {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1.5px solid var(--bdr2);
+      background: transparent;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+      pointer-events: none;
+    }
+    .model-card.active .model-radio {
+      background: var(--acc);
+      border-color: var(--acc);
+      box-shadow: 0 0 0 3px rgba(47,129,247,.25);
+    }
+    /* hidden native radio */
+    .model-card input[type=radio] {
+      position: absolute;
+      opacity: 0; width: 0; height: 0;
+      pointer-events: none;
+    }
+    .model-info { flex: 1; min-width: 0; }
+    .model-name {
+      font-size: 13px; font-weight: 600; color: var(--t1);
+      line-height: 1.3; transition: color 0.15s ease;
+    }
+    .model-note {
+      font-size: 11px; color: var(--t3); transition: color 0.15s ease;
+    }
+    .model-card.active .model-name { color: #fff; }
+    .model-card.active .model-note { color: rgba(255,255,255,.65); }
+    .model-id {
+      font-size: 10px; color: var(--t4);
+      font-family: 'JetBrains Mono', monospace;
+      text-align: right; flex-shrink: 0;
+      max-width: 180px; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap;
+      transition: color 0.15s ease;
+    }
+    .model-card.active .model-id { color: rgba(121,184,255,.7); }
+
     .chk-row { display: flex; align-items: center; gap: var(--s2); margin-top: var(--s3); }
     .chk-row label { font-size: 12px; color: var(--t3); cursor: pointer; }
-    .chk-row input[type=checkbox] { width: auto; accent-color: var(--acc); cursor: pointer; }
+    input[type=checkbox] {
+      width: 15px; height: 15px; padding: 0; flex-shrink: 0;
+      background: transparent; border: 1.5px solid var(--bdr2);
+      border-radius: 3px; box-shadow: none;
+      appearance: none; -webkit-appearance: none;
+      cursor: pointer; position: relative;
+      transition: background var(--tr), border-color var(--tr);
+    }
+    input[type=checkbox]:checked {
+      background: var(--acc);
+      border-color: var(--acc);
+    }
+    input[type=checkbox]:checked::after {
+      content: '';
+      position: absolute;
+      left: 3px; top: 0px;
+      width: 5px; height: 9px;
+      border: 2px solid #fff;
+      border-top: none; border-left: none;
+      transform: rotate(43deg);
+    }
+    input[type=checkbox]:hover:not(:checked) { border-color: var(--acc); }
+    input[type=checkbox]:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(47,129,247,.25); }
 
     .onboard { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 55vh; gap: var(--s4); padding: var(--s7) var(--s5); text-align: center; }
     .onboard-icon { font-size: 40px; }
@@ -1120,10 +1218,17 @@ function buildHTML() {
 
   /* API PANEL */
   if (S.apiOpen) {
+    /* ── NEW model-card markup ── */
     var mOpts = GROQ_MODELS.map(function(m){
-      return '<label class="model-opt'+(S.model===m.id?' active':'')+'"><input type="radio" name="mdl" value="'+esc(m.id)+'"'+(S.model===m.id?' checked':'')+'>' +
-        '<div><div class="model-name">'+esc(m.name)+'</div><div class="model-note">'+esc(m.note)+'</div></div>' +
-        '<div class="model-id">'+esc(m.id)+'</div></label>';
+      return '<label class="model-card' + (S.model===m.id?' active':'') + '" data-model="' + esc(m.id) + '">' +
+        '<div class="model-radio"></div>' +
+        '<div class="model-info">' +
+          '<div class="model-name">' + esc(m.name) + '</div>' +
+          '<div class="model-note">' + esc(m.note) + '</div>' +
+        '</div>' +
+        '<div class="model-id">' + esc(m.id) + '</div>' +
+        '<input type="radio" name="mdl" value="' + esc(m.id) + '"' + (S.model===m.id?' checked':'') + '>' +
+      '</label>';
     }).join('');
     h += '<div class="slide-panel api-bg">' +
       '<div class="sp-hdr"><div class="sp-title green">GROQ API SETTINGS</div>' +
@@ -1135,7 +1240,7 @@ function buildHTML() {
         '</div>' +
         '<div class="chk-row"><input type="checkbox" id="chk-rem"'+(S.rememberKey?' checked':'')+'><label for="chk-rem">Remember key (localStorage)</label></div>' +
       '</div>' +
-      '<div class="field"><div class="f-hdr"><label class="lbl">Model</label></div>'+mOpts+'</div>' +
+      '<div class="field" style="margin-bottom:0"><div class="f-hdr"><label class="lbl">Model</label></div>' + mOpts + '</div>' +
     '</div>';
   }
 
@@ -1281,7 +1386,7 @@ function buildHTML() {
         '>' +
         (S.loading
           ? '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center"><span style="display:inline-block;animation:spin .65s linear infinite;opacity:.7">⟳</span> Generating…</span>'
-          : '✦ Generate Prompt') +
+          : '⚡ Generate Prompt') +
       '</button>' +
       '<button class="btn-random" id="b-random" title="Random subject — Shift: creative — DblClick: wild" style="min-width:48px">🔀</button>' +
     '</div>' +
@@ -1416,7 +1521,14 @@ function attachEvents() {
   var cr=document.getElementById('chk-rem');
   if(cr) cr.addEventListener('change',function(){ var k=document.getElementById('inp-key'); saveKey(k?k.value:S.apiKey, cr.checked); });
   on('b-key-clr','click',function(){ clearKey(); render(); });
-  document.querySelectorAll('input[name="mdl"]').forEach(function(el){ el.addEventListener('change',function(){ S.model=el.value; render(); }); });
+
+  /* model-card click handler — reads data-model from label */
+  document.querySelectorAll('.model-card').forEach(function(card){
+    card.addEventListener('click', function(){
+      var val = card.dataset.model;
+      if (val) { S.model = val; render(); }
+    });
+  });
 
   on('b-gen','click',generate);
   on('b-regen','click',generate);
