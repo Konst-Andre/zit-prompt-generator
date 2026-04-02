@@ -409,6 +409,22 @@
     }
 
     hr { border: none; border-top: 1px solid var(--bdr); margin: var(--s3) 0 var(--s4); }
+
+    .style-detail-hint {
+      margin-top: var(--s2);
+      padding: 5px var(--s3);
+      background: var(--acc-bg);
+      border: 1px solid rgba(47,129,247,.18);
+      border-radius: var(--r-sm);
+      font-size: 11px;
+      color: var(--acc-txt);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      line-height: 1.4;
+      opacity: .88;
+    }
+    .style-detail-hint span { color: var(--t3); font-family: 'JetBrains Mono', monospace; }
     .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
     .three-col { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: var(--s3); }
     .row       { display: flex; gap: var(--s2); align-items: center; }
@@ -629,24 +645,61 @@ const SCENES = [
 ];
 
 const STYLES = [
-  { id:'photorealistic', label:'Photorealistic',  grp:'Real' },
-  { id:'cinematic',      label:'Cinematic',        grp:'Real' },
-  { id:'documentary',    label:'Documentary',       grp:'Real' },
-  { id:'fashion',        label:'Fashion Editorial', grp:'Real' },
-  { id:'analog',         label:'Analog Film',       grp:'Real' },
-  { id:'digital_art',    label:'Digital Art',       grp:'Illustrated' },
-  { id:'concept_art',    label:'Concept Art',       grp:'Illustrated' },
-  { id:'illustration',   label:'Illustration',      grp:'Illustrated' },
-  { id:'oil_painting',   label:'Oil Painting',      grp:'Illustrated' },
-  { id:'watercolor',     label:'Watercolor',        grp:'Illustrated' },
-  { id:'anime',          label:'Anime',             grp:'Stylized' },
-  { id:'manga',          label:'Manga',             grp:'Stylized' },
-  { id:'comic',          label:'Comic Book',        grp:'Stylized' },
-  { id:'flat_design',    label:'Flat Design',       grp:'Stylized' },
-  { id:'low_poly',       label:'Low Poly 3D',       grp:'3D / Render' },
-  { id:'3d_render',      label:'3D Render',         grp:'3D / Render' },
-  { id:'isometric',      label:'Isometric',         grp:'3D / Render' },
-  { id:'pixel_art',      label:'Pixel Art',         grp:'3D / Render' },
+  /* ── Real ── */
+  { id:'photorealistic', label:'Photorealistic',  grp:'Real', icon:'◉',
+    detail:'natural light, realistic skin and material textures, accurate colors, sharp focus, high dynamic range' },
+  { id:'cinematic',      label:'Cinematic',        grp:'Real', icon:'▶',
+    detail:'dramatic color grading, film still, shallow depth of field, anamorphic bokeh, moody atmosphere' },
+  { id:'documentary',    label:'Documentary',      grp:'Real', icon:'◎',
+    detail:'available light, candid unposed framing, raw realistic tones, minimal staging' },
+  { id:'fashion',        label:'Fashion Editorial', grp:'Real', icon:'◈',
+    detail:'high-contrast studio lighting, glossy editorial finish, deliberate pose, magazine composition' },
+  { id:'analog',         label:'Analog Film',      grp:'Real', icon:'◌',
+    detail:'film grain, subtle color shift, soft contrast, vintage tones, faint light leaks' },
+
+  /* ── Illustrated ── */
+  { id:'digital_art',    label:'Digital Art',      grp:'Illustrated', icon:'▣',
+    detail:'clean digital rendering, smooth gradients, stylized shading, crisp edges, vibrant color' },
+  { id:'concept_art',    label:'Concept Art',      grp:'Illustrated', icon:'◆',
+    detail:'painterly loose strokes, dynamic composition, atmospheric depth, design-driven, visual storytelling' },
+  { id:'illustration',   label:'Illustration',     grp:'Illustrated', icon:'◇',
+    detail:'clear line art, stylized simplified forms, controlled palette, graphic clarity' },
+  { id:'oil_painting',   label:'Oil Painting',     grp:'Illustrated', icon:'▲',
+    detail:'thick textured brushwork, visible impasto layers, rich saturated color, classical warm light' },
+  { id:'watercolor',     label:'Watercolor',       grp:'Illustrated', icon:'△',
+    detail:'soft wet-on-wet washes, pigment blooms, paper texture showing through, transparent layers' },
+  { id:'pencil_sketch',  label:'Pencil Sketch',    grp:'Illustrated', icon:'╱',
+    detail:'graphite lines, cross-hatching, light shading, raw sketchy quality, minimal fill' },
+  { id:'impressionism',  label:'Impressionism',    grp:'Illustrated', icon:'≈',
+    detail:'loose dappled brushstrokes, soft edges, natural outdoor light, captured moment, painterly texture' },
+
+  /* ── Stylized ── */
+  { id:'anime',          label:'Anime',            grp:'Stylized', icon:'✦',
+    detail:'cel shading, clean line art, expressive eyes, flat color fills, stylized proportions' },
+  { id:'manga',          label:'Manga',            grp:'Stylized', icon:'✧',
+    detail:'black and white ink lines, screentone shading, high contrast, graphic storytelling' },
+  { id:'comic',          label:'Comic Book',       grp:'Stylized', icon:'◉',
+    detail:'bold ink outlines, halftone dot shading, saturated colors, dynamic action pose' },
+  { id:'ink_wash',       label:'Ink Wash',         grp:'Stylized', icon:'⬟',
+    detail:'sumi-e brushwork, diluted black ink, negative space, spontaneous strokes, Japanese aesthetic' },
+  { id:'ukiyo_e',        label:'Ukiyo-e',          grp:'Stylized', icon:'⬡',
+    detail:'Japanese woodblock print, flat bold outlines, limited color bands, decorative pattern, Edo aesthetic' },
+
+  /* ── 3D / Render ── */
+  { id:'3d_render',      label:'3D Render',        grp:'3D / Render', icon:'◫',
+    detail:'physically based rendering, global illumination, realistic reflections and materials, studio HDRI' },
+  { id:'low_poly',       label:'Low Poly 3D',      grp:'3D / Render', icon:'◬',
+    detail:'low polygon faceted geometry, flat shading per face, sharp edges, minimal detail' },
+  { id:'isometric',      label:'Isometric',        grp:'3D / Render', icon:'⬛',
+    detail:'strict isometric 2.5D perspective, clean geometry, even light, stylized environment' },
+
+  /* ── Digital ── */
+  { id:'pixel_art',      label:'Pixel Art',        grp:'Digital', icon:'▪',
+    detail:'pixel grid visible, limited resolution, dithering, retro restricted palette' },
+  { id:'flat_design',    label:'Flat Design',      grp:'Digital', icon:'▬',
+    detail:'flat solid colors, no gradients or shadows, simple geometric shapes, bold contrast' },
+  { id:'glitch',         label:'Glitch Art',       grp:'Digital', icon:'⚡',
+    detail:'RGB channel shift, digital noise bands, scanlines, compression artifacts, fragmented image' },
 ];
 
 const LIGHTINGS = [
@@ -1067,7 +1120,7 @@ function buildUser() {
     return 'Improve this prompt for ZIT/Lumina2. Fix SDXL tags, rewrite as natural prose for Qwen3-4B.\nAfter <notes> add: <changes>bullet list of improvements</changes>\n\nPrompt: "' + S.existing.slice(0, 1500) + '"';
   }
   return 'Generate ZIT prompt:\nSubject (translate to English if needed): ' + S.subject +
-    '\nScene: ' + (sc.label||S.scene) + ' | Style: ' + (st.label||S.style) +
+    '\nScene: ' + (sc.label||S.scene) + ' | Style: ' + (st.label||S.style) + (st.detail?' — '+st.detail:'') +
     '\nCamera: ' + (sc.camera||'standard') + ' | Detail: ' + (sc.detail||'high detail') +
     '\nLighting: ' + S.lighting + ' | Mood: ' + (S.mood||'neutral') + ' | Genre: ' + (S.genre||'none') +
     '\nResolution: ' + w + '×' + h + ' (' + orient + ') | CFG: ' + S.cfg + ' | Steps: ' + S.steps +
@@ -1299,10 +1352,12 @@ function buildHTML() {
     var stylePills = grps.map(function(g){
       return '<div class="grp-lbl">'+esc(g)+'</div><div class="pill-row">' +
         STYLES.filter(function(s){return s.grp===g;}).map(function(s){
-          return '<div class="st-pill'+(S.style===s.id?' active':'')+'" data-style="'+s.id+'">'+esc(s.label)+'</div>';
+          return '<div class="st-pill'+(S.style===s.id?' active':'')+'" data-style="'+s.id+'"'+(s.detail?' title="'+esc(s.detail)+'"':'')+'>'+esc(s.icon||'·')+' '+esc(s.label)+'</div>';
         }).join('') + '</div>';
     }).join('');
-    h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">Visual Style</label></div>'+stylePills+'</div>';
+    h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">Visual Style</label><span class="hint">hover for detail</span></div>'+stylePills+
+      (function(){ var st2=STYLES.find(function(x){return x.id===S.style;}); return st2&&st2.detail?'<div class="style-detail-hint">'+esc(st2.icon)+' <span>'+esc(st2.detail)+'</span></div>':''; }()) +
+      '</div>';
 
     /* Subject field + history */
     var histHtml = '';
