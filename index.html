@@ -175,7 +175,7 @@
       padding-right: 28px; font-size: 13px;
     }
     select option { background: var(--bg4); font-size: 13px; }
-    input::placeholder, textarea::placeholder { color: var(--t4); font-size: 13px; }
+    input::placeholder, textarea::placeholder { color: var(--t3); font-size: 13px; }
 
     /* ═══════════════════════════════════════
        SUBJECT FIELD — glow animation for Random
@@ -404,13 +404,23 @@
     .st-pill:hover { border-color: var(--bdr2); color: var(--t2); background: rgba(255,255,255,.04); }
     .st-pill:active { transform: scale(0.97); }
     .st-pill.active {
-      background: var(--acc-bg); border-color: var(--acc); color: var(--acc-txt);
-      font-weight: 700; box-shadow: inset 0 1px 0 rgba(47,129,247,.12);
+      background: rgba(47,129,247,.18); border-color: var(--acc); color: #fff;
+      font-weight: 700;
+      box-shadow: inset 0 1px 0 rgba(47,129,247,.2), 0 0 0 1px rgba(47,129,247,.1),
+                  0 2px 8px rgba(47,129,247,.12);
     }
+    .st-pill .st-icon { opacity: .5; transition: opacity var(--tr); font-style: normal; }
+    .st-pill:hover .st-icon { opacity: .8; }
+    .st-pill.active .st-icon { opacity: 1; }
 
     hr { border: none; border-top: 1px solid var(--bdr); margin: var(--s3) 0 var(--s4); }
 
+    @keyframes hintFade {
+      from { opacity: 0; transform: translateY(3px); }
+      to   { opacity: .88; transform: translateY(0); }
+    }
     .style-detail-hint {
+      animation: hintFade 150ms ease;
       margin-top: var(--s2);
       padding: 5px var(--s3);
       background: var(--acc-bg);
@@ -701,6 +711,32 @@ const STYLES = [
   { id:'glitch',         label:'Glitch Art',       grp:'Digital', icon:'⚡',
     detail:'RGB channel shift, digital noise bands, scanlines, compression artifacts, fragmented image' },
 ];
+
+const STYLE_HINTS = {
+  photorealistic: 'красива жінка під дощем у Токіо',
+  cinematic:      'lone figure in a sunlit doorway, city at dusk',
+  documentary:    'street vendor at sunrise market, weathered face',
+  fashion:        'model in geometric coat, dramatic studio shadows',
+  analog:         'teenagers in a summer park, grainy warm light',
+  digital_art:    'neon city with flying vehicles at night',
+  concept_art:    'abandoned space station above a dying planet',
+  illustration:   'cozy bookshop with sleeping cat on counter',
+  oil_painting:   'countryside valley in late autumn, moody light',
+  watercolor:     'misty mountain forest with soft morning mist',
+  pencil_sketch:  'hands holding an old photograph, fine detail',
+  impressionism:  'flower garden in dappled afternoon light',
+  anime:          'дівчина на даху дивиться на захід сонця',
+  manga:          'detective in long coat, dark rainy alley',
+  comic:          'hero landing pose over glowing city skyline',
+  ink_wash:       'misty mountain peak with lone pine tree',
+  ukiyo_e:        'geisha crossing wooden bridge, Mount Fuji',
+  '3d_render':    'product on dark surface with dramatic rim light',
+  low_poly:       'geometric fox in a forest clearing at dusk',
+  isometric:      'cozy house with garden, isometric birds-eye view',
+  pixel_art:      'retro hero in pixel dungeon, neon signs',
+  flat_design:    'modern city poster with bold minimal shapes',
+  glitch:         'corrupted portrait with RGB shift and scanlines',
+};
 
 const LIGHTINGS = [
   'Cinematic lighting','Soft natural light','Golden hour','Blue hour / dusk',
@@ -1352,12 +1388,11 @@ function buildHTML() {
     var stylePills = grps.map(function(g){
       return '<div class="grp-lbl">'+esc(g)+'</div><div class="pill-row">' +
         STYLES.filter(function(s){return s.grp===g;}).map(function(s){
-          return '<div class="st-pill'+(S.style===s.id?' active':'')+'" data-style="'+s.id+'"'+(s.detail?' title="'+esc(s.detail)+'"':'')+'>'+esc(s.icon||'·')+' '+esc(s.label)+'</div>';
+          return '<div class="st-pill'+(S.style===s.id?' active':'')+'" data-style="'+s.id+'"'+(s.detail?' title="'+esc(s.detail)+'"':'')+'>'+
+            '<span class="st-icon">'+esc(s.icon||'·')+'</span> '+esc(s.label)+'</div>';
         }).join('') + '</div>';
     }).join('');
-    h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">Visual Style</label><span class="hint">hover for detail</span></div>'+stylePills+
-      (function(){ var st2=STYLES.find(function(x){return x.id===S.style;}); return st2&&st2.detail?'<div class="style-detail-hint">'+esc(st2.icon)+' <span>'+esc(st2.detail)+'</span></div>':''; }()) +
-      '</div>';
+    h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">Visual Style</label><span class="hint">hover for detail</span></div>'+stylePills+'</div>';
 
     /* Subject field + history */
     var histHtml = '';
@@ -1368,9 +1403,15 @@ function buildHTML() {
         }).join('') + '</div>';
     }
 
-    h += '<div class="field"><div class="f-hdr"><label class="lbl">Subject</label><span class="hint">Можна українською</span></div>' +
-      '<textarea id="inp-sub" rows="3" placeholder="Examples:&#10;• красива жінка під дощем у Токіо&#10;• ancient wizard tower on a stormy cliff">'+esc(S.subject)+'</textarea>' +
-      histHtml + '</div>';
+    var stNow = STYLES.find(function(x){return x.id===S.style;}) || {};
+    var stPh  = STYLE_HINTS[S.style] || 'красива жінка під дощем у Токіо';
+    var stHintHtml = stNow.detail
+      ? '<div class="style-detail-hint"><span class="st-icon">'+esc(stNow.icon||'')+'</span><span>'+esc(stNow.detail)+'</span></div>'
+      : '';
+
+    h += '<div class="field"><div class="f-hdr"><label class="lbl">Prompt</label><span class="hint">Можна українською</span></div>' +
+      '<textarea id="inp-sub" rows="3" placeholder="e.g: '+esc(stPh)+'&#10;• your own idea here">'+esc(S.subject)+'</textarea>' +
+      histHtml + stHintHtml + '</div>';
 
     /* Lighting + Mood */
     h += '<div class="two-col">' +
