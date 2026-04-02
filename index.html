@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>ZIT Prompt Generator v12</title>
+  <title>ZIT Prompt Generator v15</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -50,7 +50,7 @@
       --r-sm: 6px; --r: 8px; --r-md: 10px; --r-lg: 12px;
       --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px;
       --s5: 24px; --s6: 32px; --s7: 48px;
-      --tr: 0.18s ease;
+      --tr: 0.15s ease;
     }
 
     html, body {
@@ -142,7 +142,19 @@
 
     .field { margin-bottom: var(--s4); }
     .f-hdr { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--s2); }
-    .lbl { font-size: 12px; font-weight: 700; color: var(--t1); letter-spacing: .13em; text-transform: uppercase; }
+    .lbl { font-size: 13px; font-weight: 700; color: var(--t1); letter-spacing: .16em; text-transform: uppercase; position: relative; padding-bottom: 6px; }
+    .lbl::after {
+      content: "";
+      position: absolute;
+      left: 0; bottom: 0;
+      width: 32px; height: 2px;
+      background: var(--acc);
+      opacity: .7;
+      border-radius: 2px;
+    }
+    /* suppress underline in dense inline contexts */
+    .info-card .lbl::after,
+    .out-hdr .lbl::after { display: none; }
     .hint { font-size: 11px; color: var(--t4); }
     .grp-lbl {
       font-size: 10px; font-weight: 700; color: var(--t2); letter-spacing: .14em;
@@ -396,18 +408,26 @@
     ═══════════════════════════════════════ */
     .pill-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: var(--s2); }
     .st-pill {
-      padding: 4px 13px; background: transparent; border: 1px solid var(--bdr);
-      border-radius: 99px; font-size: 12px; font-weight: 600; color: var(--t4);
-      cursor: pointer; transition: border-color var(--tr), color var(--tr), background var(--tr);
+      padding: 6px 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.25));
+      border: 1px solid var(--bdr);
+      border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--t4);
+      cursor: pointer;
+      transition: border-color var(--tr), color var(--tr), background var(--tr),
+                  box-shadow var(--tr), transform 0.14s ease;
       user-select: none; letter-spacing: .01em;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 1px 2px rgba(0,0,0,.3);
     }
-    .st-pill:hover { border-color: var(--bdr2); color: var(--t2); background: rgba(255,255,255,.04); }
+    .st-pill:hover {
+      border-color: var(--bdr2); color: var(--t2);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.3));
+    }
     .st-pill:active { transform: scale(0.97); }
     .st-pill.active {
-      background: rgba(47,129,247,.18); border-color: var(--acc); color: #fff;
-      font-weight: 700;
-      box-shadow: inset 0 1px 0 rgba(47,129,247,.2), 0 0 0 1px rgba(47,129,247,.1),
-                  0 2px 8px rgba(47,129,247,.12);
+      background: linear-gradient(180deg, rgba(47,129,247,.22), rgba(47,129,247,.08));
+      border-color: var(--acc); color: #fff; font-weight: 700;
+      transform: translateY(-1px);
+      box-shadow: 0 0 0 1px rgba(47,129,247,.35), 0 2px 6px rgba(47,129,247,.12);
     }
     .st-pill .st-icon { opacity: .5; transition: opacity var(--tr); font-style: normal; }
     .st-pill:hover .st-icon { opacity: .8; }
@@ -417,24 +437,43 @@
 
     @keyframes hintFade {
       from { opacity: 0; transform: translateY(3px); }
-      to   { opacity: .88; transform: translateY(0); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-    .style-detail-hint {
+
+    /* ═══════════════════════════════════════
+       PROMPT PREVIEW — style+lighting+mood+genre
+    ═══════════════════════════════════════ */
+    .prompt-preview {
       animation: hintFade 150ms ease;
-      margin-top: var(--s2);
-      padding: 5px var(--s3);
-      background: var(--acc-bg);
-      border: 1px solid rgba(47,129,247,.18);
-      border-radius: var(--r-sm);
-      font-size: 11px;
-      color: var(--acc-txt);
+      margin-top: 6px;
+      padding: 6px 10px;
+      border-left: 2px solid var(--acc);
+      border-radius: 6px;
+      background: linear-gradient(90deg, rgba(47,129,247,.08), rgba(47,129,247,.03));
+      font-size: 12px;
+      color: var(--t3);
       display: flex;
-      align-items: center;
-      gap: 6px;
-      line-height: 1.4;
-      opacity: .88;
+      align-items: baseline;
+      transition: all 120ms ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+      overflow: hidden;
     }
-    .style-detail-hint span { color: var(--t3); font-family: 'JetBrains Mono', monospace; }
+    .prompt-preview[title] { cursor: help; }
+    .pp-label {
+      color: var(--acc);
+      margin-right: 6px;
+      font-weight: 600;
+      font-size: 11px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .pp-items {
+      color: #D6E8FF;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
     .three-col { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: var(--s3); }
     .row       { display: flex; gap: var(--s2); align-items: center; }
@@ -657,94 +696,126 @@ const SCENES = [
 const STYLES = [
   /* ── Real ── */
   { id:'photorealistic', label:'Photorealistic',  grp:'Real', icon:'◉',
-    detail:'natural light, realistic skin and material textures, accurate colors, sharp focus, high dynamic range' },
+    detail:'natural light, realistic skin and material textures, accurate colors, sharp focus, high dynamic range',
+    example:'красива жінка під дощем у Токіо' },
   { id:'cinematic',      label:'Cinematic',        grp:'Real', icon:'▶',
-    detail:'dramatic color grading, film still, shallow depth of field, anamorphic bokeh, moody atmosphere' },
+    detail:'dramatic color grading, film still, shallow depth of field, anamorphic bokeh, moody atmosphere',
+    example:'lone figure in a sunlit doorway, city at dusk' },
   { id:'documentary',    label:'Documentary',      grp:'Real', icon:'◎',
-    detail:'available light, candid unposed framing, raw realistic tones, minimal staging' },
+    detail:'available light, candid unposed framing, raw realistic tones, minimal staging',
+    example:'street vendor at sunrise market, weathered face' },
   { id:'fashion',        label:'Fashion Editorial', grp:'Real', icon:'◈',
-    detail:'high-contrast studio lighting, glossy editorial finish, deliberate pose, magazine composition' },
+    detail:'high-contrast studio lighting, glossy editorial finish, deliberate pose, magazine composition',
+    example:'model in geometric coat, dramatic studio shadows' },
   { id:'analog',         label:'Analog Film',      grp:'Real', icon:'◌',
-    detail:'film grain, subtle color shift, soft contrast, vintage tones, faint light leaks' },
+    detail:'film grain, subtle color shift, soft contrast, vintage tones, faint light leaks',
+    example:'teenagers in a summer park, grainy warm light' },
 
   /* ── Illustrated ── */
   { id:'digital_art',    label:'Digital Art',      grp:'Illustrated', icon:'▣',
-    detail:'clean digital rendering, smooth gradients, stylized shading, crisp edges, vibrant color' },
+    detail:'clean digital rendering, smooth gradients, stylized shading, crisp edges, vibrant color',
+    example:'neon city with flying vehicles at night' },
   { id:'concept_art',    label:'Concept Art',      grp:'Illustrated', icon:'◆',
-    detail:'painterly loose strokes, dynamic composition, atmospheric depth, design-driven, visual storytelling' },
+    detail:'painterly loose strokes, dynamic composition, atmospheric depth, design-driven, visual storytelling',
+    example:'abandoned space station above a dying planet' },
   { id:'illustration',   label:'Illustration',     grp:'Illustrated', icon:'◇',
-    detail:'clear line art, stylized simplified forms, controlled palette, graphic clarity' },
+    detail:'clear line art, stylized simplified forms, controlled palette, graphic clarity',
+    example:'cozy bookshop with sleeping cat on counter' },
   { id:'oil_painting',   label:'Oil Painting',     grp:'Illustrated', icon:'▲',
-    detail:'thick textured brushwork, visible impasto layers, rich saturated color, classical warm light' },
+    detail:'thick textured brushwork, visible impasto layers, rich saturated color, classical warm light',
+    example:'countryside valley in late autumn, moody light' },
   { id:'watercolor',     label:'Watercolor',       grp:'Illustrated', icon:'△',
-    detail:'soft wet-on-wet washes, pigment blooms, paper texture showing through, transparent layers' },
+    detail:'soft wet-on-wet washes, pigment blooms, paper texture showing through, transparent layers',
+    example:'misty mountain forest with soft morning mist' },
   { id:'pencil_sketch',  label:'Pencil Sketch',    grp:'Illustrated', icon:'╱',
-    detail:'graphite lines, cross-hatching, light shading, raw sketchy quality, minimal fill' },
+    detail:'graphite lines, cross-hatching, light shading, raw sketchy quality, minimal fill',
+    example:'hands holding an old photograph, fine detail' },
   { id:'impressionism',  label:'Impressionism',    grp:'Illustrated', icon:'≈',
-    detail:'loose dappled brushstrokes, soft edges, natural outdoor light, captured moment, painterly texture' },
+    detail:'loose dappled brushstrokes, soft edges, natural outdoor light, captured moment, painterly texture',
+    example:'flower garden in dappled afternoon light' },
 
   /* ── Stylized ── */
   { id:'anime',          label:'Anime',            grp:'Stylized', icon:'✦',
-    detail:'cel shading, clean line art, expressive eyes, flat color fills, stylized proportions' },
+    detail:'cel shading, clean line art, expressive eyes, flat color fills, stylized proportions',
+    example:'дівчина на даху дивиться на захід сонця' },
   { id:'manga',          label:'Manga',            grp:'Stylized', icon:'✧',
-    detail:'black and white ink lines, screentone shading, high contrast, graphic storytelling' },
+    detail:'black and white ink lines, screentone shading, high contrast, graphic storytelling',
+    example:'detective in long coat, dark rainy alley' },
   { id:'comic',          label:'Comic Book',       grp:'Stylized', icon:'◉',
-    detail:'bold ink outlines, halftone dot shading, saturated colors, dynamic action pose' },
+    detail:'bold ink outlines, halftone dot shading, saturated colors, dynamic action pose',
+    example:'hero landing pose over glowing city skyline' },
   { id:'ink_wash',       label:'Ink Wash',         grp:'Stylized', icon:'⬟',
-    detail:'sumi-e brushwork, diluted black ink, negative space, spontaneous strokes, Japanese aesthetic' },
+    detail:'sumi-e brushwork, diluted black ink, negative space, spontaneous strokes, Japanese aesthetic',
+    example:'misty mountain peak with lone pine tree' },
   { id:'ukiyo_e',        label:'Ukiyo-e',          grp:'Stylized', icon:'⬡',
-    detail:'Japanese woodblock print, flat bold outlines, limited color bands, decorative pattern, Edo aesthetic' },
+    detail:'Japanese woodblock print, flat bold outlines, limited color bands, decorative pattern, Edo aesthetic',
+    example:'geisha crossing wooden bridge, Mount Fuji' },
 
   /* ── 3D / Render ── */
   { id:'3d_render',      label:'3D Render',        grp:'3D / Render', icon:'◫',
-    detail:'physically based rendering, global illumination, realistic reflections and materials, studio HDRI' },
+    detail:'physically based rendering, global illumination, realistic reflections and materials, studio HDRI',
+    example:'product on dark surface with dramatic rim light' },
   { id:'low_poly',       label:'Low Poly 3D',      grp:'3D / Render', icon:'◬',
-    detail:'low polygon faceted geometry, flat shading per face, sharp edges, minimal detail' },
+    detail:'low polygon faceted geometry, flat shading per face, sharp edges, minimal detail',
+    example:'geometric fox in a forest clearing at dusk' },
   { id:'isometric',      label:'Isometric',        grp:'3D / Render', icon:'⬛',
-    detail:'strict isometric 2.5D perspective, clean geometry, even light, stylized environment' },
+    detail:'strict isometric 2.5D perspective, clean geometry, even light, stylized environment',
+    example:'cozy house with garden, isometric birds-eye view' },
 
   /* ── Digital ── */
   { id:'pixel_art',      label:'Pixel Art',        grp:'Digital', icon:'▪',
-    detail:'pixel grid visible, limited resolution, dithering, retro restricted palette' },
+    detail:'pixel grid visible, limited resolution, dithering, retro restricted palette',
+    example:'retro hero in pixel dungeon, neon signs' },
   { id:'flat_design',    label:'Flat Design',      grp:'Digital', icon:'▬',
-    detail:'flat solid colors, no gradients or shadows, simple geometric shapes, bold contrast' },
+    detail:'flat solid colors, no gradients or shadows, simple geometric shapes, bold contrast',
+    example:'modern city poster with bold minimal shapes' },
   { id:'glitch',         label:'Glitch Art',       grp:'Digital', icon:'⚡',
-    detail:'RGB channel shift, digital noise bands, scanlines, compression artifacts, fragmented image' },
+    detail:'RGB channel shift, digital noise bands, scanlines, compression artifacts, fragmented image',
+    example:'corrupted portrait with RGB shift and scanlines' },
 ];
-
-const STYLE_HINTS = {
-  photorealistic: 'красива жінка під дощем у Токіо',
-  cinematic:      'lone figure in a sunlit doorway, city at dusk',
-  documentary:    'street vendor at sunrise market, weathered face',
-  fashion:        'model in geometric coat, dramatic studio shadows',
-  analog:         'teenagers in a summer park, grainy warm light',
-  digital_art:    'neon city with flying vehicles at night',
-  concept_art:    'abandoned space station above a dying planet',
-  illustration:   'cozy bookshop with sleeping cat on counter',
-  oil_painting:   'countryside valley in late autumn, moody light',
-  watercolor:     'misty mountain forest with soft morning mist',
-  pencil_sketch:  'hands holding an old photograph, fine detail',
-  impressionism:  'flower garden in dappled afternoon light',
-  anime:          'дівчина на даху дивиться на захід сонця',
-  manga:          'detective in long coat, dark rainy alley',
-  comic:          'hero landing pose over glowing city skyline',
-  ink_wash:       'misty mountain peak with lone pine tree',
-  ukiyo_e:        'geisha crossing wooden bridge, Mount Fuji',
-  '3d_render':    'product on dark surface with dramatic rim light',
-  low_poly:       'geometric fox in a forest clearing at dusk',
-  isometric:      'cozy house with garden, isometric birds-eye view',
-  pixel_art:      'retro hero in pixel dungeon, neon signs',
-  flat_design:    'modern city poster with bold minimal shapes',
-  glitch:         'corrupted portrait with RGB shift and scanlines',
-};
 
 const LIGHTINGS = [
-  'Cinematic lighting','Soft natural light','Golden hour','Blue hour / dusk',
-  'Overcast diffused','Dramatic rim light','Neon / LED glow','Volumetric rays',
-  'Studio softbox','Candlelight','Moonlight','Harsh midday sun',
+  { label:'Cinematic',       value:'cinematic dramatic lighting, high contrast shadows' },
+  { label:'Soft Natural',    value:'soft diffused natural daylight, even illumination' },
+  { label:'Golden Hour',     value:'warm golden hour sunlight, long soft shadows' },
+  { label:'Blue Hour',       value:'cool blue hour light, twilight tones' },
+  { label:'Overcast',        value:'overcast sky, soft shadowless light' },
+  { label:'Rim Light',       value:'strong rim lighting, edge highlights, dark background' },
+  { label:'Neon / LED',      value:'neon lighting, colored LED glow, reflections' },
+  { label:'Volumetric Rays', value:'volumetric light beams, atmospheric light shafts, diffused rays' },
+  { label:'Studio Softbox',  value:'studio softbox lighting, controlled highlights, soft shadows' },
+  { label:'Candlelight',     value:'warm candlelight, flickering shadows, low light' },
+  { label:'Moonlight',       value:'cold moonlight, blue tones, night atmosphere' },
+  { label:'Harsh Midday',    value:'harsh midday sunlight, strong shadows, high contrast' },
 ];
-const GENRES = ['','Cyberpunk','Fantasy','Dark Fantasy','Sci-Fi','Solarpunk','Noir','Post-Apocalyptic','Historical','Mythological','Surreal','Horror','Contemporary','Futuristic'];
-const MOODS  = ['','Moody & atmospheric','Ethereal & dreamy','Tense & dramatic','Serene & peaceful','Mysterious','Epic & grand','Melancholic','Joyful & vibrant','Gritty & raw'];
+const GENRES = [
+  { label:'',                 value:'' },
+  { label:'Cyberpunk',        value:'cyberpunk aesthetic, neon lights, futuristic city' },
+  { label:'Fantasy',          value:'fantasy world, magical elements' },
+  { label:'Dark Fantasy',     value:'dark fantasy, gothic elements, ominous tone' },
+  { label:'Sci-Fi',           value:'science fiction, futuristic technology' },
+  { label:'Solarpunk',        value:'solarpunk, eco-futurism, greenery' },
+  { label:'Noir',             value:'film noir, high contrast shadows, 1940s style' },
+  { label:'Post-Apocalyptic', value:'post-apocalyptic ruins, decay, survival' },
+  { label:'Historical',       value:'historical setting, period accurate' },
+  { label:'Mythological',     value:'mythological theme, ancient gods' },
+  { label:'Surreal',          value:'surreal imagery, dream logic' },
+  { label:'Horror',           value:'horror atmosphere, unsettling mood' },
+  { label:'Contemporary',     value:'modern contemporary setting' },
+  { label:'Futuristic',       value:'futuristic design, advanced technology' },
+];
+const MOODS = [
+  { label:'',                   value:'' },
+  { label:'Moody & atmospheric', value:'moody atmosphere, soft shadows, cinematic tone' },
+  { label:'Ethereal & dreamy',   value:'ethereal soft glow, dreamlike haze' },
+  { label:'Tense & dramatic',    value:'tense dramatic mood, strong contrast' },
+  { label:'Serene & peaceful',   value:'calm peaceful mood, soft light' },
+  { label:'Mysterious',          value:'mysterious atmosphere, obscured details' },
+  { label:'Epic & grand',        value:'epic dramatic atmosphere, grand composition' },
+  { label:'Melancholic',         value:'melancholic tone, muted colors' },
+  { label:'Joyful & vibrant',    value:'vibrant colors, lively atmosphere' },
+  { label:'Gritty & raw',        value:'gritty raw texture, harsh realism' },
+];
 
 const RESOLUTIONS = [
   { label:'896 × 1152 — portrait ★', value:'896x1152' },
@@ -1067,7 +1138,7 @@ var S = {
   apiOpen:false, dbgOpen:false, mobilePane:'params',
   mode:'generate',
   scene:'portrait', style:'photorealistic', subject:'',
-  lighting:'Cinematic lighting', mood:'', genre:'', resolution:'896x1152',
+  lighting:'Cinematic', mood:'', genre:'', resolution:'896x1152',
   existing:'',
   loras:[{name:'',weight:'0.85'}],
   steps:'12', cfg:'1.5', sampler:'euler_ancestral', scheduler:'beta', seed:'',
@@ -1158,7 +1229,9 @@ function buildUser() {
   return 'Generate ZIT prompt:\nSubject (translate to English if needed): ' + S.subject +
     '\nScene: ' + (sc.label||S.scene) + ' | Style: ' + (st.label||S.style) + (st.detail?' — '+st.detail:'') +
     '\nCamera: ' + (sc.camera||'standard') + ' | Detail: ' + (sc.detail||'high detail') +
-    '\nLighting: ' + S.lighting + ' | Mood: ' + (S.mood||'neutral') + ' | Genre: ' + (S.genre||'none') +
+    '\nLighting: ' + (LIGHTINGS.find(function(x){return x.label===S.lighting;})||{value:S.lighting}).value +
+    ' | Mood: ' + ((MOODS.find(function(x){return x.label===S.mood;})||{value:''}).value||'neutral') +
+    ' | Genre: ' + ((GENRES.find(function(x){return x.label===S.genre;})||{value:''}).value||'none') +
     '\nResolution: ' + w + '×' + h + ' (' + orient + ') | CFG: ' + S.cfg + ' | Steps: ' + S.steps +
     '\nSampler: ' + S.sampler + ' + ' + S.scheduler +
     '\nSuggested negative (adapt if needed): ' + buildNegative();
@@ -1279,6 +1352,27 @@ function esc(s) {
 }
 
 /* ═══════════════════════════════════════════════════
+   PROMPT PREVIEW — style+lighting+mood+genre summary
+═══════════════════════════════════════════════════ */
+function buildPromptPreview() {
+  var st  = STYLES.find(function(x){ return x.id === S.style; });
+  var lit = LIGHTINGS.find(function(x){ return x.label === S.lighting; });
+  var mo  = MOODS.find(function(x){ return x.label === S.mood; });
+  var ge  = GENRES.find(function(x){ return x.label === S.genre; });
+  var parts = [
+    st  && st.detail  ? st.detail  : null,
+    lit && lit.value  ? lit.value  : null,
+    mo  && mo.value   ? mo.value   : null,
+    ge  && ge.value   ? ge.value   : null,
+  ].filter(Boolean);
+  if (!parts.length) return '';
+  return '<div class="prompt-preview" title="' + esc(parts.join(' • ')) + '">' +
+    '<span class="pp-label">Adds:</span>' +
+    '<span class="pp-items">' + esc(parts.join(' • ')) + '</span>' +
+    '</div>';
+}
+
+/* ═══════════════════════════════════════════════════
    RENDER
 ═══════════════════════════════════════════════════ */
 function render() {
@@ -1296,7 +1390,7 @@ function buildHTML() {
   var h = '<div class="hdr">' +
     '<div class="hdr-brand">' +
       '<div class="hdr-eyebrow">ZIT · Lumina2 · Qwen3-4B · CFG 1.5</div>' +
-      '<div class="hdr-title">Prompt Generator <span class="hdr-ver">v12</span></div>' +
+      '<div class="hdr-title">Prompt Generator <span class="hdr-ver">v15</span></div>' +
     '</div>' +
     '<div class="hdr-acts">' +
       '<div class="pill btn ' + (keyOk?'p-ok':'p-miss') + '" id="b-api"><span class="dot"></span>' + (keyOk?'Groq ✓':'API Key?') + '</div>' +
@@ -1404,24 +1498,22 @@ function buildHTML() {
     }
 
     var stNow = STYLES.find(function(x){return x.id===S.style;}) || {};
-    var stPh  = STYLE_HINTS[S.style] || 'красива жінка під дощем у Токіо';
-    var stHintHtml = stNow.detail
-      ? '<div class="style-detail-hint"><span class="st-icon">'+esc(stNow.icon||'')+'</span><span>'+esc(stNow.detail)+'</span></div>'
-      : '';
+    var stPh  = stNow.example || 'красива жінка під дощем у Токіо';
+    var pvHtml = buildPromptPreview();
 
     h += '<div class="field"><div class="f-hdr"><label class="lbl">Prompt</label><span class="hint">Можна українською</span></div>' +
       '<textarea id="inp-sub" rows="3" placeholder="e.g: '+esc(stPh)+'&#10;• your own idea here">'+esc(S.subject)+'</textarea>' +
-      histHtml + stHintHtml + '</div>';
+      histHtml + pvHtml + '</div>';
 
     /* Lighting + Mood */
     h += '<div class="two-col">' +
-      '<div class="field"><div class="f-hdr"><label class="lbl">Lighting</label></div><select id="sel-light">'+LIGHTINGS.map(function(l){return '<option'+(S.lighting===l?' selected':'')+'>'+esc(l)+'</option>';}).join('')+'</select></div>' +
-      '<div class="field"><div class="f-hdr"><label class="lbl">Mood</label></div><select id="sel-mood">'+MOODS.map(function(m){return '<option value="'+esc(m)+'"'+(S.mood===m?' selected':'')+'>'+(m||'— none —')+'</option>';}).join('')+'</select></div>' +
+      '<div class="field"><div class="f-hdr"><label class="lbl">Lighting</label></div><select id="sel-light">'+LIGHTINGS.map(function(l){return '<option value="'+esc(l.label)+'"'+(S.lighting===l.label?' selected':'')+'>'+esc(l.label)+'</option>';}).join('')+'</select></div>' +
+      '<div class="field"><div class="f-hdr"><label class="lbl">Mood</label></div><select id="sel-mood">'+MOODS.map(function(m){return '<option value="'+esc(m.label)+'"'+(S.mood===m.label?' selected':'')+'>'+(m.label||'— none —')+'</option>';}).join('')+'</select></div>' +
     '</div>';
 
     /* Genre + Resolution */
     h += '<div class="two-col">' +
-      '<div class="field"><div class="f-hdr"><label class="lbl">Genre</label></div><select id="sel-genre">'+GENRES.map(function(g){return '<option value="'+esc(g)+'"'+(S.genre===g?' selected':'')+'>'+(g||'— none —')+'</option>';}).join('')+'</select></div>' +
+      '<div class="field"><div class="f-hdr"><label class="lbl">Genre</label></div><select id="sel-genre">'+GENRES.map(function(g){return '<option value="'+esc(g.label)+'"'+(S.genre===g.label?' selected':'')+'>'+(g.label||'— none —')+'</option>';}).join('')+'</select></div>' +
       '<div class="field"><div class="f-hdr"><label class="lbl">Resolution</label></div><select id="sel-res">'+RESOLUTIONS.map(function(r){return '<option value="'+esc(r.value)+'"'+(S.resolution===r.value?' selected':'')+'>'+esc(r.label)+'</option>';}).join('')+'</select></div>' +
     '</div>';
   }
