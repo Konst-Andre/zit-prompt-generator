@@ -1302,14 +1302,14 @@ async function callGroqOnce(signal) {
 }
 
 async function generate() {
-  if (!S.apiKey.trim()) { S.error='Введіть Groq API ключ — натисніть ⚙ API'; S.apiOpen=true; render(); return; }
-  if (S.mode==='generate' && !S.subject.trim()) { S.error='Введіть Subject'; render(); return; }
-  if (S.mode==='enhance'  && !S.existing.trim()) { S.error='Вставте промпт для покращення'; render(); return; }
+  if (!S.apiKey.trim()) { S.error='Введіть Groq API ключ — натисніть ⚙ API'; S.apiOpen=true; render(); forceRepaint(); return; }
+  if (S.mode==='generate' && !S.subject.trim()) { S.error='Введіть Subject'; render(); forceRepaint(); return; }
+  if (S.mode==='enhance'  && !S.existing.trim()) { S.error='Вставте промпт для покращення'; render(); forceRepaint(); return; }
   if (_busy) { if (_ac) _ac.abort(); _busy=false; }
   _ac=new AbortController(); _busy=true;
   S.loading=true; S.error=''; S.result=null; S.dbgLog=null;
   if (window.innerWidth<=680) S.mobilePane='output';
-  render();
+  render(); /* loading state — intermediate, no repaint */
   var attempts=0;
   while (attempts<=2) {
     attempts++;
@@ -1324,7 +1324,7 @@ async function generate() {
       if (e.aborted) break;
       if (e.code===429 && attempts<=2) {
         if (_ac&&_ac.signal.aborted) break;
-        var delay=3000*attempts; S.error='Rate limit — retry '+attempts+'/2 in '+(delay/1000)+'s...'; render();
+        var delay=3000*attempts; S.error='Rate limit — retry '+attempts+'/2 in '+(delay/1000)+'s...'; render(); /* retry — intermediate */
         await sleep(delay);
         if (_ac&&_ac.signal.aborted) break;
         S.error=''; continue;
@@ -1333,7 +1333,7 @@ async function generate() {
       break;
     }
   }
-  _busy=false; S.loading=false; render();
+  _busy=false; S.loading=false; render(); forceRepaint(); /* final state — trigger repaint */
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1378,16 +1378,23 @@ function buildPromptPreview() {
 /* ═══════════════════════════════════════════════════
    RENDER
 ═══════════════════════════════════════════════════ */
-function render() {
-  document.getElementById('app').innerHTML = buildHTML();
-  attachEvents();
-  /* iOS Safari repaint fix — forces GPU layer flush after DOM update */
+/* ═══════════════════════════════════════════════════
+   iOS SAFARI REPAINT — centralized, called after final DOM mutations only
+   Double-RAF: frame 1 promotes body to GPU layer, frame 2 releases it.
+   Must NOT be called on intermediate loading/retry renders.
+═══════════════════════════════════════════════════ */
+function forceRepaint() {
   requestAnimationFrame(function() {
     document.body.style.transform = 'translateZ(0)';
     requestAnimationFrame(function() {
       document.body.style.transform = '';
     });
   });
+}
+
+function render() {
+  document.getElementById('app').innerHTML = buildHTML();
+  attachEvents();
 }
 
 function buildHTML() {
