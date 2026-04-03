@@ -500,11 +500,24 @@
        PROMPT MAIN — primary working area
     ═══════════════════════════════════════ */
     .prompt-main {
+      position: relative;
       background: linear-gradient(180deg, rgba(47,129,247,.06), rgba(47,129,247,.02));
       border: 1px solid rgba(47,129,247,.28);
       border-radius: var(--r-md);
       padding: calc(var(--s4) + 2px);
+      padding-left: calc(var(--s4) + 8px);
       margin-bottom: var(--s4);
+      transition: border-color .15s ease;
+    }
+    .prompt-main::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 10px; bottom: 10px;
+      width: 2px;
+      background: linear-gradient(180deg, rgba(47,129,247,.65), rgba(47,129,247,.25));
+      border-radius: 2px;
+      opacity: .55;
+      transition: opacity .15s ease;
     }
     .prompt-main .field { margin-bottom: 2px; }
     .prompt-main .lbl { letter-spacing: .18em; }
@@ -512,10 +525,24 @@
       background: #04070B;
       border: 1px solid rgba(47,129,247,.42);
       box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 0 0 1px rgba(47,129,247,.08);
+      transition: border-color .15s ease, box-shadow .15s ease;
     }
     .prompt-main textarea:focus {
       border-color: rgba(47,129,247,.55);
       box-shadow: 0 0 0 1px rgba(47,129,247,.35), 0 6px 18px rgba(47,129,247,.12);
+    }
+    /* Focus mode states */
+    .prompt-main.is-focus {
+      border-color: rgba(47,129,247,.38);
+    }
+    .prompt-main.is-focus::before {
+      opacity: .7;
+    }
+    .prompt-main.is-typing {
+      border-color: rgba(47,129,247,.48);
+    }
+    .prompt-main.is-typing textarea {
+      border-color: rgba(47,129,247,.6);
     }
 
     /* ═══════════════════════════════════════
@@ -581,10 +608,10 @@
     }
     .out-txt.accent { border-color: rgba(47,129,247,.25); background: #09162A; color: #A8C8FF; }
 
-    .params-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s1); margin-bottom: var(--s4); }
-    .p-card { display: flex; justify-content: space-between; align-items: center; padding: var(--s2) var(--s3); background: var(--bg3); border: 1px solid var(--bdr); border-radius: var(--r-sm); gap: var(--s2); }
-    .p-key { font-size: 10px; color: var(--t3); letter-spacing: .05em; text-transform: uppercase; }
-    .p-val { font-size: 12px; color: #A0CFFF; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+    .params-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s1); margin-bottom: var(--s4); min-width: 0; }
+    .p-card { display: flex; justify-content: space-between; align-items: center; padding: var(--s2) var(--s3); background: var(--bg3); border: 1px solid var(--bdr); border-radius: var(--r-sm); gap: var(--s2); min-width: 0; }
+    .p-key { font-size: 10px; color: var(--t3); letter-spacing: .05em; text-transform: uppercase; flex-shrink: 0; }
+    .p-val { font-size: 12px; color: #A0CFFF; font-weight: 700; font-family: 'JetBrains Mono', monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
     .info-card { padding: var(--s3) var(--s4); background: var(--bg3); border: 1px solid var(--bdr); border-radius: var(--r); margin-bottom: var(--s3); }
     .info-card .lbl { display: block; margin-bottom: 5px; }
@@ -1763,6 +1790,16 @@ function attachEvents() {
 
   function live(id, key){ var el=document.getElementById(id); if(el) el.addEventListener('input',function(){S[key]=el.value;}); }
   live('inp-sub','subject');
+
+  /* ── Prompt focus mode ── */
+  (function(){
+    var ta = document.getElementById('inp-sub');
+    var pm = ta && ta.closest('.prompt-main');
+    if (!ta || !pm) return;
+    ta.addEventListener('focus', function(){ pm.classList.add('is-focus'); });
+    ta.addEventListener('blur',  function(){ pm.classList.remove('is-focus','is-typing'); });
+    ta.addEventListener('input', function(){ pm.classList.add('is-typing'); });
+  }());
   var existEl = document.getElementById('inp-exist');
   if (existEl) {
     existEl.addEventListener('input', function(){
