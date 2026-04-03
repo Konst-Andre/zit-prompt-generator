@@ -1391,7 +1391,7 @@ async function callGroqOnce(signal) {
 async function generate() {
   if (!S.apiKey.trim()) { S.error='Введіть Groq API ключ — натисніть ⚙ API'; S.apiOpen=true; render(); forceRepaint(); return; }
   if (S.mode==='generate' && !S.subject.trim()) { S.error='Введіть Subject'; render(); forceRepaint(); return; }
-  if (S.mode==='enhance'  && !S.existing.trim()) { S.error='Вставте промпт для покращення'; render(); forceRepaint(); return; }
+  if (S.mode==='enhance'  && !S.existing.trim()) { S.error='Вставте промпт для оптимізації'; render(); forceRepaint(); return; }
   if (_busy) { if (_ac) _ac.abort(); _busy=false; }
   _ac=new AbortController(); _busy=true;
   S.loading=true; S.error=''; S.result=null; S.dbgLog=null;
@@ -1555,7 +1555,7 @@ function buildHTML() {
   if (!mob) {
     h += '<div class="tab-bar">' +
       '<button class="tab-btn'+(S.mode==='generate'?' active':'')+'" data-mode="generate">Generate</button>' +
-      '<button class="tab-btn'+(S.mode==='enhance'?' active':'')+'" data-mode="enhance">Enhance</button>' +
+      '<button class="tab-btn'+(S.mode==='enhance'?' active':'')+'" data-mode="enhance">Optimize <span style="font-size:10px;font-weight:400;opacity:.55;letter-spacing:.01em">· refines for ZIT engine</span></button>' +
     '</div>';
   }
 
@@ -1568,7 +1568,7 @@ function buildHTML() {
   if (mob) {
     h += '<div class="two-col mob-mode-sw" style="display:grid;margin-bottom:16px">' +
       '<button class="btn-primary'+(S.mode==='generate'?'':' btn-secondary')+'" data-mode="generate" style="margin-top:0">Generate</button>' +
-      '<button class="btn-primary'+(S.mode==='enhance'?'':' btn-secondary')+'" data-mode="enhance" style="margin-top:0">Enhance</button>' +
+      '<button class="btn-primary'+(S.mode==='enhance'?'':' btn-secondary')+'" data-mode="enhance" style="margin-top:0">Optimize</button>' +
     '</div>';
   }
 
@@ -1687,7 +1687,7 @@ function buildHTML() {
     h += '<button class="btn-primary'+(S.loading?' loading':'')+'" id="b-gen"'+(S.loading?' disabled':'')+'>' +
       (S.loading
         ? '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center"><span style="display:inline-block;animation:spin .65s linear infinite;opacity:.7">⟳</span> Generating…</span>'
-        : '✦ Enhance Prompt') +
+        : '✦ Optimize Prompt') +
     '</button>';
   }
 
