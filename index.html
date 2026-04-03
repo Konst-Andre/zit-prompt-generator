@@ -864,6 +864,33 @@ const STYLES = [
     example:'corrupted portrait with RGB shift and scanlines' },
 ];
 
+/* ═══════════════════════════════════════════════════
+   SUBJECT AXIS — ZIT Style Engine v3
+   Describes WHAT the main subject IS — separate from Scene (where/how shot)
+   and Style (rendering look). Feeds structured tokens into buildUser().
+═══════════════════════════════════════════════════ */
+const SUBJECTS = [
+  { id:'none',        label:'None',        icon:'○', tokens:[], tip:'' },
+  { id:'person',      label:'Human',       icon:'◉', tokens:['human facial detail', 'natural skin texture', 'expressive features'],            tip:'Focus on human features and anatomy' },
+  { id:'animal',      label:'Animal',      icon:'◈', tokens:['fur or feather detail', 'sharp eyes', 'natural anatomy'],                        tip:'Enhance fur, eyes, and anatomy' },
+  { id:'product',     label:'Product',     icon:'◇', tokens:['clean product detail', 'material definition', 'precise edges'],                  tip:'Clean edges, materials, product detail' },
+  { id:'object',      label:'Object',      icon:'◻', tokens:['clear shape definition', 'solid structure', 'surface detail'],                   tip:'Shape definition and structure' },
+  { id:'environment', label:'Environment', icon:'⬟', tokens:['environmental depth', 'spatial composition', 'atmospheric perspective'],         tip:'Scene-focused composition' },
+];
+
+/* buildSubjectTokens — returns comma-separated subject axis tokens.
+   Reads from SUBJECTS array — no data duplication. */
+function buildSubjectTokens(subjectId) {
+  var subj = SUBJECTS.find(function(x){ return x.id === subjectId; });
+  if (!subj || !subj.tokens || !subj.tokens.length) return '';
+  return subj.tokens.join(', ');
+}
+
+/* buildStyleTokens — returns style detail string (rendering layer only, no subject). */
+function buildStyleTokens(styleObj) {
+  return (styleObj && styleObj.detail) ? styleObj.detail : '';
+}
+
 const LIGHTINGS = [
   { label:'Cinematic',       value:'cinematic dramatic lighting, high contrast shadows' },
   { label:'Soft Natural',    value:'soft diffused natural daylight, even illumination' },
@@ -1227,7 +1254,7 @@ var S = {
   apiKey:'', rememberKey:false, model:'qwen/qwen3-32b',
   apiOpen:false, dbgOpen:false, mobilePane:'params',
   mode:'generate',
-  scene:'portrait', style:'photorealistic', subject:'',
+  scene:'portrait', style:'photorealistic', subject:'', subjectType:'none',
   lighting:'Cinematic', mood:'', genre:'', resolution:'896x1152',
   existing:'',
   loras:[{name:'',weight:'0.85'}],
@@ -1314,11 +1341,18 @@ function buildUser() {
   var w = parts[0], h = parts[1];
   var orient = (+w < +h) ? 'portrait' : (+w > +h) ? 'landscape' : 'square';
   if (S.mode === 'enhance') {
-    return 'Improve this prompt for ZIT/Lumina2. Fix SDXL tags, rewrite as natural prose for Qwen3-4B.\nAfter <notes> add: <changes>bullet list of improvements</changes>\n\nPrompt: "' + S.existing.slice(0, 1500) + '"';
+    var subjEnhTok = buildSubjectTokens(S.subjectType);
+    return 'Improve this prompt for ZIT/Lumina2. Fix SDXL tags, rewrite as natural prose for Qwen3-4B.\nAfter <notes> add: <changes>bullet list of improvements</changes>\n' +
+      (subjEnhTok ? '\nSubject focus (use only if relevant to the prompt): ' + subjEnhTok : '') +
+      '\n\nPrompt: "' + S.existing.slice(0, 1500) + '"';
   }
+  var subjTok   = buildSubjectTokens(S.subjectType);
+  var styleTok  = buildStyleTokens(st);
   return 'Generate ZIT prompt:\nSubject (translate to English if needed): ' + S.subject +
-    '\nScene: ' + (sc.label||S.scene) + ' | Style: ' + (st.label||S.style) + (st.detail?' — '+st.detail:'') +
-    '\nCamera: ' + (sc.camera||'standard') + ' | Detail: ' + (sc.detail||'high detail') +
+    (subjTok  ? '\nSubject detail: ' + subjTok : '') +
+    '\nScene: ' + (sc.label||S.scene) + ' | Detail: ' + (sc.detail||'high detail') +
+    '\nStyle: ' + (st.label||S.style) + (styleTok?' — '+styleTok:'') +
+    '\nCamera: ' + (sc.camera||'standard') +
     '\nLighting: ' + (LIGHTINGS.find(function(x){return x.label===S.lighting;})||{value:S.lighting}).value +
     ' | Mood: ' + ((MOODS.find(function(x){return x.label===S.mood;})||{value:''}).value||'neutral') +
     ' | Genre: ' + ((GENRES.find(function(x){return x.label===S.genre;})||{value:''}).value||'none') +
@@ -1450,10 +1484,11 @@ function buildPromptPreview() {
   var mo  = MOODS.find(function(x){ return x.label === S.mood; });
   var ge  = GENRES.find(function(x){ return x.label === S.genre; });
   var parts = [
-    st  && st.detail  ? st.detail  : null,
-    lit && lit.value  ? lit.value  : null,
-    mo  && mo.value   ? mo.value   : null,
-    ge  && ge.value   ? ge.value   : null,
+    buildSubjectTokens(S.subjectType) || null,
+    buildStyleTokens(st)              || null,
+    lit && lit.value ? lit.value      : null,
+    mo  && mo.value  ? mo.value       : null,
+    ge  && ge.value  ? ge.value       : null,
   ].filter(Boolean);
   if (!parts.length) return '';
   return '<div class="prompt-preview" title="' + esc(parts.join(' • ')) + '">' +
@@ -1579,6 +1614,13 @@ function buildHTML() {
         '<span class="i-glyph">'+s.icon+'</span><span class="i-label">'+esc(s.label)+'</span></div>';
     }).join('');
     h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">Scene</label></div><div class="icon-grid">'+tiles+'</div></div>';
+
+    /* Subject Type pills */
+    var subjPills = SUBJECTS.map(function(s){
+      return '<div class="st-pill'+(S.subjectType===s.id?' active':'')+'" data-subtype="'+s.id+'"'+(s.tip?' title="'+esc(s.tip)+'"':'')+'>'+
+        '<span class="st-icon">'+esc(s.icon)+'</span> '+esc(s.label)+'</div>';
+    }).join('');
+    h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">Subject Type</label><span class="hint">main subject of image</span></div><div class="pill-row" style="margin-bottom:0">'+subjPills+'</div></div>';
 
     /* Style pills */
     var grps = [];
@@ -1774,6 +1816,7 @@ function attachEvents() {
   document.querySelectorAll('[data-mode]').forEach(function(el){ el.addEventListener('click', function(){ S.mode=el.dataset.mode; S.result=null; S.error=''; render(); }); });
   document.querySelectorAll('[data-scene]').forEach(function(el){ el.addEventListener('click', function(){ S.scene=el.dataset.scene; render(); }); });
   document.querySelectorAll('[data-style]').forEach(function(el){ el.addEventListener('click', function(){ S.style=el.dataset.style; render(); }); });
+  document.querySelectorAll('[data-subtype]').forEach(function(el){ el.addEventListener('click', function(){ S.subjectType=el.dataset.subtype; render(); }); });
 
   /* History chips */
   document.querySelectorAll('[data-hist]').forEach(function(el){
