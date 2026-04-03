@@ -500,20 +500,53 @@
        PROMPT MAIN — primary working area
     ═══════════════════════════════════════ */
     .prompt-main {
-      background: linear-gradient(180deg, rgba(47,129,247,.04), rgba(47,129,247,.01));
-      border: 1px solid rgba(47,129,247,.25);
+      background: linear-gradient(180deg, rgba(47,129,247,.06), rgba(47,129,247,.02));
+      border: 1px solid rgba(47,129,247,.28);
       border-radius: var(--r-md);
       padding: calc(var(--s4) + 2px);
       margin-bottom: var(--s4);
     }
-    .prompt-main .field { margin-bottom: 0; }
+    .prompt-main .field { margin-bottom: 2px; }
+    .prompt-main .lbl { letter-spacing: .18em; }
     .prompt-main textarea {
-      background: #05080C;
-      border-color: rgba(47,129,247,.35);
+      background: #04070B;
+      border: 1px solid rgba(47,129,247,.42);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 0 0 1px rgba(47,129,247,.08);
     }
     .prompt-main textarea:focus {
-      border-color: var(--acc);
-      box-shadow: 0 0 0 3px rgba(47,129,247,.18), inset 0 2px 5px rgba(0,0,0,.35);
+      border-color: rgba(47,129,247,.55);
+      box-shadow: 0 0 0 1px rgba(47,129,247,.35), 0 6px 18px rgba(47,129,247,.12);
+    }
+
+    /* ═══════════════════════════════════════
+       OUTPUT MAIN — hero result area
+    ═══════════════════════════════════════ */
+    .output-main {
+      position: relative;
+      border: 1px solid rgba(47,129,247,.30);
+      border-radius: var(--r-md);
+      padding: var(--s4);
+      margin-bottom: var(--s4);
+    }
+    .output-main::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(
+        120% 80% at 50% -10%,
+        rgba(47,129,247,.14),
+        rgba(47,129,247,.05),
+        transparent 70%
+      );
+      pointer-events: none;
+    }
+    .output-main.is-active {
+      box-shadow: 0 0 0 1px rgba(47,129,247,.32), 0 10px 32px rgba(47,129,247,.16);
+    }
+    .output-main .out-txt.accent {
+      background: #05080C;
+      border-color: rgba(47,129,247,.45);
     }
 
     .neg-preview {
@@ -1667,6 +1700,7 @@ function buildHTML() {
 
   if (S.result) {
     var r = S.result;
+    h += '<div class="output-main is-active">';
     if (r.via !== 'xml') h += '<div class="warn-strip">⚠ Parsed via '+esc(r.via)+' — open Debug for details</div>';
 
     h += '<div class="sec-block" style="margin-bottom:var(--s3)">' +
@@ -1684,6 +1718,8 @@ function buildHTML() {
 
     if (r.changes) h += '<div class="info-card"><span class="lbl">What changed</span><p>'+esc(r.changes)+'</p></div>';
     if (r.notes)   h += '<div class="info-card"><span class="lbl">ZIT tip</span><p>'+esc(r.notes)+'</p></div>';
+
+    h += '</div>'; /* output-main */
 
     h += '<button class="btn-primary btn-secondary" id="b-cp-all" style="margin-bottom:var(--s2)">⌘ Copy all for ComfyUI</button>';
     h += '<button class="btn-ghost" id="b-regen" style="display:flex;align-items:center;justify-content:center;gap:5px;width:100%;margin-top:var(--s2);color:var(--t3)">' +
