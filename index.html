@@ -496,6 +496,26 @@
     .sec-block > .two-col:last-child,
     .sec-block > .three-col:last-child { margin-bottom: 0; }
 
+    /* ═══════════════════════════════════════
+       PROMPT MAIN — primary working area
+    ═══════════════════════════════════════ */
+    .prompt-main {
+      background: linear-gradient(180deg, rgba(47,129,247,.04), rgba(47,129,247,.01));
+      border: 1px solid rgba(47,129,247,.25);
+      border-radius: var(--r-md);
+      padding: calc(var(--s4) + 2px);
+      margin-bottom: var(--s4);
+    }
+    .prompt-main .field { margin-bottom: 0; }
+    .prompt-main textarea {
+      background: #05080C;
+      border-color: rgba(47,129,247,.35);
+    }
+    .prompt-main textarea:focus {
+      border-color: var(--acc);
+      box-shadow: 0 0 0 3px rgba(47,129,247,.18), inset 0 2px 5px rgba(0,0,0,.35);
+    }
+
     .neg-preview {
       padding: var(--s2) var(--s3); background: var(--bg); border: 1px solid #1E2429;
       border-radius: var(--r-sm); margin-bottom: var(--s3);
@@ -1525,9 +1545,9 @@ function buildHTML() {
     var stPh  = stNow.example || 'красива жінка під дощем у Токіо';
     var pvHtml = buildPromptPreview();
 
-    h += '<div class="field"><div class="f-hdr"><label class="lbl">Prompt</label><span class="hint">Можна українською</span></div>' +
+    h += '<div class="prompt-main"><div class="field"><div class="f-hdr"><label class="lbl">Prompt</label><span class="hint">Можна українською</span></div>' +
       '<textarea id="inp-sub" rows="3" placeholder="e.g: '+esc(stPh)+'&#10;• your own idea here">'+esc(S.subject)+'</textarea>' +
-      histHtml + pvHtml + '</div>';
+      histHtml + pvHtml + '</div></div>';
 
     /* Lighting + Mood */
     h += '<div class="two-col">' +
