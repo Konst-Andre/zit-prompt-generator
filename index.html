@@ -531,10 +531,7 @@
       border-color: rgba(47,129,247,.55);
       box-shadow: 0 0 0 1px rgba(47,129,247,.35), 0 6px 18px rgba(47,129,247,.12);
     }
-    .prompt-main.is-focus .prompt-preview {
-      border-left-color: rgba(47,129,247,.9);
-      background: linear-gradient(90deg, rgba(47,129,247,.12), rgba(47,129,247,.04));
-    }
+    /* Focus mode states */
     .prompt-main.is-focus {
       border-color: rgba(47,129,247,.38);
     }
@@ -546,7 +543,6 @@
     }
     .prompt-main.is-typing textarea {
       border-color: rgba(47,129,247,.6);
-      box-shadow: 0 0 0 1px rgba(47,129,247,.45), 0 8px 22px rgba(47,129,247,.16);
     }
 
     /* ═══════════════════════════════════════
@@ -558,14 +554,6 @@
       border-radius: var(--r-md);
       padding: var(--s4);
       margin-bottom: var(--s4);
-      opacity: 0;
-      transform: translateY(4px);
-      transition: opacity .25s ease, transform .25s ease, box-shadow .25s ease;
-    }
-    .output-main.is-active {
-      opacity: 1;
-      transform: translateY(0);
-      box-shadow: 0 0 0 1px rgba(47,129,247,.32), 0 10px 32px rgba(47,129,247,.16);
     }
     .output-main::before {
       content: '';
@@ -579,9 +567,10 @@
         transparent 70%
       );
       pointer-events: none;
-      z-index: 0;
     }
-    .output-main > * { position: relative; z-index: 1; }
+    .output-main.is-active {
+      box-shadow: 0 0 0 1px rgba(47,129,247,.32), 0 10px 32px rgba(47,129,247,.16);
+    }
     .output-main .out-txt.accent {
       background: #05080C;
       border-color: rgba(47,129,247,.45);
@@ -1738,7 +1727,7 @@ function buildHTML() {
 
   if (S.result) {
     var r = S.result;
-    h += '<div class="output-main">';
+    h += '<div class="output-main is-active">';
     if (r.via !== 'xml') h += '<div class="warn-strip">⚠ Parsed via '+esc(r.via)+' — open Debug for details</div>';
 
     h += '<div class="sec-block" style="margin-bottom:var(--s3)">' +
@@ -1807,26 +1796,9 @@ function attachEvents() {
     var ta = document.getElementById('inp-sub');
     var pm = ta && ta.closest('.prompt-main');
     if (!ta || !pm) return;
-    var typingTimer;
     ta.addEventListener('focus', function(){ pm.classList.add('is-focus'); });
-    ta.addEventListener('blur',  function(){
-      pm.classList.remove('is-focus', 'is-typing');
-      clearTimeout(typingTimer);
-    });
-    ta.addEventListener('input', function(){
-      pm.classList.add('is-typing');
-      clearTimeout(typingTimer);
-      typingTimer = setTimeout(function(){ pm.classList.remove('is-typing'); }, 600);
-    });
-  }());
-
-  /* ── Output appearance: activate via RAF so CSS transition fires ── */
-  (function(){
-    var om = document.querySelector('.output-main');
-    if (!om) return;
-    requestAnimationFrame(function(){
-      requestAnimationFrame(function(){ om.classList.add('is-active'); });
-    });
+    ta.addEventListener('blur',  function(){ pm.classList.remove('is-focus','is-typing'); });
+    ta.addEventListener('input', function(){ pm.classList.add('is-typing'); });
   }());
   var existEl = document.getElementById('inp-exist');
   if (existEl) {
