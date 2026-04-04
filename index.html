@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v15.9</title>
+  <title>ZIT Prompt Generator v16.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -285,25 +285,52 @@
     .btn-copy.copied { border-color: var(--green-bdr); color: var(--green-txt); background: var(--green-bg); }
 
     /* ═══════════════════════════════════════
-       OUTPUT ACTIONS — Regenerate + Copy all
+       OUTPUT ACTIONS — Regenerate + Copy (ComfyUI)
+       v16.0: full-width, hierarchy, separator
     ═══════════════════════════════════════ */
     .output-actions {
       display: flex;
-      gap: var(--s2);
-      margin: var(--s3) 0;
+      gap: 10px;
+      width: 100%;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,.06);
     }
 
-    /* REGEN — secondary, contextual */
-    .btn-regen {
+    /* Shared base for both output action buttons */
+    .btn-regen,
+    .btn-act-copy {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 6px;
-      opacity: .85;
-      transition: opacity .15s ease, transform .1s ease;
+      height: 40px;
+      border-radius: var(--r);
     }
-    .btn-regen:hover { opacity: 1; }
+
+    /* REGEN — primary iteration, dominant */
+    .btn-regen {
+      flex: 1.5;
+      opacity: .95;
+      transition: opacity .15s ease, transform .1s ease,
+                  border-color var(--tr), color var(--tr), background var(--tr);
+    }
+    .btn-regen:hover  { opacity: 1; }
     .btn-regen:active { transform: scale(0.97); }
-    .btn-regen-icon { font-size: 15px; line-height: 1; }
+
+    /* COPY (ComfyUI) — secondary, muted */
+    .btn-act-copy {
+      flex: 1;
+      opacity: .75;
+      transition: opacity .15s ease, transform .1s ease,
+                  border-color var(--tr), color var(--tr), background var(--tr);
+    }
+    .btn-act-copy:hover  { opacity: .9; border-color: var(--bdr2); color: var(--t2); }
+    .btn-act-copy:active { transform: scale(0.97); }
+    .btn-act-copy.copied { border-color: var(--green-bdr); color: var(--green-txt); background: var(--green-bg); opacity: 1; }
+
+    /* Action icon */
+    .output-actions .act-icon { font-size: 15px; opacity: .9; line-height: 1; }
 
     /* ═══════════════════════════════════════
        RANDOM BUTTON — special
@@ -1483,7 +1510,7 @@ function buildHTML() {
   var h = '<div class="hdr">' +
     '<div class="hdr-brand">' +
       '<div class="hdr-eyebrow">ZIT · Lumina2 · Qwen3-4B · CFG 1.5</div>' +
-      '<div class="hdr-title">Prompt Generator <span class="hdr-ver">v15.9</span></div>' +
+      '<div class="hdr-title">Prompt Generator <span class="hdr-ver">v16.0</span></div>' +
     '</div>' +
     '<div class="hdr-acts">' +
       '<div class="pill btn ' + (keyOk?'p-ok':'p-miss') + '" id="b-api"><span class="dot"></span>' + (keyOk?'Groq ✓':'API Key?') + '</div>' +
@@ -1720,8 +1747,8 @@ function buildHTML() {
   }
 
   /* ═══════════════════════════════════════
-     OUTPUT — v15.9: Regenerate moved into output-main
-     Flow: Generate → Read → [Regenerate | Copy all] → Repeat
+     OUTPUT — v16.0: output-actions full-width, hierarchy
+     Flow: Generate → Read → [Regenerate | Copy (ComfyUI)] → Repeat
   ═══════════════════════════════════════ */
   if (S.result) {
     var r = S.result;
@@ -1736,10 +1763,10 @@ function buildHTML() {
       '<div class="out-hdr"><span class="lbl">Negative Prompt</span><button class="btn-copy" id="b-cp-neg">⎘ Copy</button></div>' +
       '<div class="out-txt" id="out-neg">'+esc(r.negative)+'</div></div>';
 
-    /* output-actions: Regenerate + Copy all — contextual, immediately after prompts */
+    /* output-actions: Regenerate + Copy (ComfyUI) — contextual, inside output-main */
     h += '<div class="output-actions">' +
-      '<button class="btn-ghost btn-regen" id="b-regen"><span class="btn-regen-icon">↺</span> Regenerate</button>' +
-      '<button class="btn-ghost" id="b-cp-all">⌘ Copy all</button>' +
+      '<button class="btn-ghost btn-regen" id="b-regen"><span class="act-icon">↺</span> Regenerate</button>' +
+      '<button class="btn-ghost btn-act-copy" id="b-cp-all"><span class="act-icon">⧉</span> Copy (ComfyUI)</button>' +
     '</div>';
 
     var pp = r.params;
