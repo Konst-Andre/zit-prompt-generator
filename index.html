@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v15.3</title>
+  <title>ZIT Prompt Generator v15.9</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -57,7 +57,7 @@
     }
 
     html {
-      background: #0D1117; /* Safari status bar fallback — must be solid on html element */
+      background: #0D1117;
     }
 
     html, body {
@@ -161,7 +161,6 @@
       opacity: .7;
       border-radius: 2px;
     }
-    /* suppress underline in dense inline contexts */
     .info-card .lbl::after,
     .out-hdr .lbl::after { display: none; }
     .hint { font-size: 11px; color: var(--t4); }
@@ -284,6 +283,27 @@
     .btn-copy:hover { border-color: var(--acc); color: var(--acc-txt); background: var(--acc-bg); }
     .btn-copy:active { transform: scale(0.95); }
     .btn-copy.copied { border-color: var(--green-bdr); color: var(--green-txt); background: var(--green-bg); }
+
+    /* ═══════════════════════════════════════
+       OUTPUT ACTIONS — Regenerate + Copy all
+    ═══════════════════════════════════════ */
+    .output-actions {
+      display: flex;
+      gap: var(--s2);
+      margin: var(--s3) 0;
+    }
+
+    /* REGEN — secondary, contextual */
+    .btn-regen {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      opacity: .85;
+      transition: opacity .15s ease, transform .1s ease;
+    }
+    .btn-regen:hover { opacity: 1; }
+    .btn-regen:active { transform: scale(0.97); }
+    .btn-regen-icon { font-size: 15px; line-height: 1; }
 
     /* ═══════════════════════════════════════
        RANDOM BUTTON — special
@@ -450,7 +470,7 @@
     }
 
     /* ═══════════════════════════════════════
-       PROMPT PREVIEW — style+lighting+mood+genre
+       PROMPT PREVIEW
     ═══════════════════════════════════════ */
     .prompt-preview {
       animation: hintFade 150ms ease;
@@ -497,7 +517,7 @@
     .sec-block > .three-col:last-child { margin-bottom: 0; }
 
     /* ═══════════════════════════════════════
-       PROMPT MAIN — primary working area
+       PROMPT MAIN
     ═══════════════════════════════════════ */
     .prompt-main {
       position: relative;
@@ -531,22 +551,13 @@
       border-color: rgba(47,129,247,.55);
       box-shadow: 0 0 0 1px rgba(47,129,247,.35), 0 6px 18px rgba(47,129,247,.12);
     }
-    /* Focus mode states */
-    .prompt-main.is-focus {
-      border-color: rgba(47,129,247,.38);
-    }
-    .prompt-main.is-focus::before {
-      opacity: .7;
-    }
-    .prompt-main.is-typing {
-      border-color: rgba(47,129,247,.48);
-    }
-    .prompt-main.is-typing textarea {
-      border-color: rgba(47,129,247,.6);
-    }
+    .prompt-main.is-focus { border-color: rgba(47,129,247,.38); }
+    .prompt-main.is-focus::before { opacity: .7; }
+    .prompt-main.is-typing { border-color: rgba(47,129,247,.48); }
+    .prompt-main.is-typing textarea { border-color: rgba(47,129,247,.6); }
 
     /* ═══════════════════════════════════════
-       OUTPUT MAIN — hero result area
+       OUTPUT MAIN
     ═══════════════════════════════════════ */
     .output-main {
       position: relative;
@@ -631,7 +642,7 @@
     details[open] > summary::before { content: '▼ '; }
 
     /* ═══════════════════════════════════════
-       MODEL CARDS — API panel (replaces .model-opt)
+       MODEL CARDS
     ═══════════════════════════════════════ */
     .model-card {
       position: relative;
@@ -648,7 +659,6 @@
       transition: background var(--tr), border-color var(--tr),
                   box-shadow var(--tr), transform 0.18s ease;
     }
-    /* left indicator bar */
     .model-card::before {
       content: "";
       position: absolute;
@@ -658,50 +668,27 @@
       background: transparent;
       transition: background var(--tr);
     }
-    .model-card:hover {
-      background: var(--bg4);
-      border-color: var(--bdr2);
-    }
+    .model-card:hover { background: var(--bg4); border-color: var(--bdr2); }
     .model-card.active {
       background: rgba(47, 129, 247, 0.12);
       border-color: var(--acc);
-      box-shadow: 0 0 0 1px var(--acc),
-                  0 8px 24px rgba(47,129,247,.18);
+      box-shadow: 0 0 0 1px var(--acc), 0 8px 24px rgba(47,129,247,.18);
       transform: translateY(-1px);
     }
-    .model-card.active::before {
-      background: var(--acc);
-    }
-    /* custom radio dot */
+    .model-card.active::before { background: var(--acc); }
     .model-radio {
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      border: 1.5px solid var(--bdr2);
-      background: transparent;
-      flex-shrink: 0;
-      transition: all 0.15s ease;
-      pointer-events: none;
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 1.5px solid var(--bdr2); background: transparent;
+      flex-shrink: 0; transition: all 0.15s ease; pointer-events: none;
     }
     .model-card.active .model-radio {
-      background: var(--acc);
-      border-color: var(--acc);
+      background: var(--acc); border-color: var(--acc);
       box-shadow: 0 0 0 3px rgba(47,129,247,.25);
     }
-    /* hidden native radio */
-    .model-card input[type=radio] {
-      position: absolute;
-      opacity: 0; width: 0; height: 0;
-      pointer-events: none;
-    }
+    .model-card input[type=radio] { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
     .model-info { flex: 1; min-width: 0; }
-    .model-name {
-      font-size: 13px; font-weight: 600; color: var(--t1);
-      line-height: 1.3; transition: color 0.15s ease;
-    }
-    .model-note {
-      font-size: 11px; color: var(--t3); transition: color 0.15s ease;
-    }
+    .model-name { font-size: 13px; font-weight: 600; color: var(--t1); line-height: 1.3; transition: color 0.15s ease; }
+    .model-note { font-size: 11px; color: var(--t3); transition: color 0.15s ease; }
     .model-card.active .model-name { color: #fff; }
     .model-card.active .model-note { color: rgba(255,255,255,.65); }
     .model-id {
@@ -724,10 +711,7 @@
       cursor: pointer; position: relative;
       transition: background var(--tr), border-color var(--tr);
     }
-    input[type=checkbox]:checked {
-      background: var(--acc);
-      border-color: var(--acc);
-    }
+    input[type=checkbox]:checked { background: var(--acc); border-color: var(--acc); }
     input[type=checkbox]:checked::after {
       content: '';
       position: absolute;
@@ -866,27 +850,23 @@ const STYLES = [
 
 /* ═══════════════════════════════════════════════════
    SUBJECT AXIS — ZIT Style Engine v3
-   Describes WHAT the main subject IS — separate from Scene (where/how shot)
-   and Style (rendering look). Feeds structured tokens into buildUser().
+   v15.9: semantic emoji icons replace abstract symbols
 ═══════════════════════════════════════════════════ */
 const SUBJECTS = [
-  { id:'none',        label:'None',        icon:'○', tokens:[], tip:'' },
-  { id:'person',      label:'Human',       icon:'◉', tokens:['human facial detail', 'natural skin texture', 'expressive features'],            tip:'Focus on human features and anatomy' },
-  { id:'animal',      label:'Animal',      icon:'◈', tokens:['fur or feather detail', 'sharp eyes', 'natural anatomy'],                        tip:'Enhance fur, eyes, and anatomy' },
-  { id:'product',     label:'Product',     icon:'◇', tokens:['clean product detail', 'material definition', 'precise edges'],                  tip:'Clean edges, materials, product detail' },
-  { id:'object',      label:'Object',      icon:'◻', tokens:['clear shape definition', 'solid structure', 'surface detail'],                   tip:'Shape definition and structure' },
-  { id:'environment', label:'Environment', icon:'⬟', tokens:['environmental depth', 'spatial composition', 'atmospheric perspective'],         tip:'Scene-focused composition' },
+  { id:'none',        label:'None',        icon:'○',  tokens:[], tip:'' },
+  { id:'person',      label:'Human',       icon:'👤', tokens:['human facial detail', 'natural skin texture', 'expressive features'],            tip:'Focus on human features and anatomy' },
+  { id:'animal',      label:'Animal',      icon:'🐾', tokens:['fur or feather detail', 'sharp eyes', 'natural anatomy'],                        tip:'Enhance fur, eyes, and anatomy' },
+  { id:'product',     label:'Product',     icon:'📦', tokens:['clean product detail', 'material definition', 'precise edges'],                  tip:'Clean edges, materials, product detail' },
+  { id:'object',      label:'Object',      icon:'◻️', tokens:['clear shape definition', 'solid structure', 'surface detail'],                   tip:'Shape definition and structure' },
+  { id:'environment', label:'Environment', icon:'🏞️', tokens:['environmental depth', 'spatial composition', 'atmospheric perspective'],         tip:'Scene-focused composition' },
 ];
 
-/* buildSubjectTokens — returns comma-separated subject axis tokens.
-   Reads from SUBJECTS array — no data duplication. */
 function buildSubjectTokens(subjectId) {
   var subj = SUBJECTS.find(function(x){ return x.id === subjectId; });
   if (!subj || !subj.tokens || !subj.tokens.length) return '';
   return subj.tokens.join(', ');
 }
 
-/* buildStyleTokens — returns style detail string (rendering layer only, no subject). */
 function buildStyleTokens(styleObj) {
   return (styleObj && styleObj.detail) ? styleObj.detail : '';
 }
@@ -959,7 +939,7 @@ const GROQ_MODELS = [
 ];
 
 /* ═══════════════════════════════════════════════════
-   SMART RANDOM — scene+style+genre aware subject pool
+   SMART RANDOM
 ═══════════════════════════════════════════════════ */
 const RANDOM_POOL = {
   portrait: {
@@ -1184,7 +1164,6 @@ const RANDOM_POOL = {
   },
 };
 
-/* Genre modifiers that get appended */
 const GENRE_MODS = {
   'Cyberpunk':        ', neon lights, rain, futuristic tech, digital overlays',
   'Fantasy':          ', magical atmosphere, mystical elements, otherworldly beauty',
@@ -1205,26 +1184,19 @@ function rndFrom(arr) {
 }
 
 function smartRandom(mode) {
-  /* mode: 'normal' | 'creative' | 'wild' */
   var scene = S.scene || 'portrait';
   var pool  = RANDOM_POOL[scene] || RANDOM_POOL.manual;
-
   var tier;
-  if (mode === 'wild')     tier = pool.wild     || pool.creative || pool.normal;
+  if (mode === 'wild')          tier = pool.wild     || pool.creative || pool.normal;
   else if (mode === 'creative') tier = pool.creative || pool.normal;
-  else                     tier = pool.normal;
-
+  else                          tier = pool.normal;
   var subject = rndFrom(tier);
-
-  /* append genre modifier if set and not already thematic */
   if (S.genre && GENRE_MODS[S.genre]) {
     var lower = subject.toLowerCase();
-    /* avoid redundant modifier if subject clearly already matches genre feel */
     var keywords = S.genre.toLowerCase().split(/[\s\-]/);
     var alreadyContains = keywords.some(function(k){ return k.length > 4 && lower.indexOf(k) !== -1; });
     if (!alreadyContains) subject += GENRE_MODS[S.genre];
   }
-
   return subject;
 }
 
@@ -1260,9 +1232,8 @@ var S = {
   loras:[{name:'',weight:'0.85'}],
   steps:'12', cfg:'1.5', sampler:'euler_ancestral', scheduler:'beta', seed:'',
   loading:false, result:null, error:'', dbgLog:null,
-  /* Random */
-  rndMode:'normal',       /* 'normal' | 'creative' | 'wild' */
-  subjectHistory:[],      /* last 5 random subjects */
+  rndMode:'normal',
+  subjectHistory:[],
 };
 
 /* ═══════════════════════════════════════════════════
@@ -1296,27 +1267,18 @@ function clearKey() {
 function doRandom(mode) {
   var subject = smartRandom(mode || S.rndMode);
   S.subject = subject;
-
-  /* Push to history (max 5, deduplicated) */
   S.subjectHistory = S.subjectHistory.filter(function(h){ return h !== subject; });
   S.subjectHistory.unshift(subject);
   if (S.subjectHistory.length > 5) S.subjectHistory.length = 5;
-
-  /* Render to update textarea value */
   render();
-
-  /* Apply glow animation to subject textarea */
   requestAnimationFrame(function() {
     var ta = document.getElementById('inp-sub');
     if (!ta) return;
     ta.classList.remove('glow-flash');
-    void ta.offsetWidth; /* reflow to restart */
+    void ta.offsetWidth;
     ta.classList.add('glow-flash');
-    /* move cursor to end */
     ta.focus();
     ta.setSelectionRange(ta.value.length, ta.value.length);
-
-    /* flash the generate button */
     setTimeout(function() {
       var gb = document.getElementById('b-gen');
       if (!gb) return;
@@ -1346,8 +1308,8 @@ function buildUser() {
       (subjEnhTok ? '\nSubject focus (use only if relevant to the prompt): ' + subjEnhTok : '') +
       '\n\nPrompt: "' + S.existing.slice(0, 1500) + '"';
   }
-  var subjTok   = buildSubjectTokens(S.subjectType);
-  var styleTok  = buildStyleTokens(st);
+  var subjTok  = buildSubjectTokens(S.subjectType);
+  var styleTok = buildStyleTokens(st);
   return 'Generate ZIT prompt:\nSubject (translate to English if needed): ' + S.subject +
     (subjTok  ? '\nSubject detail: ' + subjTok : '') +
     '\nScene: ' + (sc.label||S.scene) + ' | Detail: ' + (sc.detail||'high detail') +
@@ -1430,7 +1392,7 @@ async function generate() {
   _ac=new AbortController(); _busy=true;
   S.loading=true; S.error=''; S.result=null; S.dbgLog=null;
   if (window.innerWidth<=680) S.mobilePane='output';
-  render(); /* loading state — intermediate, no repaint */
+  render();
   var attempts=0;
   while (attempts<=2) {
     attempts++;
@@ -1445,7 +1407,7 @@ async function generate() {
       if (e.aborted) break;
       if (e.code===429 && attempts<=2) {
         if (_ac&&_ac.signal.aborted) break;
-        var delay=3000*attempts; S.error='Rate limit — retry '+attempts+'/2 in '+(delay/1000)+'s...'; render(); /* retry — intermediate */
+        var delay=3000*attempts; S.error='Rate limit — retry '+attempts+'/2 in '+(delay/1000)+'s...'; render();
         await sleep(delay);
         if (_ac&&_ac.signal.aborted) break;
         S.error=''; continue;
@@ -1454,7 +1416,7 @@ async function generate() {
       break;
     }
   }
-  _busy=false; S.loading=false; render(); forceRepaint(); /* final state — trigger repaint */
+  _busy=false; S.loading=false; render(); forceRepaint();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1468,15 +1430,12 @@ function copyText(text, btn) {
   });
 }
 
-/* ═══════════════════════════════════════════════════
-   HTML ESC
-═══════════════════════════════════════════════════ */
 function esc(s) {
   return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 /* ═══════════════════════════════════════════════════
-   PROMPT PREVIEW — style+lighting+mood+genre summary
+   PROMPT PREVIEW
 ═══════════════════════════════════════════════════ */
 function buildPromptPreview() {
   var st  = STYLES.find(function(x){ return x.id === S.style; });
@@ -1498,12 +1457,7 @@ function buildPromptPreview() {
 }
 
 /* ═══════════════════════════════════════════════════
-   RENDER
-═══════════════════════════════════════════════════ */
-/* ═══════════════════════════════════════════════════
-   iOS SAFARI REPAINT — centralized, called after final DOM mutations only
-   Double-RAF: frame 1 promotes body to GPU layer, frame 2 releases it.
-   Must NOT be called on intermediate loading/retry renders.
+   iOS SAFARI REPAINT
 ═══════════════════════════════════════════════════ */
 function forceRepaint() {
   requestAnimationFrame(function() {
@@ -1529,7 +1483,7 @@ function buildHTML() {
   var h = '<div class="hdr">' +
     '<div class="hdr-brand">' +
       '<div class="hdr-eyebrow">ZIT · Lumina2 · Qwen3-4B · CFG 1.5</div>' +
-      '<div class="hdr-title">Prompt Generator <span class="hdr-ver">v15.3</span></div>' +
+      '<div class="hdr-title">Prompt Generator <span class="hdr-ver">v15.9</span></div>' +
     '</div>' +
     '<div class="hdr-acts">' +
       '<div class="pill btn ' + (keyOk?'p-ok':'p-miss') + '" id="b-api"><span class="dot"></span>' + (keyOk?'Groq ✓':'API Key?') + '</div>' +
@@ -1540,7 +1494,6 @@ function buildHTML() {
 
   /* API PANEL */
   if (S.apiOpen) {
-    /* ── NEW model-card markup ── */
     var mOpts = GROQ_MODELS.map(function(m){
       return '<label class="model-card' + (S.model===m.id?' active':'') + '" data-model="' + esc(m.id) + '">' +
         '<div class="model-radio"></div>' +
@@ -1615,12 +1568,12 @@ function buildHTML() {
     }).join('');
     h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">Scene</label></div><div class="icon-grid">'+tiles+'</div></div>';
 
-    /* Subject Type pills */
+    /* Subject Type pills — v15.9: semantic emoji icons */
     var subjPills = SUBJECTS.map(function(s){
       return '<div class="st-pill'+(S.subjectType===s.id?' active':'')+'" data-subtype="'+s.id+'"'+(s.tip?' title="'+esc(s.tip)+'"':'')+'>'+
         '<span class="st-icon">'+esc(s.icon)+'</span> '+esc(s.label)+'</div>';
     }).join('');
-    h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">Subject Type</label><span class="hint">main subject of image</span></div><div class="pill-row" style="margin-bottom:0">'+subjPills+'</div></div>';
+    h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">Subject Type</label><span class="hint">Adds subject detail</span></div><div class="pill-row" style="margin-bottom:0">'+subjPills+'</div></div>';
 
     /* Style pills */
     var grps = [];
@@ -1709,7 +1662,6 @@ function buildHTML() {
 
   /* ── GENERATE ROW ── */
   if (S.mode === 'generate') {
-    /* Random mode badge */
     var badgeText = '', badgeClass = 'rnd-badge';
     if (S.rndMode === 'creative') { badgeText='Shift: creative mode'; badgeClass+=' creative'; }
     else if (S.rndMode === 'wild') { badgeText='DblClick: max wild ⚡'; badgeClass+=' wild'; }
@@ -1767,6 +1719,10 @@ function buildHTML() {
       '<div class="ph-sub">'+esc((GROQ_MODELS.find(function(m){return m.id===S.model;})||{name:S.model}).name)+'</div></div>';
   }
 
+  /* ═══════════════════════════════════════
+     OUTPUT — v15.9: Regenerate moved into output-main
+     Flow: Generate → Read → [Regenerate | Copy all] → Repeat
+  ═══════════════════════════════════════ */
   if (S.result) {
     var r = S.result;
     h += '<div class="output-main is-active">';
@@ -1780,6 +1736,12 @@ function buildHTML() {
       '<div class="out-hdr"><span class="lbl">Negative Prompt</span><button class="btn-copy" id="b-cp-neg">⎘ Copy</button></div>' +
       '<div class="out-txt" id="out-neg">'+esc(r.negative)+'</div></div>';
 
+    /* output-actions: Regenerate + Copy all — contextual, immediately after prompts */
+    h += '<div class="output-actions">' +
+      '<button class="btn-ghost btn-regen" id="b-regen"><span class="btn-regen-icon">↺</span> Regenerate</button>' +
+      '<button class="btn-ghost" id="b-cp-all">⌘ Copy all</button>' +
+    '</div>';
+
     var pp = r.params;
     var pcards = [['Steps',pp.steps],['CFG',pp.cfg],['Sampler',pp.sampler],['Scheduler',pp.scheduler],['Resolution',pp.resolution],['Seed',pp.seed]];
     h += '<div class="f-hdr" style="margin-bottom:8px"><span class="lbl">ComfyUI Params</span></div>' +
@@ -1789,11 +1751,6 @@ function buildHTML() {
     if (r.notes)   h += '<div class="info-card"><span class="lbl">ZIT tip</span><p>'+esc(r.notes)+'</p></div>';
 
     h += '</div>'; /* output-main */
-
-    h += '<button class="btn-primary btn-secondary" id="b-cp-all" style="margin-bottom:var(--s2)">⌘ Copy all for ComfyUI</button>';
-    h += '<button class="btn-ghost" id="b-regen" style="display:flex;align-items:center;justify-content:center;gap:5px;width:100%;margin-top:var(--s2);color:var(--t3)">' +
-      '<span style="font-size:15px;line-height:1;color:var(--t3)">↺</span> Regenerate' +
-    '</button>';
   }
 
   h += '</div></div>'; /* col-r + body-grid */
@@ -1818,7 +1775,6 @@ function attachEvents() {
   document.querySelectorAll('[data-style]').forEach(function(el){ el.addEventListener('click', function(){ S.style=el.dataset.style; render(); }); });
   document.querySelectorAll('[data-subtype]').forEach(function(el){ el.addEventListener('click', function(){ S.subjectType=el.dataset.subtype; render(); }); });
 
-  /* History chips */
   document.querySelectorAll('[data-hist]').forEach(function(el){
     el.addEventListener('click', function(){
       var i = +el.dataset.hist;
@@ -1834,7 +1790,6 @@ function attachEvents() {
   function live(id, key){ var el=document.getElementById(id); if(el) el.addEventListener('input',function(){S[key]=el.value;}); }
   live('inp-sub','subject');
 
-  /* ── Prompt focus mode ── */
   (function(){
     var ta = document.getElementById('inp-sub');
     var pm = ta && ta.closest('.prompt-main');
@@ -1843,6 +1798,7 @@ function attachEvents() {
     ta.addEventListener('blur',  function(){ pm.classList.remove('is-focus','is-typing'); });
     ta.addEventListener('input', function(){ pm.classList.add('is-typing'); });
   }());
+
   var existEl = document.getElementById('inp-exist');
   if (existEl) {
     existEl.addEventListener('input', function(){
@@ -1872,7 +1828,6 @@ function attachEvents() {
   if(cr) cr.addEventListener('change',function(){ var k=document.getElementById('inp-key'); saveKey(k?k.value:S.apiKey, cr.checked); });
   on('b-key-clr','click',function(){ clearKey(); render(); });
 
-  /* model-card click handler — reads data-model from label */
   document.querySelectorAll('.model-card').forEach(function(card){
     card.addEventListener('click', function(){
       var val = card.dataset.model;
@@ -1886,17 +1841,14 @@ function attachEvents() {
   /* ── RANDOM BUTTON ── */
   var rndBtn = document.getElementById('b-random');
   if (rndBtn) {
-    /* single click — normal or creative (if shift held) */
     rndBtn.addEventListener('click', function(e) {
       var mode = e.shiftKey ? 'creative' : 'normal';
       S.rndMode = mode;
-      /* fire + brief flash */
       rndBtn.classList.remove('fired');
       void rndBtn.offsetWidth;
       rndBtn.classList.add('fired');
       setTimeout(function(){ rndBtn.classList.remove('fired'); }, 250);
       doRandom(mode);
-      /* update badge */
       var badge = document.getElementById('rnd-badge');
       if (badge) {
         badge.textContent = mode==='creative' ? 'Shift: creative mode' : '';
@@ -1904,7 +1856,6 @@ function attachEvents() {
       }
     });
 
-    /* double-click → wild */
     rndBtn.addEventListener('dblclick', function(e) {
       e.stopPropagation();
       S.rndMode = 'wild';
