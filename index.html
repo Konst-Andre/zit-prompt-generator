@@ -285,6 +285,7 @@
     }
     .btn-ghost:hover { border-color: var(--bdr2); color: var(--t2); background: rgba(255,255,255,.03); }
     .btn-ghost:active { transform: scale(0.96); }
+    .btn-ghost.copied { border-color: var(--green-bdr); color: var(--green-txt); background: var(--green-bg); }
 
     /* TEXT */
     .btn-text { background: transparent; border: none; color: var(--t3); font-size: 12px; padding: 0; border-radius: var(--r-sm); }
@@ -788,7 +789,7 @@
     @media (min-width: 681px) { .mob-mode-sw { display: none; } }
 
     /* ═══════════════════════════════════════
-       MODIFY ENGINE v3
+       MODIFY ENGINE v4
     ═══════════════════════════════════════ */
     .mod-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: var(--s2); }
     .mod-pill {
@@ -811,6 +812,8 @@
     .mod-row    { display: flex; gap: var(--s2); margin-bottom: var(--s2); align-items: center; }
     .mod-domain { width: 128px; flex-shrink: 0; font-size: 12px; font-family: 'JetBrains Mono', monospace; }
     .mod-hint   { font-size: 11px; color: var(--t4); margin-top: -6px; margin-bottom: var(--s3); line-height: 1.5; }
+    /* debug copy button flash — matches btn-copy.copied */
+    .btn-ghost.copied { border-color: var(--green-bdr); color: var(--green-txt); background: var(--green-bg); }
   </style>
 </head>
 <body>
@@ -1290,34 +1293,109 @@ const SCENE_NEGATIVES = {
 function buildNegative() { return SCENE_NEGATIVES[S.scene] || SCENE_NEGATIVES.manual; }
 
 /* ═══════════════════════════════════════════════════
-   MODIFY ENGINE v3
+   MODIFY ENGINE v4
 ═══════════════════════════════════════════════════ */
 var MODIFY_DOMAINS = ['LIGHTING','ENVIRONMENT','STYLE','COLOR','CAMERA','CHARACTER','PROPS'];
 
+var DOMAIN_PRIORITY = { STYLE:1, ENVIRONMENT:2, LIGHTING:3, COLOR:4, CAMERA:5, PROPS:6, CHARACTER:7 };
+
+/* helpers */
+function dedupeDomains(mods) {
+  var seen = {};
+  return mods.filter(function(m){ if (seen[m.domain]) return false; seen[m.domain]=true; return true; });
+}
+
+function getDomain(str) {
+  if (!str) return 'CHARACTER';
+  var s = str.toLowerCase();
+  if (s.indexOf('light') !== -1) return 'LIGHTING';
+  if (s.indexOf('style') !== -1) return 'STYLE';
+  if (s.indexOf('environment') !== -1 || s.indexOf('snow') !== -1 || s.indexOf('fog') !== -1 || s.indexOf('mist') !== -1) return 'ENVIRONMENT';
+  if (s.indexOf('color') !== -1 || s.indexOf('palette') !== -1) return 'COLOR';
+  if (s.indexOf('camera') !== -1 || s.indexOf('lens') !== -1) return 'CAMERA';
+  if (s.indexOf('prop') !== -1 || s.indexOf('object') !== -1) return 'PROPS';
+  return 'CHARACTER';
+}
+
+function extractBase(text) {
+  var m = text.match(/Base:\s*([\s\S]*)/);
+  return m ? m[1].trim() : '';
+}
+
+function buildModifyPrompt(base, mods, intensity) {
+  var validMods = (mods || []).filter(function(m){ return (m.text || '').trim(); });
+  if (!validMods.length) return base;
+  var safe = dedupeDomains(validMods).slice(-2);
+  safe.sort(function(a, b){ return (DOMAIN_PRIORITY[a.domain]||99) - (DOMAIN_PRIORITY[b.domain]||99); });
+  var prefix = intensity === 'low' ? 'subtle ' : intensity === 'high' ? 'strong ' : '';
+  var suffix = intensity === 'high' ? ', dramatic' : '';
+  var changes = safe.map(function(m){ return '- Change: ' + prefix + m.text.trim() + suffix; }).join('\n');
+  return 'Modify the image:\n' + changes +
+    '\n\nKeep:\n- identity\n- composition\n- framing\n- pose (unless modified)\n- lighting (unless modified)\n- color (unless modified)\n\nBase:\n' + base;
+}
+
+function generateVariantModifiers() {
+  var LIGHTING_POOL  = ['cinematic lighting','golden hour lighting','soft lighting','rim lighting','blue hour lighting','volumetric rays'];
+  var SECONDARY_POOL = ['foggy environment','snowy environment','misty environment','anime style','warm color palette'];
+  var result = [{ domain:'LIGHTING', text: rndFrom(LIGHTING_POOL) }];
+  if (Math.random() > 0.4) {
+    var sec = rndFrom(SECONDARY_POOL);
+    result.push({ domain: getDomain(sec), text: sec });
+  }
+  return result;
+}
+
+function normalizeModifier(str) {
+  var prefix = '';
+  if (str.toLowerCase().indexOf('subtle') !== -1) prefix = 'subtle ';
+  else if (str.toLowerCase().indexOf('strong') !== -1) prefix = 'strong ';
+  var core = str.toLowerCase()
+    .replace(/(subtle|strong)/g, '')
+    .replace(/\b(adjust|enhance|make|increase|add|improve|apply|use)\b/g, '')
+    .replace(/\s+/g, ' ').trim();
+  core = core.split(/\s+/).slice(0, 5).join(' ').trim();
+  return (prefix + core).trim();
+}
+
+function normalizeModifyOutput(raw, builtPrompt) {
+  var cleaned = stripThink(raw);
+  if (!cleaned.trim()) return builtPrompt; /* FIX: fallback to built prompt, never empty */
+  /* extract Change lines */
+  var changes = [];
+  var re = /- Change:\s*(.+)/g;
+  var m;
+  while ((m = re.exec(cleaned)) !== null) changes.push(normalizeModifier(m[1].trim()));
+  if (!changes.length) return cleaned.trim() || builtPrompt;
+  changes = changes.slice(0, 2);
+  /* smart Keep list — drop items if modifier explicitly targets that domain */
+  var domains = changes.map(function(c){ return getDomain(c); });
+  var keep = ['identity','composition','framing','pose','lighting','color'].filter(function(k){
+    if (k === 'lighting' && domains.indexOf('LIGHTING') !== -1) return false;
+    if (k === 'color'    && domains.indexOf('COLOR')    !== -1) return false;
+    return true;
+  });
+  var base = extractBase(cleaned) || extractBase(builtPrompt);
+  return 'Modify the image:\n' +
+    changes.map(function(c){ return '- Change: ' + c; }).join('\n') +
+    '\n\nKeep:\n' + keep.map(function(k){ return '- ' + k; }).join('\n') +
+    '\n\nBase:\n' + base;
+}
+
 function buildModifySystem() {
-  return 'You are the ZIT Prompt Modify Engine v3.\n\nPipeline: Generate → Optimize → Modify (this step).\nbase_prompt is already optimized for ZIT/Lumina2/Qwen3-4B.\n\nYOU MUST NOT:\n- rewrite or expand base_prompt\n- add new subjects\n- call Optimize again\n\nONLY apply the provided modifiers.\n\nINTENSITY:\n- low: prefix modifier with "subtle"\n- medium: no prefix\n- high: prefix with "strong", may add "dramatic"\n\nMODES:\n- refine: apply user modifiers to base_prompt\n- variant: ignore user modifiers — generate 1-2 safe modifiers yourself (LIGHTING primary, ENVIRONMENT or STYLE as optional second; no duplicate domains)\n- regenerate: return base_prompt text only, unchanged\n\nCONFLICT: last modifier wins; drop earlier domain duplicate.\n\nOUTPUT — STRICT FORMAT:\n\nModify the image:\n- Change: {modifier_1}\n- Change: {modifier_2}\n\nKeep:\n- identity\n- composition\n- framing\n- pose\n- lighting\n- color\n\nBase:\n{base_prompt}\n\nFor regenerate mode: output only the base_prompt text, nothing else.\nFor variant mode: choose safe non-destructive modifiers; output the full format above.\nNEVER output explanations, greetings, markdown, or any text outside the format.';
+  return 'You are the ZIT Prompt Modify Engine v4.\n\nPipeline: Generate → Optimize → Modify (this step).\nbase_prompt is already optimized for ZIT/Lumina2/Qwen3-4B.\n\nYOU MUST NOT:\n- rewrite or expand base_prompt\n- add new subjects\n- re-optimize\n\nONLY apply the provided modifiers exactly as given.\n\nOUTPUT — STRICT FORMAT (no other text):\n\nModify the image:\n- Change: {modifier_1}\n- Change: {modifier_2}\n\nKeep:\n- identity\n- composition\n- framing\n- pose (unless modified)\n- lighting (unless modified)\n- color (unless modified)\n\nBase:\n{base_prompt}\n\nNEVER output explanations, greetings, markdown, or text outside this format.';
 }
 
 function buildModifyUser() {
-  var validMods = S.modifiers.filter(function(m){ return m.text.trim(); });
-  var prefix = S.modifyIntensity === 'low' ? 'subtle ' : S.modifyIntensity === 'high' ? 'strong ' : '';
-  var suffix = S.modifyIntensity === 'high' ? ', dramatic' : '';
-  var modsStr = validMods.map(function(m){
-    return m.domain + ': ' + prefix + m.text.trim() + suffix;
-  }).join('\n');
-  return 'base_prompt: ' + S.modifyBasePrompt.trim() +
-    '\nmodifiers:\n' + (modsStr || '(none)') +
-    '\nintensity: ' + S.modifyIntensity +
-    '\nmode: ' + S.modifyMode;
+  var mods = S.modifyMode === 'variant' ? generateVariantModifiers() : S.modifiers;
+  return buildModifyPrompt(S.modifyBasePrompt.trim(), mods, S.modifyIntensity);
 }
 
 function parseModifyResponse(raw) {
-  var cleaned = stripThink(raw);
   var neg = (S.result && S.result.negative) ? S.result.negative : 'blurry, watermark, text';
-  if (cleaned.trim().length > 20) {
-    return { positive: cleaned.trim(), negative: neg, notes: 'Modify Engine v3 · mode: ' + S.modifyMode, changes: null, via: 'modify_v3' };
-  }
-  return { positive: S.modifyBasePrompt, negative: neg, notes: 'Modify fallback — base returned', changes: null, via: 'modify_fallback' };
+  var mods = S.modifyMode === 'variant' ? [] : S.modifiers.filter(function(m){ return (m.text||'').trim(); });
+  var builtPrompt = buildModifyPrompt(S.modifyBasePrompt.trim(), mods, S.modifyIntensity);
+  var normalized = normalizeModifyOutput(raw, builtPrompt);
+  return { positive: normalized, negative: neg, notes: 'Modify Engine v4 · mode: ' + S.modifyMode, changes: null, via: 'modify_v4' };
 }
 
 /* ═══════════════════════════════════════════════════
@@ -2138,7 +2216,7 @@ function attachEvents() {
     var p=S.result.params;
     copyText('Positive: '+S.result.positive+'\nNegative: '+S.result.negative+'\n\nSteps: '+p.steps+' | CFG: '+p.cfg+' | Sampler: '+p.sampler+' | Scheduler: '+p.scheduler+'\nResolution: '+p.resolution+' | Seed: '+p.seed, e.currentTarget);
   });
-  on('b-cp-log','click',function(){ if(S.dbgLog) navigator.clipboard.writeText(JSON.stringify(S.dbgLog,null,2)); });
+  on('b-cp-log','click',function(){ var btn=document.getElementById('b-cp-log'); if(S.dbgLog&&btn) copyText(JSON.stringify(S.dbgLog,null,2), btn); });
 }
 
 /* ═══════════════════════════════════════════════════
