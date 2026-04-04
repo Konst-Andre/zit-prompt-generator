@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v16.0</title>
+  <title>ZIT Prompt Generator v1.6</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -80,6 +80,9 @@
     /* ═══════════════════════════════════════
        HEADER
     ═══════════════════════════════════════ */
+    /* ═══════════════════════════════════════
+       HEADER — v1.6: cleaner hierarchy, gradient title
+    ═══════════════════════════════════════ */
     .hdr {
       display: flex;
       justify-content: space-between;
@@ -90,10 +93,24 @@
       gap: var(--s3);
       background: var(--bg2);
     }
-    .hdr-brand { display: flex; flex-direction: column; gap: 2px; }
-    .hdr-eyebrow { font-size: 10px; color: var(--t3); letter-spacing: .12em; text-transform: uppercase; font-weight: 500; }
-    .hdr-title { font-size: 18px; font-weight: 700; color: var(--t1); letter-spacing: -.02em; line-height: 1.2; }
-    .hdr-ver { font-size: 11px; color: var(--acc); font-weight: 500; margin-left: 6px; }
+    /* brand section */
+    .hdr-brand { display: flex; flex-direction: column; gap: 4px; }
+    .app-meta {
+      font-size: 11px; color: var(--t3); letter-spacing: .08em;
+      opacity: .55; font-weight: 500;
+    }
+    .app-title { display: flex; align-items: baseline; gap: 10px; }
+    .title-main {
+      font-size: 22px; font-weight: 600; letter-spacing: -.01em; line-height: 1.15;
+      background: linear-gradient(90deg, #fff 0%, #9ecbff 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .title-version {
+      font-size: 12px; color: var(--acc); font-weight: 500; opacity: .6;
+      /* fallback for browsers without gradient text */
+      -webkit-text-fill-color: var(--acc);
+    }
     .hdr-acts { display: flex; gap: var(--s2); align-items: center; flex-wrap: wrap; }
 
     .pill {
@@ -293,6 +310,7 @@
       gap: 10px;
       width: 100%;
       margin-top: 12px;
+      margin-bottom: 14px; /* fix: space before ComfyUI Params below */
       padding-top: 10px;
       border-top: 1px solid rgba(255,255,255,.06);
     }
@@ -1247,12 +1265,78 @@ const SCENE_NEGATIVES = {
 function buildNegative() { return SCENE_NEGATIVES[S.scene] || SCENE_NEGATIVES.manual; }
 
 /* ═══════════════════════════════════════════════════
+   I18N — UI labels only
+   CRITICAL: does NOT affect buildUser(), prompt engine, or Qwen translate
+   Stored in S.lang; applied via t() inside buildHTML() on every render.
+   GPT's DOM-mutation approach (querySelectorAll data-i18n) is incompatible
+   with render() full-DOM-rebuild — replaced with state-driven approach.
+═══════════════════════════════════════════════════ */
+const I18N = {
+  en: {
+    /* tabs */
+    tabGenerate: 'Generate', tabOptimize: 'Optimize',
+    tabOptimizeNote: '· refines for ZIT engine',
+    /* section labels */
+    lScene: 'Scene', lSubjectType: 'Subject Type',
+    lSubjectHint: 'Adds subject detail',
+    lStyle: 'Visual Style', lStyleHint: 'hover for detail',
+    lPrompt: 'Prompt', lPromptHint: 'UA or EN',
+    lLighting: 'Lighting', lMood: 'Mood',
+    lGenre: 'Genre', lResolution: 'Resolution',
+    lLoRA: 'LoRA Stack', lSampler: 'Sampler + Scheduler',
+    lSteps: 'Steps', lCFG: 'CFG', lSeed: 'Seed',
+    lExisting: 'Existing Prompt', lExistingHint: 'Any language',
+    /* buttons */
+    btnGenerate: '✦ Generate Prompt', btnOptimize: '✦ Optimize Prompt',
+    btnGenerating: 'Generating…', btnRegenerate: 'Regenerate',
+    btnCopy: 'Copy (ComfyUI)', btnAddLoRA: '+ Add LoRA',
+    /* output labels */
+    outPositive: 'Positive Prompt', outNegative: 'Negative Prompt',
+    outParams: 'ComfyUI Params', outChanged: 'What changed', outTip: 'ZIT tip',
+    /* placeholders / states */
+    phFill: 'Fill in parameters\nand press Generate',
+    phSub: '· ZIT/Lumina2',
+    /* mobile */
+    mobParams: 'Params', mobOutput: 'Output',
+    /* none */
+    noneOpt: '— none —',
+  },
+  ua: {
+    tabGenerate: 'Генерувати', tabOptimize: 'Оптимізувати',
+    tabOptimizeNote: '· адаптує для ZIT',
+    lScene: 'Сцена', lSubjectType: 'Тип субʼєкта',
+    lSubjectHint: 'Додає деталі субʼєкта',
+    lStyle: 'Візуальний стиль', lStyleHint: 'наведи для деталей',
+    lPrompt: 'Промпт', lPromptHint: 'UA або EN',
+    lLighting: 'Освітлення', lMood: 'Настрій',
+    lGenre: 'Жанр', lResolution: 'Роздільна здатність',
+    lLoRA: 'LoRA стек', lSampler: 'Семплер + Планувальник',
+    lSteps: 'Кроки', lCFG: 'CFG', lSeed: 'Сід',
+    lExisting: 'Вхідний промпт', lExistingHint: 'Будь-яка мова',
+    btnGenerate: '✦ Згенерувати', btnOptimize: '✦ Оптимізувати',
+    btnGenerating: 'Генерація…', btnRegenerate: 'Перегенерувати',
+    btnCopy: 'Копіювати (ComfyUI)', btnAddLoRA: '+ Додати LoRA',
+    outPositive: 'Позитивний промпт', outNegative: 'Негативний промпт',
+    outParams: 'Параметри ComfyUI', outChanged: 'Що змінилось', outTip: 'Порада ZIT',
+    phFill: 'Заповніть параметри\nта натисніть Генерувати',
+    phSub: '· ZIT/Lumina2',
+    mobParams: 'Параметри', mobOutput: 'Результат',
+    noneOpt: '— немає —',
+  }
+};
+/* t() — safe lookup with en fallback */
+function t(key) {
+  var lang = (typeof S !== 'undefined' && S.lang) ? S.lang : 'en';
+  return (I18N[lang] && I18N[lang][key]) ? I18N[lang][key] : (I18N.en[key] || key);
+}
+
+/* ═══════════════════════════════════════════════════
    STATE
 ═══════════════════════════════════════════════════ */
 var S = {
   apiKey:'', rememberKey:false, model:'qwen/qwen3-32b',
   apiOpen:false, dbgOpen:false, mobilePane:'params',
-  mode:'generate',
+  mode:'generate', lang:'en',
   scene:'portrait', style:'photorealistic', subject:'', subjectType:'none',
   lighting:'Cinematic', mood:'', genre:'', resolution:'896x1152',
   existing:'',
@@ -1507,14 +1591,18 @@ function buildHTML() {
   var keyOk = !!S.apiKey.trim();
 
   /* HEADER */
+  var langLabel = S.lang === 'ua' ? '🌐 EN' : '🌐 UA';
   var h = '<div class="hdr">' +
     '<div class="hdr-brand">' +
-      '<div class="hdr-eyebrow">ZIT · Lumina2 · Qwen3-4B · CFG 1.5</div>' +
-      '<div class="hdr-title">Prompt Generator <span class="hdr-ver">v16.0</span></div>' +
+      '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
+      '<div class="app-title">' +
+        '<span class="title-main">Prompt Generator</span>' +
+        '<span class="title-version">v1.6</span>' +
+      '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
       '<div class="pill btn ' + (keyOk?'p-ok':'p-miss') + '" id="b-api"><span class="dot"></span>' + (keyOk?'Groq ✓':'API Key?') + '</div>' +
-      '<div class="pill">🌐 UA→EN</div>' +
+      '<div class="pill btn" id="b-lang" title="Switch UI language">' + langLabel + '</div>' +
       '<div class="pill btn' + (S.dbgOpen?' p-active':'') + '" id="b-dbg">🔬 Debug' + (S.dbgLog?(S.dbgLog.httpOk?' ✓':' ✗'):'') + '</div>' +
     '</div>' +
   '</div>';
@@ -1569,8 +1657,8 @@ function buildHTML() {
   /* TABS */
   if (!mob) {
     h += '<div class="tab-bar">' +
-      '<button class="tab-btn'+(S.mode==='generate'?' active':'')+'" data-mode="generate">Generate</button>' +
-      '<button class="tab-btn'+(S.mode==='enhance'?' active':'')+'" data-mode="enhance">Optimize <span style="font-size:10px;font-weight:400;opacity:.55;letter-spacing:.01em">· refines for ZIT engine</span></button>' +
+      '<button class="tab-btn'+(S.mode==='generate'?' active':'')+'" data-mode="generate">'+t('tabGenerate')+'</button>' +
+      '<button class="tab-btn'+(S.mode==='enhance'?' active':'')+'" data-mode="enhance">'+t('tabOptimize')+' <span style="font-size:10px;font-weight:400;opacity:.55;letter-spacing:.01em">'+t('tabOptimizeNote')+'</span></button>' +
     '</div>';
   }
 
@@ -1582,8 +1670,8 @@ function buildHTML() {
 
   if (mob) {
     h += '<div class="two-col mob-mode-sw" style="display:grid;margin-bottom:16px">' +
-      '<button class="btn-primary'+(S.mode==='generate'?'':' btn-secondary')+'" data-mode="generate" style="margin-top:0">Generate</button>' +
-      '<button class="btn-primary'+(S.mode==='enhance'?'':' btn-secondary')+'" data-mode="enhance" style="margin-top:0">Optimize</button>' +
+      '<button class="btn-primary'+(S.mode==='generate'?'':' btn-secondary')+'" data-mode="generate" style="margin-top:0">'+t('tabGenerate')+'</button>' +
+      '<button class="btn-primary'+(S.mode==='enhance'?'':' btn-secondary')+'" data-mode="enhance" style="margin-top:0">'+t('tabOptimize')+'</button>' +
     '</div>';
   }
 
@@ -1593,14 +1681,14 @@ function buildHTML() {
       return '<div class="icon-tile'+(S.scene===s.id?' active':'')+'" data-scene="'+s.id+'" title="'+esc(s.label)+'">' +
         '<span class="i-glyph">'+s.icon+'</span><span class="i-label">'+esc(s.label)+'</span></div>';
     }).join('');
-    h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">Scene</label></div><div class="icon-grid">'+tiles+'</div></div>';
+    h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">'+t('lScene')+'</label></div><div class="icon-grid">'+tiles+'</div></div>';
 
     /* Subject Type pills — v15.9: semantic emoji icons */
     var subjPills = SUBJECTS.map(function(s){
       return '<div class="st-pill'+(S.subjectType===s.id?' active':'')+'" data-subtype="'+s.id+'"'+(s.tip?' title="'+esc(s.tip)+'"':'')+'>'+
         '<span class="st-icon">'+esc(s.icon)+'</span> '+esc(s.label)+'</div>';
     }).join('');
-    h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">Subject Type</label><span class="hint">Adds subject detail</span></div><div class="pill-row" style="margin-bottom:0">'+subjPills+'</div></div>';
+    h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">'+t('lSubjectType')+'</label><span class="hint">'+t('lSubjectHint')+'</span></div><div class="pill-row" style="margin-bottom:0">'+subjPills+'</div></div>';
 
     /* Style pills */
     var grps = [];
@@ -1612,7 +1700,7 @@ function buildHTML() {
             '<span class="st-icon">'+esc(s.icon||'·')+'</span> '+esc(s.label)+'</div>';
         }).join('') + '</div>';
     }).join('');
-    h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">Visual Style</label><span class="hint">hover for detail</span></div>'+stylePills+'</div>';
+    h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">'+t('lStyle')+'</label><span class="hint">'+t('lStyleHint')+'</span></div>'+stylePills+'</div>';
 
     /* Subject field + history */
     var histHtml = '';
@@ -1627,27 +1715,27 @@ function buildHTML() {
     var stPh  = stNow.example || 'красива жінка під дощем у Токіо';
     var pvHtml = buildPromptPreview();
 
-    h += '<div class="prompt-main"><div class="field"><div class="f-hdr"><label class="lbl">Prompt</label><span class="hint">Можна українською</span></div>' +
+    h += '<div class="prompt-main"><div class="field"><div class="f-hdr"><label class="lbl">'+t('lPrompt')+'</label><span class="hint">'+t('lPromptHint')+'</span></div>' +
       '<textarea id="inp-sub" rows="3" placeholder="e.g: '+esc(stPh)+'&#10;• your own idea here">'+esc(S.subject)+'</textarea>' +
       histHtml + pvHtml + '</div></div>';
 
     /* Lighting + Mood */
     h += '<div class="two-col">' +
-      '<div class="field"><div class="f-hdr"><label class="lbl">Lighting</label></div><select id="sel-light">'+LIGHTINGS.map(function(l){return '<option value="'+esc(l.label)+'"'+(S.lighting===l.label?' selected':'')+'>'+esc(l.label)+'</option>';}).join('')+'</select></div>' +
-      '<div class="field"><div class="f-hdr"><label class="lbl">Mood</label></div><select id="sel-mood">'+MOODS.map(function(m){return '<option value="'+esc(m.label)+'"'+(S.mood===m.label?' selected':'')+'>'+(m.label||'— none —')+'</option>';}).join('')+'</select></div>' +
+      '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lLighting')+'</label></div><select id="sel-light">'+LIGHTINGS.map(function(l){return '<option value="'+esc(l.label)+'"'+(S.lighting===l.label?' selected':'')+'>'+esc(l.label)+'</option>';}).join('')+'</select></div>' +
+      '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lMood')+'</label></div><select id="sel-mood">'+MOODS.map(function(m){return '<option value="'+esc(m.label)+'"'+(S.mood===m.label?' selected':'')+'>'+(m.label||t('noneOpt'))+'</option>';}).join('')+'</select></div>' +
     '</div>';
 
     /* Genre + Resolution */
     h += '<div class="two-col">' +
-      '<div class="field"><div class="f-hdr"><label class="lbl">Genre</label></div><select id="sel-genre">'+GENRES.map(function(g){return '<option value="'+esc(g.label)+'"'+(S.genre===g.label?' selected':'')+'>'+(g.label||'— none —')+'</option>';}).join('')+'</select></div>' +
-      '<div class="field"><div class="f-hdr"><label class="lbl">Resolution</label></div><select id="sel-res">'+RESOLUTIONS.map(function(r){return '<option value="'+esc(r.value)+'"'+(S.resolution===r.value?' selected':'')+'>'+esc(r.label)+'</option>';}).join('')+'</select></div>' +
+      '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lGenre')+'</label></div><select id="sel-genre">'+GENRES.map(function(g){return '<option value="'+esc(g.label)+'"'+(S.genre===g.label?' selected':'')+'>'+(g.label||t('noneOpt'))+'</option>';}).join('')+'</select></div>' +
+      '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lResolution')+'</label></div><select id="sel-res">'+RESOLUTIONS.map(function(r){return '<option value="'+esc(r.value)+'"'+(S.resolution===r.value?' selected':'')+'>'+esc(r.label)+'</option>';}).join('')+'</select></div>' +
     '</div>';
   }
 
   if (S.mode === 'enhance') {
     var ec = S.existing.length;
     var ecColor = ec>1400?'var(--red)':ec>1000?'var(--amber)':'var(--t4)';
-    h += '<div class="field"><div class="f-hdr"><label class="lbl">Existing Prompt</label><span class="hint">Any language &nbsp;·&nbsp; <span style="color:'+ecColor+'">'+ec+'/1500</span></span></div>' +
+    h += '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lExisting')+'</label><span class="hint">'+t('lExistingHint')+' &nbsp;·&nbsp; <span style="color:'+ecColor+'">'+ec+'/1500</span></span></div>' +
       '<textarea id="inp-exist" rows="6" style="min-height:130px" maxlength="1500" placeholder="e.g: beautiful girl, best quality, masterpiece...&#10;&#10;or: дівчина-кіборг у нічному місті">'+esc(S.existing)+'</textarea></div>';
   }
 
@@ -1660,18 +1748,18 @@ function buildHTML() {
       '<input type="text" data-lw="'+i+'" value="'+esc(l.weight)+'" placeholder="0.85" style="flex:1;text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:13px">' +
       '<button class="btn-ghost" data-lr="'+i+'" style="color:var(--t3)">✕</button></div>';
   }).join('');
-  h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">LoRA Stack</label></div>' + loraRows + '<button class="btn-text" id="b-add-lora" style="margin-top:4px">+ Add LoRA</button></div>';
+  h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">'+t('lLoRA')+'</label></div>' + loraRows + '<button class="btn-text" id="b-add-lora" style="margin-top:4px">'+t('btnAddLoRA')+'</button></div>';
 
   /* Sampler */
   h += '<div class="sec-block">' +
-    '<div class="field"><div class="f-hdr"><label class="lbl">Sampler + Scheduler</label></div>' +
+    '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lSampler')+'</label></div>' +
     '<div class="two-col"><select id="sel-samp">'+SAMPLERS.map(function(s){return '<option'+(S.sampler===s?' selected':'')+'>'+s+'</option>';}).join('')+'</select>' +
     '<select id="sel-sch">'+SCHEDULERS.map(function(s){return '<option'+(S.scheduler===s?' selected':'')+'>'+s+'</option>';}).join('')+'</select></div>' +
     '<div class="s-hint" style="color:'+sh.c+'">'+sh.text+'</div></div>' +
     '<div class="three-col">' +
-    '<div class="field"><div class="f-hdr"><label class="lbl">Steps</label></div><input type="text" id="inp-steps" value="'+esc(S.steps)+'" style="font-family:\'JetBrains Mono\',monospace;font-size:13px;text-align:center"></div>' +
-    '<div class="field"><div class="f-hdr"><label class="lbl">CFG</label></div><input type="text" id="inp-cfg" value="'+esc(S.cfg)+'" style="font-family:\'JetBrains Mono\',monospace;font-size:13px;text-align:center"></div>' +
-    '<div class="field"><div class="f-hdr"><label class="lbl">Seed</label></div>' +
+    '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lSteps')+'</label></div><input type="text" id="inp-steps" value="'+esc(S.steps)+'" style="font-family:\'JetBrains Mono\',monospace;font-size:13px;text-align:center"></div>' +
+    '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lCFG')+'</label></div><input type="text" id="inp-cfg" value="'+esc(S.cfg)+'" style="font-family:\'JetBrains Mono\',monospace;font-size:13px;text-align:center"></div>' +
+    '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lSeed')+'</label></div>' +
     '<div class="row"><input type="text" id="inp-seed" value="'+esc(S.seed)+'" placeholder="random" style="flex:1;font-family:\'JetBrains Mono\',monospace;font-size:13px">' +
     '<button class="btn-ghost" id="b-seed" title="Random seed">🎲</button></div></div>' +
     '</div></div>';
@@ -1698,8 +1786,8 @@ function buildHTML() {
         (!S.loading?'style="box-shadow:0 4px 24px rgba(47,129,247,.28),0 2px 8px rgba(47,129,247,.18),inset 0 1px 0 rgba(255,255,255,.22)"':'')+
         '>' +
         (S.loading
-          ? '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center"><span style="display:inline-block;animation:spin .65s linear infinite;opacity:.7">⟳</span> Generating…</span>'
-          : '✦ Generate Prompt') +
+          ? '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center"><span style="display:inline-block;animation:spin .65s linear infinite;opacity:.7">⟳</span> '+t('btnGenerating')+'</span>'
+          : t('btnGenerate')) +
       '</button>' +
       '<button class="btn-random" id="b-random" title="Random subject — Shift: creative — DblClick: wild" style="min-width:48px">🔀</button>' +
     '</div>' +
@@ -1707,8 +1795,8 @@ function buildHTML() {
   } else {
     h += '<button class="btn-primary'+(S.loading?' loading':'')+'" id="b-gen"'+(S.loading?' disabled':'')+'>' +
       (S.loading
-        ? '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center"><span style="display:inline-block;animation:spin .65s linear infinite;opacity:.7">⟳</span> Generating…</span>'
-        : '✦ Optimize Prompt') +
+        ? '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center"><span style="display:inline-block;animation:spin .65s linear infinite;opacity:.7">⟳</span> '+t('btnGenerating')+'</span>'
+        : t('btnOptimize')) +
     '</button>';
   }
 
@@ -1720,8 +1808,8 @@ function buildHTML() {
 
   if (mob) {
     h += '<div class="two-col" style="display:grid;margin-bottom:16px">' +
-      '<button class="btn-primary'+(S.mobilePane==='params'?'':' btn-secondary')+'" data-pane="params" style="margin-top:0">Params</button>' +
-      '<button class="btn-primary'+(S.mobilePane==='output'?'':' btn-secondary')+'" data-pane="output" style="margin-top:0">Output</button>' +
+      '<button class="btn-primary'+(S.mobilePane==='params'?'':' btn-secondary')+'" data-pane="params" style="margin-top:0">'+t('mobParams')+'</button>' +
+      '<button class="btn-primary'+(S.mobilePane==='output'?'':' btn-secondary')+'" data-pane="output" style="margin-top:0">'+t('mobOutput')+'</button>' +
     '</div>';
   }
 
@@ -1736,7 +1824,7 @@ function buildHTML() {
         '<p style="font-size:11px;color:var(--t4);font-family:\'JetBrains Mono\',monospace">Free · Fast · No Anthropic tokens used</p>' +
         '<button class="btn-primary" id="b-open-api" style="max-width:240px;margin-top:8px">⚙ Open API Settings</button></div>';
     } else {
-      h += '<div class="ph"><div class="ph-icon">◎</div><div class="ph-text">Fill in parameters<br>and press Generate</div>' +
+      h += '<div class="ph"><div class="ph-icon">◎</div><div class="ph-text">'+t('phFill').replace('\n','<br>')+'</div>' +
         '<div class="ph-sub">'+esc((GROQ_MODELS.find(function(m){return m.id===S.model;})||{name:S.model}).name)+' · ZIT/Lumina2</div></div>';
     }
   }
@@ -1756,26 +1844,26 @@ function buildHTML() {
     if (r.via !== 'xml') h += '<div class="warn-strip">⚠ Parsed via '+esc(r.via)+' — open Debug for details</div>';
 
     h += '<div class="sec-block" style="margin-bottom:var(--s3)">' +
-      '<div class="out-hdr"><span class="lbl">Positive Prompt</span><button class="btn-copy" id="b-cp-pos">⎘ Copy</button></div>' +
+      '<div class="out-hdr"><span class="lbl">'+t('outPositive')+'</span><button class="btn-copy" id="b-cp-pos">⎘ Copy</button></div>' +
       '<div class="out-txt accent" id="out-pos">'+esc(r.positive)+'</div></div>';
 
     h += '<div class="sec-block" style="margin-bottom:var(--s3)">' +
-      '<div class="out-hdr"><span class="lbl">Negative Prompt</span><button class="btn-copy" id="b-cp-neg">⎘ Copy</button></div>' +
+      '<div class="out-hdr"><span class="lbl">'+t('outNegative')+'</span><button class="btn-copy" id="b-cp-neg">⎘ Copy</button></div>' +
       '<div class="out-txt" id="out-neg">'+esc(r.negative)+'</div></div>';
 
     /* output-actions: Regenerate + Copy (ComfyUI) — contextual, inside output-main */
     h += '<div class="output-actions">' +
-      '<button class="btn-ghost btn-regen" id="b-regen"><span class="act-icon">↺</span> Regenerate</button>' +
-      '<button class="btn-ghost btn-act-copy" id="b-cp-all"><span class="act-icon">⧉</span> Copy (ComfyUI)</button>' +
+      '<button class="btn-ghost btn-regen" id="b-regen"><span class="act-icon">↺</span> '+t('btnRegenerate')+'</button>' +
+      '<button class="btn-ghost btn-act-copy" id="b-cp-all"><span class="act-icon">⧉</span> '+t('btnCopy')+'</button>' +
     '</div>';
 
     var pp = r.params;
     var pcards = [['Steps',pp.steps],['CFG',pp.cfg],['Sampler',pp.sampler],['Scheduler',pp.scheduler],['Resolution',pp.resolution],['Seed',pp.seed]];
-    h += '<div class="f-hdr" style="margin-bottom:8px"><span class="lbl">ComfyUI Params</span></div>' +
+    h += '<div class="f-hdr" style="margin-bottom:8px"><span class="lbl">'+t('outParams')+'</span></div>' +
       '<div class="params-grid">'+pcards.map(function(x){return '<div class="p-card"><span class="p-key">'+x[0]+'</span><span class="p-val">'+esc(x[1])+'</span></div>';}).join('')+'</div>';
 
-    if (r.changes) h += '<div class="info-card"><span class="lbl">What changed</span><p>'+esc(r.changes)+'</p></div>';
-    if (r.notes)   h += '<div class="info-card"><span class="lbl">ZIT tip</span><p>'+esc(r.notes)+'</p></div>';
+    if (r.changes) h += '<div class="info-card"><span class="lbl">'+t('outChanged')+'</span><p>'+esc(r.changes)+'</p></div>';
+    if (r.notes)   h += '<div class="info-card"><span class="lbl">'+t('outTip')+'</span><p>'+esc(r.notes)+'</p></div>';
 
     h += '</div>'; /* output-main */
   }
@@ -1795,6 +1883,11 @@ function attachEvents() {
   on('b-api-close', 'click', function(){ S.apiOpen=false; S.dbgOpen=false; render(); });
   on('b-open-api',  'click', function(){ S.apiOpen=true; render(); });
   on('b-open-dbg',  'click', function(){ S.dbgOpen=true; render(); });
+  on('b-lang',      'click', function(){
+    S.lang = S.lang === 'en' ? 'ua' : 'en';
+    try { localStorage.setItem('zit_lang', S.lang); } catch(e) {}
+    render();
+  });
 
   document.querySelectorAll('[data-pane]').forEach(function(el){ el.addEventListener('click', function(){ S.mobilePane=el.dataset.pane; render(); }); });
   document.querySelectorAll('[data-mode]').forEach(function(el){ el.addEventListener('click', function(){ S.mode=el.dataset.mode; S.result=null; S.error=''; render(); }); });
@@ -1911,6 +2004,7 @@ function attachEvents() {
    INIT
 ═══════════════════════════════════════════════════ */
 loadKey();
+try { var _sl = localStorage.getItem('zit_lang'); if (_sl === 'ua' || _sl === 'en') S.lang = _sl; } catch(e) {}
 render();
 var _rt;
 window.addEventListener('resize', function(){ clearTimeout(_rt); _rt=setTimeout(render,150); });
