@@ -1393,7 +1393,9 @@ function buildModifyUser() {
 }
 
 function parseModifyResponse(raw) {
-  var neg = (S.result && S.result.negative) ? S.result.negative : 'blurry, watermark, text';
+  /* Bug fix: S.result is null at call time (cleared before API call).
+     Negative is saved to S.modifyBaseNeg before clearing in generate(). */
+  var neg = S.modifyBaseNeg || 'blurry, watermark, text';
   var mods = S.modifyMode === 'variant' ? [] : S.modifiers.filter(function(m){ return (m.text||'').trim(); });
   var builtPrompt = buildModifyPrompt(S.modifyBasePrompt.trim(), mods, S.modifyIntensity);
   var normalized = normalizeModifyOutput(raw, builtPrompt);
@@ -1482,6 +1484,7 @@ var S = {
   rndMode:'normal',
   subjectHistory:[],
   modifyBasePrompt:'', modifiers:[{domain:'LIGHTING',text:''},{domain:'ENVIRONMENT',text:''}], modifyIntensity:'medium', modifyMode:'refine',
+  modifyBaseNeg:'', /* saved negative from last result, used by parseModifyResponse */
 };
 
 /* ═══════════════════════════════════════════════════
@@ -1608,9 +1611,12 @@ var _ac   = null;
 function sleep(ms) { return new Promise(function(r){setTimeout(r,ms);}); }
 
 async function callGroqOnce(signal) {
-  var log = { model:S.model, httpStatus:null, httpOk:null, responseMs:null, rawText:'', strippedText:'', contentField:'', error:null };
+  var log = { model:S.model, httpStatus:null, httpOk:null, responseMs:null, rawText:'', strippedText:'', contentField:'', error:null, sentSystem:'', sentUser:'' };
   var sysMsg = (S.mode === 'modify') ? buildModifySystem() : buildSystem();
   var userMsg = (S.mode === 'modify') ? buildModifyUser() : buildUser();
+  /* store for debug panel */
+  log.sentSystem = sysMsg;
+  log.sentUser   = userMsg;
   var mdl = GROQ_MODELS.find(function(m){return m.id===S.model;});
   if (mdl && mdl.qwen) userMsg += '\n\n/no_think';
   var body = { model:S.model, max_tokens:2048, messages:[{role:'system',content:sysMsg},{role:'user',content:userMsg}] };
@@ -1648,7 +1654,12 @@ async function generate() {
   }
   if (_busy) { if (_ac) _ac.abort(); _busy=false; }
   _ac=new AbortController(); _busy=true;
-  S.loading=true; S.error=''; S.result=null; S.dbgLog=null;
+  S.loading=true; S.error='';
+  /* save negative from previous result before clearing — used by parseModifyResponse */
+  if (S.mode === 'modify' && S.result && S.result.negative) {
+    S.modifyBaseNeg = S.result.negative;
+  }
+  S.result=null; S.dbgLog=null;
   if (window.innerWidth<=680) S.mobilePane='output';
   render();
   var attempts=0;
@@ -1795,6 +1806,7 @@ function buildHTML() {
       dbInner = '<div class="dbg-badges" style="margin-bottom:12px">'+badges+'</div>' +
         '<div class="dbg-sec"><div class="dbg-lbl">Stripped content (think removed)</div>' +
         '<pre class="dbg-pre '+(lg.strippedText?'ok':'err')+'">'+esc(lg.strippedText||'⚠ EMPTY — this is the problem')+'</pre></div>' +
+        (lg.sentUser ? '<details><summary>Sent to API — user message</summary><pre class="dbg-pre">'+esc(lg.sentUser.slice(0,1500))+'</pre></details>' : '') +
         '<details><summary>Full raw HTTP response</summary><pre class="dbg-pre">'+esc(lg.rawText?lg.rawText.slice(0,2000):'empty')+'</pre></details>';
     }
     h += '<div class="slide-panel debug-bg"><div class="sp-hdr"><div class="sp-title muted">DEBUG LOG</div>' +
