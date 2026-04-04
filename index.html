@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v1.6</title>
+  <title>ZIT Prompt Generator v1.7</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -786,6 +786,31 @@
       .pp-items { white-space: normal; overflow: visible; text-overflow: unset; }
     }
     @media (min-width: 681px) { .mob-mode-sw { display: none; } }
+
+    /* ═══════════════════════════════════════
+       MODIFY ENGINE v3
+    ═══════════════════════════════════════ */
+    .mod-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: var(--s2); }
+    .mod-pill {
+      padding: 5px 14px; border-radius: 999px; font-size: 12px; font-weight: 600;
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.25));
+      border: 1px solid var(--bdr); color: var(--t4); cursor: pointer; user-select: none;
+      transition: border-color var(--tr), color var(--tr), background var(--tr), box-shadow var(--tr);
+    }
+    .mod-pill:hover { border-color: var(--bdr2); color: var(--t2); }
+    .mod-pill:active { transform: scale(0.97); }
+    .mod-pill.active {
+      background: linear-gradient(180deg, rgba(47,129,247,.22), rgba(47,129,247,.08));
+      border-color: var(--acc); color: #fff; font-weight: 700;
+      box-shadow: 0 0 0 1px rgba(47,129,247,.35), 0 2px 6px rgba(47,129,247,.12);
+    }
+    .mod-pill.lo.active  { background: linear-gradient(180deg, rgba(63,185,80,.2), rgba(63,185,80,.06));   border-color: var(--green); box-shadow: 0 0 0 1px rgba(63,185,80,.35); }
+    .mod-pill.hi.active  { background: linear-gradient(180deg, rgba(227,179,65,.2), rgba(227,179,65,.06)); border-color: var(--amber); box-shadow: 0 0 0 1px rgba(227,179,65,.35); }
+    .mod-pill.var.active { background: linear-gradient(180deg, rgba(227,179,65,.18), rgba(227,179,65,.06)); border-color: var(--amber); box-shadow: 0 0 0 1px rgba(227,179,65,.35); }
+    .mod-pill.reg.active { background: linear-gradient(180deg, rgba(248,81,73,.18), rgba(248,81,73,.06));  border-color: var(--red);   box-shadow: 0 0 0 1px rgba(248,81,73,.35); }
+    .mod-row    { display: flex; gap: var(--s2); margin-bottom: var(--s2); align-items: center; }
+    .mod-domain { width: 128px; flex-shrink: 0; font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+    .mod-hint   { font-size: 11px; color: var(--t4); margin-top: -6px; margin-bottom: var(--s3); line-height: 1.5; }
   </style>
 </head>
 <body>
@@ -1265,6 +1290,37 @@ const SCENE_NEGATIVES = {
 function buildNegative() { return SCENE_NEGATIVES[S.scene] || SCENE_NEGATIVES.manual; }
 
 /* ═══════════════════════════════════════════════════
+   MODIFY ENGINE v3
+═══════════════════════════════════════════════════ */
+var MODIFY_DOMAINS = ['LIGHTING','ENVIRONMENT','STYLE','COLOR','CAMERA','CHARACTER','PROPS'];
+
+function buildModifySystem() {
+  return 'You are the ZIT Prompt Modify Engine v3.\n\nPipeline: Generate → Optimize → Modify (this step).\nbase_prompt is already optimized for ZIT/Lumina2/Qwen3-4B.\n\nYOU MUST NOT:\n- rewrite or expand base_prompt\n- add new subjects\n- call Optimize again\n\nONLY apply the provided modifiers.\n\nINTENSITY:\n- low: prefix modifier with "subtle"\n- medium: no prefix\n- high: prefix with "strong", may add "dramatic"\n\nMODES:\n- refine: apply user modifiers to base_prompt\n- variant: ignore user modifiers — generate 1-2 safe modifiers yourself (LIGHTING primary, ENVIRONMENT or STYLE as optional second; no duplicate domains)\n- regenerate: return base_prompt text only, unchanged\n\nCONFLICT: last modifier wins; drop earlier domain duplicate.\n\nOUTPUT — STRICT FORMAT:\n\nModify the image:\n- Change: {modifier_1}\n- Change: {modifier_2}\n\nKeep:\n- identity\n- composition\n- framing\n- pose\n- lighting\n- color\n\nBase:\n{base_prompt}\n\nFor regenerate mode: output only the base_prompt text, nothing else.\nFor variant mode: choose safe non-destructive modifiers; output the full format above.\nNEVER output explanations, greetings, markdown, or any text outside the format.';
+}
+
+function buildModifyUser() {
+  var validMods = S.modifiers.filter(function(m){ return m.text.trim(); });
+  var prefix = S.modifyIntensity === 'low' ? 'subtle ' : S.modifyIntensity === 'high' ? 'strong ' : '';
+  var suffix = S.modifyIntensity === 'high' ? ', dramatic' : '';
+  var modsStr = validMods.map(function(m){
+    return m.domain + ': ' + prefix + m.text.trim() + suffix;
+  }).join('\n');
+  return 'base_prompt: ' + S.modifyBasePrompt.trim() +
+    '\nmodifiers:\n' + (modsStr || '(none)') +
+    '\nintensity: ' + S.modifyIntensity +
+    '\nmode: ' + S.modifyMode;
+}
+
+function parseModifyResponse(raw) {
+  var cleaned = stripThink(raw);
+  var neg = (S.result && S.result.negative) ? S.result.negative : 'blurry, watermark, text';
+  if (cleaned.trim().length > 20) {
+    return { positive: cleaned.trim(), negative: neg, notes: 'Modify Engine v3 · mode: ' + S.modifyMode, changes: null, via: 'modify_v3' };
+  }
+  return { positive: S.modifyBasePrompt, negative: neg, notes: 'Modify fallback — base returned', changes: null, via: 'modify_fallback' };
+}
+
+/* ═══════════════════════════════════════════════════
    I18N — UI labels only
    CRITICAL: does NOT affect buildUser(), prompt engine, or Qwen translate
    Stored in S.lang; applied via t() inside buildHTML() on every render.
@@ -1345,6 +1401,7 @@ var S = {
   loading:false, result:null, error:'', dbgLog:null,
   rndMode:'normal',
   subjectHistory:[],
+  modifyBasePrompt:'', modifiers:[{domain:'LIGHTING',text:''},{domain:'ENVIRONMENT',text:''}], modifyIntensity:'medium', modifyMode:'refine',
 };
 
 /* ═══════════════════════════════════════════════════
@@ -1472,7 +1529,8 @@ function sleep(ms) { return new Promise(function(r){setTimeout(r,ms);}); }
 
 async function callGroqOnce(signal) {
   var log = { model:S.model, httpStatus:null, httpOk:null, responseMs:null, rawText:'', strippedText:'', contentField:'', error:null };
-  var sysMsg = buildSystem(), userMsg = buildUser();
+  var sysMsg = (S.mode === 'modify') ? buildModifySystem() : buildSystem();
+  var userMsg = (S.mode === 'modify') ? buildModifyUser() : buildUser();
   var mdl = GROQ_MODELS.find(function(m){return m.id===S.model;});
   if (mdl && mdl.qwen) userMsg += '\n\n/no_think';
   var body = { model:S.model, max_tokens:2048, messages:[{role:'system',content:sysMsg},{role:'user',content:userMsg}] };
@@ -1492,13 +1550,22 @@ async function callGroqOnce(signal) {
   var raw=(data&&data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||'';
   log.contentField=raw; log.strippedText=stripThink(raw);
   if (!raw) { log.error='choices[0].message.content is empty'; var ee=new Error(log.error); ee.log=log; throw ee; }
-  return Object.assign({}, parseResponse(raw), {log});
+  return Object.assign({}, (S.mode === 'modify' ? parseModifyResponse(raw) : parseResponse(raw)), {log});
 }
 
 async function generate() {
   if (!S.apiKey.trim()) { S.error='Введіть Groq API ключ — натисніть ⚙ API'; S.apiOpen=true; render(); forceRepaint(); return; }
   if (S.mode==='generate' && !S.subject.trim()) { S.error='Введіть Subject'; render(); forceRepaint(); return; }
   if (S.mode==='enhance'  && !S.existing.trim()) { S.error='Вставте промпт для оптимізації'; render(); forceRepaint(); return; }
+  if (S.mode==='modify'   && !S.modifyBasePrompt.trim()) { S.error='Вставте Base Prompt'; render(); forceRepaint(); return; }
+  /* regenerate — client-side only, no API call */
+  if (S.mode==='modify' && S.modifyMode==='regenerate') {
+    S.loading=true; S.error=''; S.dbgLog=null; render();
+    await sleep(180);
+    var negReg = (S.result && S.result.negative) ? S.result.negative : 'blurry, watermark, text';
+    S.result = { positive:S.modifyBasePrompt.trim(), negative:negReg, notes:'Regenerate — base prompt returned unchanged', changes:null, via:'regenerate', params:{steps:S.steps,cfg:S.cfg,sampler:S.sampler,scheduler:S.scheduler,resolution:S.resolution,seed:S.seed||String(Math.floor(Math.random()*1e9))} };
+    S.loading=false; if (window.innerWidth<=680) S.mobilePane='output'; render(); forceRepaint(); return;
+  }
   if (_busy) { if (_ac) _ac.abort(); _busy=false; }
   _ac=new AbortController(); _busy=true;
   S.loading=true; S.error=''; S.result=null; S.dbgLog=null;
@@ -1597,7 +1664,7 @@ function buildHTML() {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v1.6</span>' +
+        '<span class="title-version">v1.7</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
@@ -1659,6 +1726,7 @@ function buildHTML() {
     h += '<div class="tab-bar">' +
       '<button class="tab-btn'+(S.mode==='generate'?' active':'')+'" data-mode="generate">'+t('tabGenerate')+'</button>' +
       '<button class="tab-btn'+(S.mode==='enhance'?' active':'')+'" data-mode="enhance">'+t('tabOptimize')+' <span style="font-size:10px;font-weight:400;opacity:.55;letter-spacing:.01em">'+t('tabOptimizeNote')+'</span></button>' +
+      '<button class="tab-btn'+(S.mode==='modify'?' active':'')+'" data-mode="modify">Modify <span style="font-size:10px;font-weight:400;opacity:.55;letter-spacing:.01em">· post-generate edit</span></button>' +
     '</div>';
   }
 
@@ -1669,9 +1737,10 @@ function buildHTML() {
   h += '<div class="col col-l'+(pHide?' pane-hidden':'')+ '">';
 
   if (mob) {
-    h += '<div class="two-col mob-mode-sw" style="display:grid;margin-bottom:16px">' +
-      '<button class="btn-primary'+(S.mode==='generate'?'':' btn-secondary')+'" data-mode="generate" style="margin-top:0">'+t('tabGenerate')+'</button>' +
-      '<button class="btn-primary'+(S.mode==='enhance'?'':' btn-secondary')+'" data-mode="enhance" style="margin-top:0">'+t('tabOptimize')+'</button>' +
+    h += '<div class="mob-mode-sw" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--s2);margin-bottom:16px">' +
+      '<button class="btn-primary'+(S.mode==='generate'?'':' btn-secondary')+'" data-mode="generate" style="margin-top:0;font-size:12px;padding:10px 4px">'+t('tabGenerate')+'</button>' +
+      '<button class="btn-primary'+(S.mode==='enhance'?'':' btn-secondary')+'" data-mode="enhance" style="margin-top:0;font-size:12px;padding:10px 4px">'+t('tabOptimize')+'</button>' +
+      '<button class="btn-primary'+(S.mode==='modify'?'':' btn-secondary')+'" data-mode="modify" style="margin-top:0;font-size:12px;padding:10px 4px">Modify</button>' +
     '</div>';
   }
 
@@ -1739,6 +1808,52 @@ function buildHTML() {
       '<textarea id="inp-exist" rows="6" style="min-height:130px" maxlength="1500" placeholder="e.g: beautiful girl, best quality, masterpiece...&#10;&#10;or: дівчина-кіборг у нічному місті">'+esc(S.existing)+'</textarea></div>';
   }
 
+  if (S.mode === 'modify') {
+    var mbpLen = S.modifyBasePrompt.length;
+    var mbpColor = mbpLen>1400?'var(--red)':mbpLen>800?'var(--amber)':'var(--t4)';
+    h += '<div class="field"><div class="f-hdr"><label class="lbl">Base Prompt</label><span class="hint">Optimized positive &nbsp;·&nbsp; <span style="color:'+mbpColor+'">'+mbpLen+' chars</span></span></div>' +
+      '<textarea id="inp-modbase" rows="5" style="min-height:110px;font-family:\'JetBrains Mono\',monospace;font-size:12px;line-height:1.6" placeholder="Paste your optimized positive prompt here…\n\nОр: перейди до Generate → згенеруй → переключись на Modify (auto-fill)">'+esc(S.modifyBasePrompt)+'</textarea></div>';
+
+    /* Mode */
+    h += '<div class="field"><div class="f-hdr"><label class="lbl">Mode</label></div>' +
+      '<div class="mod-pills">' +
+      '<div class="mod-pill'+(S.modifyMode==='refine'?' active':'')+'" data-modmode="refine">⊙ Refine</div>' +
+      '<div class="mod-pill var'+(S.modifyMode==='variant'?' active':'')+'" data-modmode="variant">✦ Variant</div>' +
+      '<div class="mod-pill reg'+(S.modifyMode==='regenerate'?' active':'')+'" data-modmode="regenerate">↺ Regenerate</div>' +
+      '</div>' +
+      '<span class="mod-hint">' +
+      (S.modifyMode==='refine'    ? 'Apply selected modifiers to the base prompt' :
+       S.modifyMode==='variant'   ? 'AI generates safe LIGHTING / ENVIRONMENT modifiers — ignore user modifiers' :
+                                    'Return base prompt unchanged — no API call') +
+      '</span></div>';
+
+    /* Intensity — hidden for regenerate */
+    if (S.modifyMode !== 'regenerate') {
+      h += '<div class="field"><div class="f-hdr"><label class="lbl">Intensity</label></div>' +
+        '<div class="mod-pills">' +
+        '<div class="mod-pill lo'+(S.modifyIntensity==='low'   ?' active':'')+'" data-intensity="low">▽ Low</div>' +
+        '<div class="mod-pill'  +(S.modifyIntensity==='medium' ?' active':'')+'" data-intensity="medium">◈ Medium</div>' +
+        '<div class="mod-pill hi'+(S.modifyIntensity==='high'  ?' active':'')+'" data-intensity="high">▲ High</div>' +
+        '</div></div>';
+    }
+
+    /* Modifier rows — refine only */
+    if (S.modifyMode === 'refine') {
+      var dOpts0 = MODIFY_DOMAINS.map(function(d){ return '<option'+(S.modifiers[0].domain===d?' selected':'')+'>'+d+'</option>'; }).join('');
+      var dOpts1 = MODIFY_DOMAINS.map(function(d){ return '<option'+(S.modifiers[1].domain===d?' selected':'')+'>'+d+'</option>'; }).join('');
+      h += '<div class="field"><div class="f-hdr"><label class="lbl">Modifiers</label><span class="hint">max 2 · no duplicate domains</span></div>' +
+        '<div class="mod-row">' +
+          '<select class="mod-domain" data-modd="0">'+dOpts0+'</select>' +
+          '<input type="text" data-modt="0" value="'+esc(S.modifiers[0].text)+'" placeholder="e.g: cinematic lighting" style="flex:1;font-size:13px">' +
+        '</div>' +
+        '<div class="mod-row">' +
+          '<select class="mod-domain" data-modd="1">'+dOpts1+'</select>' +
+          '<input type="text" data-modt="1" value="'+esc(S.modifiers[1].text)+'" placeholder="optional second modifier" style="flex:1;font-size:13px">' +
+        '</div>' +
+      '</div>';
+    }
+  }
+
   h += '<hr>';
 
   /* LoRA */
@@ -1793,10 +1908,13 @@ function buildHTML() {
     '</div>' +
     '<div class="'+badgeClass+'" id="rnd-badge">'+badgeText+'</div>';
   } else {
+    var genLabel = S.mode==='modify'
+      ? (S.modifyMode==='regenerate' ? '↺ Regenerate' : S.modifyMode==='variant' ? '✦ Variant' : '✦ Apply Modify')
+      : t('btnOptimize');
     h += '<button class="btn-primary'+(S.loading?' loading':'')+'" id="b-gen"'+(S.loading?' disabled':'')+'>' +
       (S.loading
         ? '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center"><span style="display:inline-block;animation:spin .65s linear infinite;opacity:.7">⟳</span> '+t('btnGenerating')+'</span>'
-        : t('btnOptimize')) +
+        : genLabel) +
     '</button>';
   }
 
@@ -1890,7 +2008,14 @@ function attachEvents() {
   });
 
   document.querySelectorAll('[data-pane]').forEach(function(el){ el.addEventListener('click', function(){ S.mobilePane=el.dataset.pane; render(); }); });
-  document.querySelectorAll('[data-mode]').forEach(function(el){ el.addEventListener('click', function(){ S.mode=el.dataset.mode; S.result=null; S.error=''; render(); }); });
+  document.querySelectorAll('[data-mode]').forEach(function(el){ el.addEventListener('click', function(){
+    var prevResult = S.result;
+    S.mode=el.dataset.mode; S.result=null; S.error='';
+    if (el.dataset.mode === 'modify' && prevResult && prevResult.positive && !S.modifyBasePrompt.trim()) {
+      S.modifyBasePrompt = prevResult.positive;
+    }
+    render();
+  }); });
   document.querySelectorAll('[data-scene]').forEach(function(el){ el.addEventListener('click', function(){ S.scene=el.dataset.scene; render(); }); });
   document.querySelectorAll('[data-style]').forEach(function(el){ el.addEventListener('click', function(){ S.style=el.dataset.style; render(); }); });
   document.querySelectorAll('[data-subtype]').forEach(function(el){ el.addEventListener('click', function(){ S.subjectType=el.dataset.subtype; render(); }); });
@@ -1928,6 +2053,22 @@ function attachEvents() {
     });
   }
   live('inp-steps','steps'); live('inp-cfg','cfg'); live('inp-seed','seed');
+
+  /* ── MODIFY MODE EVENTS ── */
+  var mbpEl = document.getElementById('inp-modbase');
+  if (mbpEl) mbpEl.addEventListener('input', function(){ S.modifyBasePrompt = mbpEl.value; });
+  document.querySelectorAll('[data-modmode]').forEach(function(el){
+    el.addEventListener('click', function(){ S.modifyMode = el.dataset.modmode; render(); });
+  });
+  document.querySelectorAll('[data-intensity]').forEach(function(el){
+    el.addEventListener('click', function(){ S.modifyIntensity = el.dataset.intensity; render(); });
+  });
+  document.querySelectorAll('[data-modd]').forEach(function(el){
+    el.addEventListener('change', function(){ S.modifiers[+el.dataset.modd].domain = el.value; });
+  });
+  document.querySelectorAll('[data-modt]').forEach(function(el){
+    el.addEventListener('input', function(){ S.modifiers[+el.dataset.modt].text = el.value; });
+  });
 
   function lsel(id,key){ var el=document.getElementById(id); if(el) el.addEventListener('change',function(){S[key]=el.value; render();}); }
   lsel('sel-light','lighting'); lsel('sel-mood','mood'); lsel('sel-genre','genre');
