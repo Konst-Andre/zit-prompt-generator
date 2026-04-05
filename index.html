@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v1.9</title>
+  <title>ZIT Prompt Generator v2.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -19,8 +19,8 @@
     :root {
       --bg:       #0D1117;
       --bg2:      #161C24;
-      --bg3:      #070B0F;   /* inputs — deepest */
-      --bg4:      #232E42;   /* tiles  — highest */
+      --bg3:      #070B0F;
+      --bg4:      #232E42;
 
       --bdr:      #2A3140;
       --bdr2:     #3E4D62;
@@ -56,9 +56,7 @@
       --tr: 0.15s ease;
     }
 
-    html {
-      background: #0D1117;
-    }
+    html { background: #0D1117; }
 
     html, body {
       background: linear-gradient(180deg, #111720 0%, #0D1117 40%, #080C10 100%);
@@ -80,9 +78,6 @@
     /* ═══════════════════════════════════════
        HEADER
     ═══════════════════════════════════════ */
-    /* ═══════════════════════════════════════
-       HEADER — v1.6: cleaner hierarchy, gradient title
-    ═══════════════════════════════════════ */
     .hdr {
       display: flex;
       justify-content: space-between;
@@ -93,12 +88,8 @@
       gap: var(--s3);
       background: var(--bg2);
     }
-    /* brand section */
     .hdr-brand { display: flex; flex-direction: column; gap: 4px; }
-    .app-meta {
-      font-size: 11px; color: var(--t3); letter-spacing: .08em;
-      opacity: .55; font-weight: 500;
-    }
+    .app-meta { font-size: 11px; color: var(--t3); letter-spacing: .08em; opacity: .55; font-weight: 500; }
     .app-title { display: flex; align-items: baseline; gap: 10px; }
     .title-main {
       font-size: 22px; font-weight: 600; letter-spacing: -.01em; line-height: 1.15;
@@ -106,11 +97,7 @@
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .title-version {
-      font-size: 12px; color: var(--acc); font-weight: 500; opacity: .6;
-      /* fallback for browsers without gradient text */
-      -webkit-text-fill-color: var(--acc);
-    }
+    .title-version { font-size: 12px; color: var(--acc); font-weight: 500; opacity: .6; -webkit-text-fill-color: var(--acc); }
     .hdr-acts { display: flex; gap: var(--s2); align-items: center; flex-wrap: wrap; }
 
     .pill {
@@ -130,11 +117,7 @@
     /* ═══════════════════════════════════════
        SLIDE PANELS
     ═══════════════════════════════════════ */
-    .slide-panel {
-      padding: var(--s4) var(--s5);
-      border-bottom: 1px solid var(--bdr);
-      background: var(--bg2);
-    }
+    .slide-panel { padding: var(--s4) var(--s5); border-bottom: 1px solid var(--bdr); background: var(--bg2); }
     .slide-panel.api-bg   { border-left: 3px solid var(--green-bdr); }
     .slide-panel.debug-bg { border-left: 3px solid var(--bdr2); }
     .sp-hdr { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--s2); margin-bottom: var(--s3); }
@@ -168,18 +151,15 @@
 
     .field { margin-bottom: var(--s4); }
     .f-hdr { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--s2); }
-    .lbl { font-size: 13px; font-weight: 700; color: var(--t1); letter-spacing: .16em; text-transform: uppercase; position: relative; padding-bottom: 6px; }
-    .lbl::after {
-      content: "";
-      position: absolute;
-      left: 0; bottom: 0;
-      width: 32px; height: 2px;
-      background: var(--acc);
-      opacity: .7;
-      border-radius: 2px;
+    .lbl {
+      font-size: 13px; font-weight: 700; color: var(--t1); letter-spacing: .16em;
+      text-transform: uppercase; position: relative; padding-bottom: 6px;
     }
-    .info-card .lbl::after,
-    .out-hdr .lbl::after { display: none; }
+    .lbl::after {
+      content: ""; position: absolute; left: 0; bottom: 0;
+      width: 32px; height: 2px; background: var(--acc); opacity: .7; border-radius: 2px;
+    }
+    .info-card .lbl::after, .out-hdr .lbl::after { display: none; }
     .hint { font-size: 11px; color: var(--t4); }
     .grp-lbl {
       font-size: 10px; font-weight: 700; color: var(--t2); letter-spacing: .14em;
@@ -188,7 +168,7 @@
     }
 
     /* ═══════════════════════════════════════
-       INPUTS — deepest layer
+       INPUTS
     ═══════════════════════════════════════ */
     input, textarea, select {
       width: 100%; padding: var(--s2) var(--s3);
@@ -215,16 +195,14 @@
     input::placeholder, textarea::placeholder { color: var(--t3); font-size: 13px; }
 
     /* ═══════════════════════════════════════
-       SUBJECT FIELD — glow animation for Random
+       SUBJECT GLOW
     ═══════════════════════════════════════ */
     @keyframes subjectGlow {
       0%   { border-color: var(--acc); box-shadow: 0 0 0 4px rgba(47,129,247,.25), inset 0 2px 5px rgba(0,0,0,.3); }
       60%  { border-color: var(--acc); box-shadow: 0 0 0 6px rgba(47,129,247,.18), inset 0 2px 5px rgba(0,0,0,.3); }
       100% { border-color: var(--bdr); box-shadow: inset 0 2px 6px rgba(0,0,0,.38); }
     }
-    textarea.glow-flash {
-      animation: subjectGlow 320ms ease-out forwards;
-    }
+    textarea.glow-flash { animation: subjectGlow 320ms ease-out forwards; }
 
     /* ═══════════════════════════════════════
        BUTTONS
@@ -235,7 +213,6 @@
                   box-shadow var(--tr), transform 0.12s ease, opacity var(--tr);
     }
 
-    /* PRIMARY */
     .btn-primary {
       display: block; width: 100%; padding: 13px 20px;
       background: linear-gradient(180deg, #4696FF 0%, #2F81F7 45%, #2270E0 100%);
@@ -277,7 +254,6 @@
     }
     .btn-primary.btn-secondary:not(:disabled):active { transform: scale(0.98); background: rgba(255,255,255,.08); }
 
-    /* GHOST */
     .btn-ghost {
       padding: 6px var(--s3); background: transparent;
       border: 1px solid var(--bdr); color: var(--t3);
@@ -287,12 +263,10 @@
     .btn-ghost:active { transform: scale(0.96); }
     .btn-ghost.copied { border-color: var(--green-bdr); color: var(--green-txt); background: var(--green-bg); }
 
-    /* TEXT */
     .btn-text { background: transparent; border: none; color: var(--t3); font-size: 12px; padding: 0; border-radius: var(--r-sm); }
     .btn-text:hover { color: var(--acc-txt); }
     .btn-text:active { transform: scale(0.97); }
 
-    /* COPY */
     .btn-copy {
       padding: 4px 11px; background: transparent; border: 1px solid var(--bdr);
       color: var(--t4); border-radius: var(--r-sm); font-size: 11px;
@@ -303,20 +277,18 @@
     .btn-copy.copied { border-color: var(--green-bdr); color: var(--green-txt); background: var(--green-bg); }
 
     /* ═══════════════════════════════════════
-       OUTPUT ACTIONS — Regenerate + Copy (ComfyUI)
-       v16.0: full-width, hierarchy, separator
+       OUTPUT ACTIONS — v2.0: Regenerate primary
     ═══════════════════════════════════════ */
     .output-actions {
       display: flex;
       gap: 10px;
       width: 100%;
       margin-top: 12px;
-      margin-bottom: 14px; /* fix: space before ComfyUI Params below */
+      margin-bottom: 14px;
       padding-top: 10px;
       border-top: 1px solid rgba(255,255,255,.06);
     }
 
-    /* Shared base for both output action buttons */
     .btn-regen,
     .btn-act-copy {
       display: flex;
@@ -327,119 +299,90 @@
       border-radius: var(--r);
     }
 
-    /* REGEN — primary iteration, dominant */
+    /* REGEN — v2.0: primary iteration, blue tint */
     .btn-regen {
       flex: 1.5;
-      opacity: .95;
+      border-color: rgba(47,129,247,.42) !important;
+      color: var(--acc-txt) !important;
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: .02em;
+      background: rgba(47,129,247,.06) !important;
       transition: opacity .15s ease, transform .1s ease,
                   border-color var(--tr), color var(--tr), background var(--tr);
     }
-    .btn-regen:hover  { opacity: 1; }
+    .btn-regen:hover {
+      border-color: var(--acc) !important;
+      background: rgba(47,129,247,.12) !important;
+      color: #fff !important;
+      opacity: 1;
+    }
     .btn-regen:active { transform: scale(0.97); }
 
-    /* COPY (ComfyUI) — secondary, muted */
+    /* COPY — secondary, muted */
     .btn-act-copy {
       flex: 1;
-      opacity: .75;
+      opacity: .65;
       transition: opacity .15s ease, transform .1s ease,
                   border-color var(--tr), color var(--tr), background var(--tr);
     }
-    .btn-act-copy:hover  { opacity: .9; border-color: var(--bdr2); color: var(--t2); }
+    .btn-act-copy:hover  { opacity: .85; border-color: var(--bdr2); color: var(--t2); }
     .btn-act-copy:active { transform: scale(0.97); }
     .btn-act-copy.copied { border-color: var(--green-bdr); color: var(--green-txt); background: var(--green-bg); opacity: 1; }
 
-    /* Action icon */
     .output-actions .act-icon { font-size: 15px; opacity: .9; line-height: 1; }
 
     /* ═══════════════════════════════════════
-       RANDOM BUTTON — special
+       RANDOM BUTTON
     ═══════════════════════════════════════ */
     .btn-random {
       padding: 13px 16px;
       background: linear-gradient(180deg, #2A3548 0%, #1E2C3E 100%);
-      border: 1px solid var(--bdr2);
-      color: var(--t2);
-      border-radius: var(--r);
-      font-size: 16px;
-      font-family: inherit;
-      cursor: pointer;
-      flex-shrink: 0;
+      border: 1px solid var(--bdr2); color: var(--t2);
+      border-radius: var(--r); font-size: 16px; font-family: inherit;
+      cursor: pointer; flex-shrink: 0;
       transition: background var(--tr), border-color var(--tr), box-shadow var(--tr),
                   color var(--tr), transform 0.12s ease;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 1px 3px rgba(0,0,0,.2);
-      position: relative;
     }
     .btn-random:hover {
       background: linear-gradient(180deg, #303F58 0%, #263348 100%);
-      border-color: var(--acc);
-      color: var(--acc-txt);
+      border-color: var(--acc); color: var(--acc-txt);
       box-shadow: 0 0 12px rgba(47,129,247,.2), inset 0 1px 0 rgba(255,255,255,.1);
     }
     .btn-random:active { transform: scale(0.95); }
-    .btn-random.fired {
-      animation: randomFlash 200ms ease-out;
-    }
+    .btn-random.fired { animation: randomFlash 200ms ease-out; }
     @keyframes randomFlash {
       0%   { box-shadow: 0 0 0 0 rgba(47,129,247,.0); }
       40%  { box-shadow: 0 0 16px 4px rgba(47,129,247,.35); }
       100% { box-shadow: 0 0 0 0 rgba(47,129,247,.0); }
     }
 
-    /* ── Generate row layout ── */
-    .gen-row {
-      display: flex;
-      gap: var(--s2);
-      align-items: stretch;
-      margin-top: var(--s1);
-    }
-    .gen-row .btn-primary {
-      flex: 1;
-      margin-top: 0;
-    }
+    .gen-row { display: flex; gap: var(--s2); align-items: stretch; margin-top: var(--s1); }
+    .gen-row .btn-primary { flex: 1; margin-top: 0; }
 
-    /* ─── Generate highlight flash ─── */
     @keyframes genHighlight {
       0%   { box-shadow: 0 4px 24px rgba(47,129,247,.28), 0 2px 8px rgba(47,129,247,.18), inset 0 1px 0 rgba(255,255,255,.22); }
       50%  { box-shadow: 0 4px 32px rgba(47,129,247,.55), 0 2px 16px rgba(47,129,247,.4),  inset 0 1px 0 rgba(255,255,255,.3); }
       100% { box-shadow: 0 4px 24px rgba(47,129,247,.28), 0 2px 8px rgba(47,129,247,.18), inset 0 1px 0 rgba(255,255,255,.22); }
     }
-    .btn-primary.gen-hint {
-      animation: genHighlight 400ms ease-in-out;
-    }
+    .btn-primary.gen-hint { animation: genHighlight 400ms ease-in-out; }
 
-    /* Subject history tooltip */
-    .subj-hist {
-      display: flex;
-      gap: 5px;
-      flex-wrap: wrap;
-      margin-top: 5px;
-    }
+    /* Subject history */
+    .subj-hist { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px; }
     .subj-hist-item {
-      font-size: 10px;
-      color: var(--t4);
-      background: var(--bg);
-      border: 1px solid var(--bdr);
-      border-radius: 4px;
-      padding: 2px 7px;
-      cursor: pointer;
-      white-space: nowrap;
-      max-width: 160px;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-size: 10px; color: var(--t4); background: var(--bg);
+      border: 1px solid var(--bdr); border-radius: 4px; padding: 2px 7px;
+      cursor: pointer; white-space: nowrap; max-width: 160px;
+      overflow: hidden; text-overflow: ellipsis;
       transition: color var(--tr), border-color var(--tr);
       font-family: 'JetBrains Mono', monospace;
     }
     .subj-hist-item:hover { color: var(--acc-txt); border-color: var(--acc); }
 
-    /* Random mode badge */
     .rnd-badge {
-      font-size: 9px;
-      color: var(--t4);
-      text-align: center;
-      margin-top: 3px;
-      letter-spacing: .04em;
-      min-height: 13px;
-      transition: color var(--tr);
+      font-size: 9px; color: var(--t4); text-align: center; margin-top: 3px;
+      letter-spacing: .04em; min-height: 13px; transition: color var(--tr);
     }
     .rnd-badge.creative { color: var(--amber-txt); }
     .rnd-badge.wild     { color: var(--red-txt); }
@@ -485,18 +428,15 @@
     .st-pill {
       padding: 6px 16px;
       background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.25));
-      border: 1px solid var(--bdr);
-      border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--t4);
+      border: 1px solid var(--bdr); border-radius: 999px;
+      font-size: 13px; font-weight: 600; color: var(--t4);
       cursor: pointer;
       transition: border-color var(--tr), color var(--tr), background var(--tr),
                   box-shadow var(--tr), transform 0.14s ease;
       user-select: none; letter-spacing: .01em;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 1px 2px rgba(0,0,0,.3);
     }
-    .st-pill:hover {
-      border-color: var(--bdr2); color: var(--t2);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.3));
-    }
+    .st-pill:hover { border-color: var(--bdr2); color: var(--t2); background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.3)); }
     .st-pill:active { transform: scale(0.97); }
     .st-pill.active {
       background: linear-gradient(180deg, rgba(47,129,247,.22), rgba(47,129,247,.08));
@@ -516,7 +456,7 @@
     }
 
     /* ═══════════════════════════════════════
-       PROMPT PREVIEW
+       PROMPT PREVIEW INLINE (inside subject block)
     ═══════════════════════════════════════ */
     .prompt-preview {
       animation: hintFade 150ms ease;
@@ -525,30 +465,99 @@
       border-left: 2px solid var(--acc);
       border-radius: 6px;
       background: linear-gradient(90deg, rgba(47,129,247,.08), rgba(47,129,247,.03));
-      font-size: 12px;
-      color: var(--t3);
-      display: flex;
-      align-items: baseline;
+      font-size: 12px; color: var(--t3);
+      display: flex; align-items: baseline;
       transition: all 120ms ease;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
       overflow: hidden;
     }
     .prompt-preview[title] { cursor: help; }
-    .pp-label {
-      color: var(--acc);
-      margin-right: 6px;
-      font-weight: 600;
-      font-size: 11px;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      flex-shrink: 0;
+    .pp-label { color: var(--acc); margin-right: 6px; font-weight: 600; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; flex-shrink: 0; }
+    .pp-items { color: #D6E8FF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ═══════════════════════════════════════
+       PREVIEW CARD — v2.0 NEW: standalone before Generate
+    ═══════════════════════════════════════ */
+    .preview-card {
+      background: linear-gradient(135deg, rgba(47,129,247,.07) 0%, rgba(12,16,22,.7) 100%);
+      border: 1px solid rgba(47,129,247,.28);
+      border-radius: var(--r-md);
+      padding: var(--s3) var(--s4);
+      margin-bottom: var(--s3);
+      box-shadow: inset 0 1px 0 rgba(47,129,247,.1), 0 2px 8px rgba(0,0,0,.2);
+      animation: hintFade 180ms ease;
     }
-    .pp-items {
-      color: #D6E8FF;
+    .preview-card-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--s2);
+    }
+    .preview-card-title {
+      font-size: 10px; font-weight: 700; letter-spacing: .16em;
+      text-transform: uppercase; color: var(--acc);
+    }
+    .preview-card-count {
+      font-size: 10px; color: var(--t4); font-family: 'JetBrains Mono', monospace;
+    }
+    .preview-token-row {
+      display: flex; align-items: baseline; gap: 0; margin-bottom: 5px; flex-wrap: wrap;
+    }
+    .preview-token-key {
+      font-size: 9px; color: var(--t4); letter-spacing: .1em; text-transform: uppercase;
+      width: 72px; flex-shrink: 0; padding-top: 2px;
+    }
+    .preview-tokens {
+      display: flex; flex-wrap: wrap; gap: 4px; flex: 1;
+    }
+    .preview-token {
+      font-size: 11px; color: #A8C8FF;
+      background: rgba(47,129,247,.1);
+      border: 1px solid rgba(47,129,247,.2);
+      border-radius: 4px; padding: 2px 8px;
+      font-family: 'JetBrains Mono', monospace;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
+    .preview-token.sec {
+      color: var(--t3); background: rgba(255,255,255,.04); border-color: var(--bdr);
+    }
+    .preview-token.subject-tok {
+      color: #D0E8FF; background: rgba(47,129,247,.15); border-color: rgba(47,129,247,.35);
+      font-family: 'Outfit', sans-serif; font-size: 11px;
+      max-width: 280px; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* ═══════════════════════════════════════
+       SECONDARY SECTION — Light / Mood / Genre
+       v2.0: dimmer, compact, less visual weight
+    ═══════════════════════════════════════ */
+    .secondary-section {
+      margin-bottom: var(--s3);
+    }
+    .secondary-section .sec-block {
+      border-color: rgba(42,49,64,.55);
+      background: rgba(16,22,30,.6);
+      padding: var(--s3) var(--s4) var(--s2);
+    }
+    .secondary-section .lbl {
+      font-size: 10px;
+      color: var(--t3);
+      letter-spacing: .12em;
+      padding-bottom: 4px;
+    }
+    .secondary-section .lbl::after {
+      width: 16px;
+      opacity: .28;
+    }
+    .secondary-section select {
+      font-size: 12px;
+      color: var(--t2);
+      background: rgba(7,11,15,.8);
+      opacity: .88;
+    }
+    .secondary-section .field { margin-bottom: var(--s2); }
+    .secondary-section .three-col { gap: var(--s2); }
+
     .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
     .three-col { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: var(--s3); }
     .row       { display: flex; gap: var(--s2); align-items: center; }
@@ -577,13 +586,10 @@
     }
     .prompt-main::before {
       content: '';
-      position: absolute;
-      left: 0; top: 10px; bottom: 10px;
+      position: absolute; left: 0; top: 10px; bottom: 10px;
       width: 2px;
       background: linear-gradient(180deg, rgba(47,129,247,.65), rgba(47,129,247,.25));
-      border-radius: 2px;
-      opacity: .55;
-      transition: opacity .15s ease;
+      border-radius: 2px; opacity: .55; transition: opacity .15s ease;
     }
     .prompt-main .field { margin-bottom: 2px; }
     .prompt-main .lbl { letter-spacing: .18em; }
@@ -591,7 +597,6 @@
       background: #04070B;
       border: 1px solid rgba(47,129,247,.42);
       box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 0 0 1px rgba(47,129,247,.08);
-      transition: border-color .15s ease, box-shadow .15s ease;
     }
     .prompt-main textarea:focus {
       border-color: rgba(47,129,247,.55);
@@ -609,29 +614,17 @@
       position: relative;
       border: 1px solid rgba(47,129,247,.30);
       border-radius: var(--r-md);
-      padding: var(--s4);
-      margin-bottom: var(--s4);
+      padding: var(--s4); margin-bottom: var(--s4);
     }
     .output-main::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      background: radial-gradient(
-        120% 80% at 50% -10%,
-        rgba(47,129,247,.14),
-        rgba(47,129,247,.05),
-        transparent 70%
-      );
+      content: ''; position: absolute; inset: 0; border-radius: inherit;
+      background: radial-gradient(120% 80% at 50% -10%, rgba(47,129,247,.14), rgba(47,129,247,.05), transparent 70%);
       pointer-events: none;
     }
     .output-main.is-active {
       box-shadow: 0 0 0 1px rgba(47,129,247,.32), 0 10px 32px rgba(47,129,247,.16);
     }
-    .output-main .out-txt.accent {
-      background: #05080C;
-      border-color: rgba(47,129,247,.45);
-    }
+    .output-main .out-txt.accent { background: #05080C; border-color: rgba(47,129,247,.45); }
 
     .neg-preview {
       padding: var(--s2) var(--s3); background: var(--bg); border: 1px solid #1E2429;
@@ -691,60 +684,31 @@
        MODEL CARDS
     ═══════════════════════════════════════ */
     .model-card {
-      position: relative;
-      display: flex;
-      align-items: center;
-      gap: var(--s3);
-      padding: var(--s3) var(--s4);
-      background: var(--bg2);
-      border: 1px solid var(--bdr);
-      border-radius: var(--r-lg);
-      cursor: pointer;
-      margin-bottom: var(--s2);
-      overflow: hidden;
-      transition: background var(--tr), border-color var(--tr),
-                  box-shadow var(--tr), transform 0.18s ease;
+      position: relative; display: flex; align-items: center; gap: var(--s3);
+      padding: var(--s3) var(--s4); background: var(--bg2);
+      border: 1px solid var(--bdr); border-radius: var(--r-lg);
+      cursor: pointer; margin-bottom: var(--s2); overflow: hidden;
+      transition: background var(--tr), border-color var(--tr), box-shadow var(--tr), transform 0.18s ease;
     }
     .model-card::before {
-      content: "";
-      position: absolute;
-      left: 0; top: 0; bottom: 0;
-      width: 3px;
-      border-radius: 3px 0 0 3px;
-      background: transparent;
-      transition: background var(--tr);
+      content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+      width: 3px; border-radius: 3px 0 0 3px; background: transparent; transition: background var(--tr);
     }
     .model-card:hover { background: var(--bg4); border-color: var(--bdr2); }
     .model-card.active {
-      background: rgba(47, 129, 247, 0.12);
-      border-color: var(--acc);
-      box-shadow: 0 0 0 1px var(--acc), 0 8px 24px rgba(47,129,247,.18);
-      transform: translateY(-1px);
+      background: rgba(47,129,247,0.12); border-color: var(--acc);
+      box-shadow: 0 0 0 1px var(--acc), 0 8px 24px rgba(47,129,247,.18); transform: translateY(-1px);
     }
     .model-card.active::before { background: var(--acc); }
-    .model-radio {
-      width: 14px; height: 14px; border-radius: 50%;
-      border: 1.5px solid var(--bdr2); background: transparent;
-      flex-shrink: 0; transition: all 0.15s ease; pointer-events: none;
-    }
-    .model-card.active .model-radio {
-      background: var(--acc); border-color: var(--acc);
-      box-shadow: 0 0 0 3px rgba(47,129,247,.25);
-    }
+    .model-radio { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--bdr2); background: transparent; flex-shrink: 0; transition: all 0.15s ease; pointer-events: none; }
+    .model-card.active .model-radio { background: var(--acc); border-color: var(--acc); box-shadow: 0 0 0 3px rgba(47,129,247,.25); }
     .model-card input[type=radio] { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
     .model-info { flex: 1; min-width: 0; }
     .model-name { font-size: 13px; font-weight: 600; color: var(--t1); line-height: 1.3; transition: color 0.15s ease; }
     .model-note { font-size: 11px; color: var(--t3); transition: color 0.15s ease; }
     .model-card.active .model-name { color: #fff; }
     .model-card.active .model-note { color: rgba(255,255,255,.65); }
-    .model-id {
-      font-size: 10px; color: var(--t4);
-      font-family: 'JetBrains Mono', monospace;
-      text-align: right; flex-shrink: 0;
-      max-width: 180px; overflow: hidden;
-      text-overflow: ellipsis; white-space: nowrap;
-      transition: color 0.15s ease;
-    }
+    .model-id { font-size: 10px; color: var(--t4); font-family: 'JetBrains Mono', monospace; text-align: right; flex-shrink: 0; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color 0.15s ease; }
     .model-card.active .model-id { color: rgba(121,184,255,.7); }
 
     .chk-row { display: flex; align-items: center; gap: var(--s2); margin-top: var(--s3); }
@@ -752,20 +716,14 @@
     input[type=checkbox] {
       width: 15px; height: 15px; padding: 0; flex-shrink: 0;
       background: transparent; border: 1.5px solid var(--bdr2);
-      border-radius: 3px; box-shadow: none;
-      appearance: none; -webkit-appearance: none;
-      cursor: pointer; position: relative;
-      transition: background var(--tr), border-color var(--tr);
+      border-radius: 3px; box-shadow: none; appearance: none; -webkit-appearance: none;
+      cursor: pointer; position: relative; transition: background var(--tr), border-color var(--tr);
     }
     input[type=checkbox]:checked { background: var(--acc); border-color: var(--acc); }
     input[type=checkbox]:checked::after {
-      content: '';
-      position: absolute;
-      left: 3px; top: 0px;
-      width: 5px; height: 9px;
-      border: 2px solid #fff;
-      border-top: none; border-left: none;
-      transform: rotate(43deg);
+      content: ''; position: absolute; left: 3px; top: 0px;
+      width: 5px; height: 9px; border: 2px solid #fff;
+      border-top: none; border-left: none; transform: rotate(43deg);
     }
     input[type=checkbox]:hover:not(:checked) { border-color: var(--acc); }
     input[type=checkbox]:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(47,129,247,.25); }
@@ -787,7 +745,6 @@
       .pp-items { white-space: normal; overflow: visible; text-overflow: unset; }
     }
     @media (min-width: 681px) { .mob-mode-sw { display: none; } }
-    /* debug copy button flash — matches btn-copy.copied */
     .btn-ghost.copied { border-color: var(--green-bdr); color: var(--green-txt); background: var(--green-bg); }
   </style>
 </head>
@@ -816,7 +773,6 @@ const SCENES = [
 ];
 
 const STYLES = [
-  /* ── Real ── */
   { id:'photorealistic', label:'Photorealistic',  grp:'Real', icon:'◉',
     detail:'natural light, realistic skin and material textures, accurate colors, sharp focus, high dynamic range',
     example:'красива жінка під дощем у Токіо' },
@@ -832,8 +788,6 @@ const STYLES = [
   { id:'analog',         label:'Analog Film',      grp:'Real', icon:'◌',
     detail:'film grain, subtle color shift, soft contrast, vintage tones, faint light leaks',
     example:'teenagers in a summer park, grainy warm light' },
-
-  /* ── Illustrated ── */
   { id:'digital_art',    label:'Digital Art',      grp:'Illustrated', icon:'▣',
     detail:'clean digital rendering, smooth gradients, stylized shading, crisp edges, vibrant color',
     example:'neon city with flying vehicles at night' },
@@ -855,8 +809,6 @@ const STYLES = [
   { id:'impressionism',  label:'Impressionism',    grp:'Illustrated', icon:'≈',
     detail:'loose dappled brushstrokes, soft edges, natural outdoor light, captured moment, painterly texture',
     example:'flower garden in dappled afternoon light' },
-
-  /* ── Stylized ── */
   { id:'anime',          label:'Anime',            grp:'Stylized', icon:'✦',
     detail:'cel shading, clean line art, expressive eyes, flat color fills, stylized proportions',
     example:'дівчина на даху дивиться на захід сонця' },
@@ -872,8 +824,6 @@ const STYLES = [
   { id:'ukiyo_e',        label:'Ukiyo-e',          grp:'Stylized', icon:'⬡',
     detail:'Japanese woodblock print, flat bold outlines, limited color bands, decorative pattern, Edo aesthetic',
     example:'geisha crossing wooden bridge, Mount Fuji' },
-
-  /* ── 3D / Render ── */
   { id:'3d_render',      label:'3D Render',        grp:'3D / Render', icon:'◫',
     detail:'physically based rendering, global illumination, realistic reflections and materials, studio HDRI',
     example:'product on dark surface with dramatic rim light' },
@@ -883,8 +833,6 @@ const STYLES = [
   { id:'isometric',      label:'Isometric',        grp:'3D / Render', icon:'⬛',
     detail:'strict isometric 2.5D perspective, clean geometry, even light, stylized environment',
     example:'cozy house with garden, isometric birds-eye view' },
-
-  /* ── Digital ── */
   { id:'pixel_art',      label:'Pixel Art',        grp:'Digital', icon:'▪',
     detail:'pixel grid visible, limited resolution, dithering, retro restricted palette',
     example:'retro hero in pixel dungeon, neon signs' },
@@ -896,10 +844,6 @@ const STYLES = [
     example:'corrupted portrait with RGB shift and scanlines' },
 ];
 
-/* ═══════════════════════════════════════════════════
-   SUBJECT AXIS — ZIT Style Engine v3
-   v15.9: semantic emoji icons replace abstract symbols
-═══════════════════════════════════════════════════ */
 const SUBJECTS = [
   { id:'none',        label:'None',        icon:'○',  tokens:[], tip:'' },
   { id:'person',      label:'Human',       icon:'👤', tokens:['human facial detail', 'natural skin texture', 'expressive features'],            tip:'Focus on human features and anatomy' },
@@ -1227,9 +1171,7 @@ const GENRE_MODS = {
   'Futuristic':       ', sleek minimalist future tech, chrome and light, utopian scale',
 };
 
-function rndFrom(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
+function rndFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
 function smartRandom(mode) {
   var scene = S.scene || 'portrait';
@@ -1267,44 +1209,32 @@ const SCENE_NEGATIVES = {
 };
 function buildNegative() { return SCENE_NEGATIVES[S.scene] || SCENE_NEGATIVES.manual; }
 
-
-
 /* ═══════════════════════════════════════════════════
-   I18N — UI labels only
-   CRITICAL: does NOT affect buildUser(), prompt engine, or Qwen translate
-   Stored in S.lang; applied via t() inside buildHTML() on every render.
-   GPT's DOM-mutation approach (querySelectorAll data-i18n) is incompatible
-   with render() full-DOM-rebuild — replaced with state-driven approach.
+   I18N
 ═══════════════════════════════════════════════════ */
 const I18N = {
   en: {
-    /* tabs */
     tabGenerate: 'Generate', tabOptimize: 'Optimize',
     tabOptimizeNote: '· refines for ZIT engine',
-    /* section labels */
     lScene: 'Scene', lSubjectType: 'Subject Type',
     lSubjectHint: 'Adds subject detail',
     lStyle: 'Visual Style', lStyleHint: 'hover for detail',
-    lPrompt: 'Prompt', lPromptHint: 'UA or EN',
+    lPrompt: 'Subject', lPromptHint: 'UA or EN',
     lLighting: 'Lighting', lMood: 'Mood',
     lGenre: 'Genre', lResolution: 'Resolution',
     lLoRA: 'LoRA Stack', lSampler: 'Sampler + Scheduler',
     lSteps: 'Steps', lCFG: 'CFG', lSeed: 'Seed',
     lExisting: 'Existing Prompt', lExistingHint: 'Any language',
-    /* buttons */
     btnGenerate: '✦ Generate Prompt', btnOptimize: '✦ Optimize Prompt',
-    btnGenerating: 'Generating…', btnRegenerate: 'Regenerate',
+    btnGenerating: 'Generating…', btnRegenerate: '↺ Regenerate',
     btnCopy: 'Copy (ComfyUI)', btnAddLoRA: '+ Add LoRA',
-    /* output labels */
     outPositive: 'Positive Prompt', outNegative: 'Negative Prompt',
     outParams: 'ComfyUI Params', outChanged: 'What changed', outTip: 'ZIT tip',
-    /* placeholders / states */
     phFill: 'Fill in parameters\nand press Generate',
     phSub: '· ZIT/Lumina2',
-    /* mobile */
     mobParams: 'Params', mobOutput: 'Output',
-    /* none */
     noneOpt: '— none —',
+    lAtmosphere: 'Atmosphere', lPreview: 'Prompt Preview',
   },
   ua: {
     tabGenerate: 'Генерувати', tabOptimize: 'Оптимізувати',
@@ -1312,14 +1242,14 @@ const I18N = {
     lScene: 'Сцена', lSubjectType: 'Тип субʼєкта',
     lSubjectHint: 'Додає деталі субʼєкта',
     lStyle: 'Візуальний стиль', lStyleHint: 'наведи для деталей',
-    lPrompt: 'Промпт', lPromptHint: 'UA або EN',
+    lPrompt: 'Субʼєкт', lPromptHint: 'UA або EN',
     lLighting: 'Освітлення', lMood: 'Настрій',
     lGenre: 'Жанр', lResolution: 'Роздільна здатність',
     lLoRA: 'LoRA стек', lSampler: 'Семплер + Планувальник',
     lSteps: 'Кроки', lCFG: 'CFG', lSeed: 'Сід',
     lExisting: 'Вхідний промпт', lExistingHint: 'Будь-яка мова',
     btnGenerate: '✦ Згенерувати', btnOptimize: '✦ Оптимізувати',
-    btnGenerating: 'Генерація…', btnRegenerate: 'Перегенерувати',
+    btnGenerating: 'Генерація…', btnRegenerate: '↺ Перегенерувати',
     btnCopy: 'Копіювати (ComfyUI)', btnAddLoRA: '+ Додати LoRA',
     outPositive: 'Позитивний промпт', outNegative: 'Негативний промпт',
     outParams: 'Параметри ComfyUI', outChanged: 'Що змінилось', outTip: 'Порада ZIT',
@@ -1327,9 +1257,9 @@ const I18N = {
     phSub: '· ZIT/Lumina2',
     mobParams: 'Параметри', mobOutput: 'Результат',
     noneOpt: '— немає —',
+    lAtmosphere: 'Атмосфера', lPreview: 'Попередній перегляд',
   }
 };
-/* t() — safe lookup with en fallback */
 function t(key) {
   var lang = (typeof S !== 'undefined' && S.lang) ? S.lang : 'en';
   return (I18N[lang] && I18N[lang][key]) ? I18N[lang][key] : (I18N.en[key] || key);
@@ -1479,7 +1409,6 @@ async function callGroqOnce(signal) {
   var log = { model:S.model, httpStatus:null, httpOk:null, responseMs:null, rawText:'', strippedText:'', contentField:'', error:null, sentSystem:'', sentUser:'' };
   var sysMsg = buildSystem();
   var userMsg = buildUser();
-  /* store for debug panel */
   log.sentSystem = sysMsg;
   log.sentUser   = userMsg;
   var mdl = GROQ_MODELS.find(function(m){return m.id===S.model;});
@@ -1508,7 +1437,7 @@ async function generate() {
   if (!S.apiKey.trim()) { S.error='Введіть Groq API ключ — натисніть ⚙ API'; S.apiOpen=true; render(); forceRepaint(); return; }
   if (S.mode==='generate' && !S.subject.trim()) { S.error='Введіть Subject'; render(); forceRepaint(); return; }
   if (S.mode==='enhance'  && !S.existing.trim()) { S.error='Вставте промпт для оптимізації'; render(); forceRepaint(); return; }
-if (_busy) { if (_ac) _ac.abort(); _busy=false; }
+  if (_busy) { if (_ac) _ac.abort(); _busy=false; }
   _ac=new AbortController(); _busy=true;
   S.loading=true; S.error='';
   S.result=null; S.dbgLog=null;
@@ -1556,7 +1485,7 @@ function esc(s) {
 }
 
 /* ═══════════════════════════════════════════════════
-   PROMPT PREVIEW
+   PROMPT PREVIEW INLINE (inside subject block)
 ═══════════════════════════════════════════════════ */
 function buildPromptPreview() {
   var st  = STYLES.find(function(x){ return x.id === S.style; });
@@ -1578,14 +1507,92 @@ function buildPromptPreview() {
 }
 
 /* ═══════════════════════════════════════════════════
+   PREVIEW CARD — v2.0 NEW: standalone block before Generate
+   Shows assembled prompt tokens in a clear visual card
+═══════════════════════════════════════════════════ */
+function buildPreviewCard() {
+  var sc  = SCENES.find(function(x){ return x.id === S.scene; }) || {};
+  var st  = STYLES.find(function(x){ return x.id === S.style; }) || {};
+  var lit = LIGHTINGS.find(function(x){ return x.label === S.lighting; });
+  var mo  = MOODS.find(function(x){ return x.label === S.mood; });
+  var ge  = GENRES.find(function(x){ return x.label === S.genre; });
+  var subjTok  = buildSubjectTokens(S.subjectType);
+  var styleTok = buildStyleTokens(st);
+
+  var rows = [];
+  var totalTokenCount = 0;
+
+  /* Subject */
+  if (S.subject.trim()) {
+    var subj = S.subject.trim();
+    var subjDisplay = subj.length > 55 ? subj.slice(0, 53) + '…' : subj;
+    rows.push({ key: 'Subject', tokens: [subjDisplay], cls: 'subject-tok' });
+    totalTokenCount++;
+  }
+
+  /* Scene */
+  if (sc.label && sc.id !== 'manual') {
+    var sceneToks = [sc.label];
+    if (sc.detail) {
+      sceneToks = sceneToks.concat(sc.detail.split(',').slice(0,2).map(function(t){ return t.trim(); }));
+    }
+    rows.push({ key: 'Scene', tokens: sceneToks, cls: '' });
+    totalTokenCount += sceneToks.length;
+  }
+
+  /* Subject type detail */
+  if (subjTok) {
+    var stArr = subjTok.split(',').slice(0,2).map(function(t){ return t.trim(); });
+    rows.push({ key: 'Detail', tokens: stArr, cls: '' });
+    totalTokenCount += stArr.length;
+  }
+
+  /* Style */
+  if (styleTok) {
+    var styleArr = styleTok.split(',').slice(0,3).map(function(t){ return t.trim(); });
+    rows.push({ key: 'Style', tokens: styleArr, cls: '' });
+    totalTokenCount += styleArr.length;
+  }
+
+  /* Atmosphere: lighting + mood + genre */
+  var atmoToks = [];
+  if (lit && lit.value) atmoToks.push(S.lighting);
+  if (mo  && mo.value)  atmoToks.push(S.mood);
+  if (ge  && ge.value)  atmoToks.push(S.genre);
+  if (atmoToks.length) {
+    rows.push({ key: 'Atmos', tokens: atmoToks, cls: 'sec' });
+    totalTokenCount += atmoToks.length;
+  }
+
+  if (!rows.length) return '';
+
+  var inner = rows.map(function(row) {
+    return '<div class="preview-token-row">' +
+      '<span class="preview-token-key">' + esc(row.key) + '</span>' +
+      '<span class="preview-tokens">' +
+        row.tokens.map(function(tok) {
+          return '<span class="preview-token ' + row.cls + '">' + esc(tok) + '</span>';
+        }).join('') +
+      '</span>' +
+    '</div>';
+  }).join('');
+
+  return '<div class="preview-card">' +
+    '<div class="preview-card-hdr">' +
+      '<span class="preview-card-title">▸ ' + t('lPreview') + '</span>' +
+      '<span class="preview-card-count">' + totalTokenCount + ' tokens</span>' +
+    '</div>' +
+    inner +
+  '</div>';
+}
+
+/* ═══════════════════════════════════════════════════
    iOS SAFARI REPAINT
 ═══════════════════════════════════════════════════ */
 function forceRepaint() {
   requestAnimationFrame(function() {
     document.body.style.transform = 'translateZ(0)';
-    requestAnimationFrame(function() {
-      document.body.style.transform = '';
-    });
+    requestAnimationFrame(function() { document.body.style.transform = ''; });
   });
 }
 
@@ -1594,6 +1601,21 @@ function render() {
   attachEvents();
 }
 
+/* ═══════════════════════════════════════════════════
+   BUILD HTML — v2.0 RESTRUCTURED
+   New left-column order (generate mode):
+   1. SUBJECT (prompt-main) — first, most prominent
+   2. SCENE grid
+   3. SUBJECT TYPE pills (compact, inside scene context)
+   4. STYLE pills (primary)
+   5. SECONDARY: Lighting | Mood | Genre (dimmer 3-col)
+   6. Resolution (compact)
+   — hr —
+   7. LoRA, Sampler
+   8. PREVIEW CARD (new, before Generate)
+   9. Error / Neg preview
+   10. GENERATE row
+═══════════════════════════════════════════════════ */
 function buildHTML() {
   var mob   = window.innerWidth <= 680;
   var sk    = S.sampler + '+' + S.scheduler;
@@ -1607,7 +1629,7 @@ function buildHTML() {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v1.9</span>' +
+        '<span class="title-version">v2.0</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
@@ -1622,10 +1644,7 @@ function buildHTML() {
     var mOpts = GROQ_MODELS.map(function(m){
       return '<label class="model-card' + (S.model===m.id?' active':'') + '" data-model="' + esc(m.id) + '">' +
         '<div class="model-radio"></div>' +
-        '<div class="model-info">' +
-          '<div class="model-name">' + esc(m.name) + '</div>' +
-          '<div class="model-note">' + esc(m.note) + '</div>' +
-        '</div>' +
+        '<div class="model-info"><div class="model-name">' + esc(m.name) + '</div><div class="model-note">' + esc(m.note) + '</div></div>' +
         '<div class="model-id">' + esc(m.id) + '</div>' +
         '<input type="radio" name="mdl" value="' + esc(m.id) + '"' + (S.model===m.id?' checked':'') + '>' +
       '</label>';
@@ -1675,7 +1694,7 @@ function buildHTML() {
 
   h += '<div class="body-grid">';
 
-  /* ── LEFT ── */
+  /* ── LEFT COLUMN ── */
   var pHide = mob && S.mobilePane !== 'params';
   h += '<div class="col col-l'+(pHide?' pane-hidden':'')+ '">';
 
@@ -1686,22 +1705,45 @@ function buildHTML() {
     '</div>';
   }
 
+  /* ══════════════════════════════════════
+     GENERATE MODE — v2.0 block order
+  ══════════════════════════════════════ */
   if (S.mode === 'generate') {
-    /* Scene grid */
+
+    /* ── STEP 1: SUBJECT (first, most prominent) ── */
+    var stNow = STYLES.find(function(x){return x.id===S.style;}) || {};
+    var stPh  = stNow.example || 'красива жінка під дощем у Токіо';
+    var histHtml = '';
+    if (S.subjectHistory.length > 0) {
+      histHtml = '<div class="subj-hist">' +
+        S.subjectHistory.map(function(s, i){
+          return '<span class="subj-hist-item" data-hist="'+i+'" title="'+esc(s)+'">'+esc(s.length>28?s.slice(0,26)+'…':s)+'</span>';
+        }).join('') + '</div>';
+    }
+
+    h += '<div class="prompt-main">' +
+      '<div class="field">' +
+        '<div class="f-hdr"><label class="lbl">'+t('lPrompt')+'</label><span class="hint">'+t('lPromptHint')+'</span></div>' +
+        '<textarea id="inp-sub" rows="3" placeholder="e.g: '+esc(stPh)+'&#10;• your own idea here">'+esc(S.subject)+'</textarea>' +
+        histHtml +
+      '</div>' +
+    '</div>';
+
+    /* ── STEP 2a: SCENE ── */
     var tiles = SCENES.map(function(s){
       return '<div class="icon-tile'+(S.scene===s.id?' active':'')+'" data-scene="'+s.id+'" title="'+esc(s.label)+'">' +
         '<span class="i-glyph">'+s.icon+'</span><span class="i-label">'+esc(s.label)+'</span></div>';
     }).join('');
     h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">'+t('lScene')+'</label></div><div class="icon-grid">'+tiles+'</div></div>';
 
-    /* Subject Type pills — v15.9: semantic emoji icons */
+    /* ── STEP 2b: SUBJECT TYPE (compact, below scene) ── */
     var subjPills = SUBJECTS.map(function(s){
       return '<div class="st-pill'+(S.subjectType===s.id?' active':'')+'" data-subtype="'+s.id+'"'+(s.tip?' title="'+esc(s.tip)+'"':'')+'>'+
         '<span class="st-icon">'+esc(s.icon)+'</span> '+esc(s.label)+'</div>';
     }).join('');
     h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">'+t('lSubjectType')+'</label><span class="hint">'+t('lSubjectHint')+'</span></div><div class="pill-row" style="margin-bottom:0">'+subjPills+'</div></div>';
 
-    /* Style pills */
+    /* ── STEP 3: STYLE (primary) ── */
     var grps = [];
     STYLES.forEach(function(s){ if(grps.indexOf(s.grp)<0) grps.push(s.grp); });
     var stylePills = grps.map(function(g){
@@ -1713,35 +1755,30 @@ function buildHTML() {
     }).join('');
     h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">'+t('lStyle')+'</label><span class="hint">'+t('lStyleHint')+'</span></div>'+stylePills+'</div>';
 
-    /* Subject field + history */
-    var histHtml = '';
-    if (S.subjectHistory.length > 0) {
-      histHtml = '<div class="subj-hist">' +
-        S.subjectHistory.map(function(s, i){
-          return '<span class="subj-hist-item" data-hist="'+i+'" title="'+esc(s)+'">'+esc(s.length>28?s.slice(0,26)+'…':s)+'</span>';
-        }).join('') + '</div>';
-    }
-
-    var stNow = STYLES.find(function(x){return x.id===S.style;}) || {};
-    var stPh  = stNow.example || 'красива жінка під дощем у Токіо';
-    var pvHtml = buildPromptPreview();
-
-    h += '<div class="prompt-main"><div class="field"><div class="f-hdr"><label class="lbl">'+t('lPrompt')+'</label><span class="hint">'+t('lPromptHint')+'</span></div>' +
-      '<textarea id="inp-sub" rows="3" placeholder="e.g: '+esc(stPh)+'&#10;• your own idea here">'+esc(S.subject)+'</textarea>' +
-      histHtml + pvHtml + '</div></div>';
-
-    /* Lighting + Mood */
-    h += '<div class="two-col">' +
-      '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lLighting')+'</label></div><select id="sel-light">'+LIGHTINGS.map(function(l){return '<option value="'+esc(l.label)+'"'+(S.lighting===l.label?' selected':'')+'>'+esc(l.label)+'</option>';}).join('')+'</select></div>' +
-      '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lMood')+'</label></div><select id="sel-mood">'+MOODS.map(function(m){return '<option value="'+esc(m.label)+'"'+(S.mood===m.label?' selected':'')+'>'+(m.label||t('noneOpt'))+'</option>';}).join('')+'</select></div>' +
+    /* ── STEP 3 secondary: Lighting | Mood | Genre (dimmer 3-col) ── */
+    h += '<div class="secondary-section">' +
+      '<div class="sec-block">' +
+        '<div class="three-col" style="grid-template-columns:1fr 1fr 1fr">' +
+          /* Lighting */
+          '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lLighting')+'</label></div>' +
+          '<select id="sel-light">'+LIGHTINGS.map(function(l){return '<option value="'+esc(l.label)+'"'+(S.lighting===l.label?' selected':'')+'>'+esc(l.label)+'</option>';}).join('')+'</select></div>' +
+          /* Mood */
+          '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lMood')+'</label></div>' +
+          '<select id="sel-mood">'+MOODS.map(function(m){return '<option value="'+esc(m.label)+'"'+(S.mood===m.label?' selected':'')+'>'+(m.label||t('noneOpt'))+'</option>';}).join('')+'</select></div>' +
+          /* Genre */
+          '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lGenre')+'</label></div>' +
+          '<select id="sel-genre">'+GENRES.map(function(g){return '<option value="'+esc(g.label)+'"'+(S.genre===g.label?' selected':'')+'>'+(g.label||t('noneOpt'))+'</option>';}).join('')+'</select></div>' +
+        '</div>' +
+      '</div>' +
     '</div>';
 
-    /* Genre + Resolution */
-    h += '<div class="two-col">' +
-      '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lGenre')+'</label></div><select id="sel-genre">'+GENRES.map(function(g){return '<option value="'+esc(g.label)+'"'+(S.genre===g.label?' selected':'')+'>'+(g.label||t('noneOpt'))+'</option>';}).join('')+'</select></div>' +
-      '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lResolution')+'</label></div><select id="sel-res">'+RESOLUTIONS.map(function(r){return '<option value="'+esc(r.value)+'"'+(S.resolution===r.value?' selected':'')+'>'+esc(r.label)+'</option>';}).join('')+'</select></div>' +
+    /* Resolution — compact single row */
+    h += '<div class="field" style="margin-bottom:var(--s4)">' +
+      '<div class="f-hdr"><label class="lbl">'+t('lResolution')+'</label></div>' +
+      '<select id="sel-res">'+RESOLUTIONS.map(function(r){return '<option value="'+esc(r.value)+'"'+(S.resolution===r.value?' selected':'')+'>'+esc(r.label)+'</option>';}).join('')+'</select>' +
     '</div>';
-  }
+
+  } /* end generate mode blocks */
 
   if (S.mode === 'enhance') {
     var ec = S.existing.length;
@@ -1752,7 +1789,7 @@ function buildHTML() {
 
   h += '<hr>';
 
-  /* LoRA */
+  /* ── LoRA ── */
   var loraRows = S.loras.map(function(l,i){
     return '<div class="lora-row">' +
       '<input type="text" data-ln="'+i+'" value="'+esc(l.name)+'" placeholder="lora_filename (no .safetensors)" style="flex:3;font-family:\'JetBrains Mono\',monospace;font-size:13px">' +
@@ -1761,7 +1798,7 @@ function buildHTML() {
   }).join('');
   h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">'+t('lLoRA')+'</label></div>' + loraRows + '<button class="btn-text" id="b-add-lora" style="margin-top:4px">'+t('btnAddLoRA')+'</button></div>';
 
-  /* Sampler */
+  /* ── Sampler ── */
   h += '<div class="sec-block">' +
     '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lSampler')+'</label></div>' +
     '<div class="two-col"><select id="sel-samp">'+SAMPLERS.map(function(s){return '<option'+(S.sampler===s?' selected':'')+'>'+s+'</option>';}).join('')+'</select>' +
@@ -1775,18 +1812,24 @@ function buildHTML() {
     '<button class="btn-ghost" id="b-seed" title="Random seed">🎲</button></div></div>' +
     '</div></div>';
 
-  /* Error */
+  /* ── STEP 4: PREVIEW CARD (before generate) ── */
+  if (S.mode === 'generate') {
+    var pvCard = buildPreviewCard();
+    if (pvCard) h += pvCard;
+  }
+
+  /* ── Error ── */
   if (S.error) {
     h += '<div class="err-box"><div class="err-title">⚠ Error</div><div class="err-msg">'+esc(S.error)+'</div>' +
       (!S.dbgOpen?'<button class="btn-text" id="b-open-dbg" style="margin-top:6px;color:var(--amber-txt);font-size:12px">→ Open Debug Panel</button>':'') + '</div>';
   }
 
-  /* Neg preview */
+  /* ── Neg preview ── */
   if (S.mode === 'generate') {
     h += '<div class="neg-preview"><span class="neg-preview-label">NEG</span><span class="neg-preview-text">'+esc(buildNegative())+'</span></div>';
   }
 
-  /* ── GENERATE ROW ── */
+  /* ── STEP 5: GENERATE ROW ── */
   if (S.mode === 'generate') {
     var badgeText = '', badgeClass = 'rnd-badge';
     if (S.rndMode === 'creative') { badgeText='Shift: creative mode'; badgeClass+=' creative'; }
@@ -1813,7 +1856,7 @@ function buildHTML() {
 
   h += '</div>'; /* col-l */
 
-  /* ── RIGHT ── */
+  /* ── RIGHT COLUMN ── */
   var oHide = mob && S.mobilePane !== 'output';
   h += '<div class="col'+(oHide?' pane-hidden':'')+ '">';
 
@@ -1846,8 +1889,8 @@ function buildHTML() {
   }
 
   /* ═══════════════════════════════════════
-     OUTPUT — v16.0: output-actions full-width, hierarchy
-     Flow: Generate → Read → [Regenerate | Copy (ComfyUI)] → Repeat
+     OUTPUT — v2.0: Regenerate is primary action
+     RESULT → READ → REGENERATE (primary) | Copy (secondary) → LOOP
   ═══════════════════════════════════════ */
   if (S.result) {
     var r = S.result;
@@ -1862,7 +1905,7 @@ function buildHTML() {
       '<div class="out-hdr"><span class="lbl">'+t('outNegative')+'</span><button class="btn-copy" id="b-cp-neg">⎘ Copy</button></div>' +
       '<div class="out-txt" id="out-neg">'+esc(r.negative)+'</div></div>';
 
-    /* output-actions: Regenerate + Copy (ComfyUI) — contextual, inside output-main */
+    /* ── output-actions v2.0: Regenerate primary (blue), Copy secondary ── */
     h += '<div class="output-actions">' +
       '<button class="btn-ghost btn-regen" id="b-regen"><span class="act-icon">↺</span> '+t('btnRegenerate')+'</button>' +
       '<button class="btn-ghost btn-act-copy" id="b-cp-all"><span class="act-icon">⧉</span> '+t('btnCopy')+'</button>' +
@@ -1902,8 +1945,7 @@ function attachEvents() {
 
   document.querySelectorAll('[data-pane]').forEach(function(el){ el.addEventListener('click', function(){ S.mobilePane=el.dataset.pane; render(); }); });
   document.querySelectorAll('[data-mode]').forEach(function(el){ el.addEventListener('click', function(){
-    S.mode=el.dataset.mode; S.result=null; S.error='';
-    render();
+    S.mode=el.dataset.mode; S.result=null; S.error=''; render();
   }); });
   document.querySelectorAll('[data-scene]').forEach(function(el){ el.addEventListener('click', function(){ S.scene=el.dataset.scene; render(); }); });
   document.querySelectorAll('[data-style]').forEach(function(el){ el.addEventListener('click', function(){ S.style=el.dataset.style; render(); }); });
