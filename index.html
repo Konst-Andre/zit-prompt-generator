@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v2.0</title>
+  <title>ZIT Prompt Generator v2.1</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -313,7 +313,7 @@
     }
     .btn-regen:hover {
       border-color: var(--acc) !important;
-      background: rgba(47,129,247,.12) !important;
+      background: rgba(47,129,247,.16) !important;
       color: #fff !important;
       opacity: 1;
     }
@@ -501,7 +501,7 @@
       font-size: 10px; color: var(--t4); font-family: 'JetBrains Mono', monospace;
     }
     .preview-token-row {
-      display: flex; align-items: baseline; gap: 0; margin-bottom: 5px; flex-wrap: wrap;
+      display: flex; align-items: baseline; gap: 0; margin-bottom: 3px; flex-wrap: wrap;
     }
     .preview-token-key {
       font-size: 9px; color: var(--t4); letter-spacing: .1em; text-transform: uppercase;
@@ -517,14 +517,17 @@
       border-radius: 4px; padding: 2px 8px;
       font-family: 'JetBrains Mono', monospace;
       white-space: nowrap;
+      opacity: 0.85;
     }
     .preview-token.sec {
       color: var(--t3); background: rgba(255,255,255,.04); border-color: var(--bdr);
+      opacity: 0.65;
     }
     .preview-token.subject-tok {
       color: #D0E8FF; background: rgba(47,129,247,.15); border-color: rgba(47,129,247,.35);
       font-family: 'Outfit', sans-serif; font-size: 11px;
       max-width: 280px; overflow: hidden; text-overflow: ellipsis;
+      opacity: 1;
     }
 
     /* ═══════════════════════════════════════
@@ -535,28 +538,52 @@
       margin-bottom: var(--s3);
     }
     .secondary-section .sec-block {
-      border-color: rgba(42,49,64,.55);
-      background: rgba(16,22,30,.6);
+      border-color: rgba(62,77,98,.55);
+      background: rgba(16,22,30,.78);
       padding: var(--s3) var(--s4) var(--s2);
     }
     .secondary-section .lbl {
       font-size: 10px;
-      color: var(--t3);
-      letter-spacing: .12em;
+      color: var(--t2);
+      letter-spacing: .14em;
       padding-bottom: 4px;
     }
     .secondary-section .lbl::after {
       width: 16px;
-      opacity: .28;
+      opacity: .45;
     }
     .secondary-section select {
       font-size: 12px;
-      color: var(--t2);
-      background: rgba(7,11,15,.8);
-      opacity: .88;
+      color: var(--t1);
+      background: var(--bg3);
+      border-color: var(--bdr2);
+      opacity: 1;
+    }
+    .secondary-section select:hover:not(:focus) {
+      border-color: var(--acc);
+    }
+    .secondary-section select:focus {
+      border-color: var(--acc);
+      box-shadow: 0 0 0 2px rgba(47,129,247,.18);
     }
     .secondary-section .field { margin-bottom: var(--s2); }
     .secondary-section .three-col { gap: var(--s2); }
+
+    /* ═══════════════════════════════════════
+       PREVIEW SUMMARY — v2.1: primary readable line
+    ═══════════════════════════════════════ */
+    .preview-summary {
+      font-size: 13px;
+      color: #D6E8FF;
+      line-height: 1.6;
+      margin-bottom: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(47,129,247,.12);
+    }
 
     .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
     .three-col { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: var(--s3); }
@@ -1219,7 +1246,7 @@ const I18N = {
     lScene: 'Scene', lSubjectType: 'Subject Type',
     lSubjectHint: 'Adds subject detail',
     lStyle: 'Visual Style', lStyleHint: 'hover for detail',
-    lPrompt: 'Subject', lPromptHint: 'UA or EN',
+    lPrompt: 'PROMPT', lPromptHint: 'UA or EN',
     lLighting: 'Lighting', lMood: 'Mood',
     lGenre: 'Genre', lResolution: 'Resolution',
     lLoRA: 'LoRA Stack', lSampler: 'Sampler + Scheduler',
@@ -1227,7 +1254,7 @@ const I18N = {
     lExisting: 'Existing Prompt', lExistingHint: 'Any language',
     btnGenerate: '✦ Generate Prompt', btnOptimize: '✦ Optimize Prompt',
     btnGenerating: 'Generating…', btnRegenerate: '↺ Regenerate',
-    btnCopy: 'Copy (ComfyUI)', btnAddLoRA: '+ Add LoRA',
+    btnCopy: 'Copy All', btnAddLoRA: '+ Add LoRA',
     outPositive: 'Positive Prompt', outNegative: 'Negative Prompt',
     outParams: 'ComfyUI Params', outChanged: 'What changed', outTip: 'ZIT tip',
     phFill: 'Fill in parameters\nand press Generate',
@@ -1242,7 +1269,7 @@ const I18N = {
     lScene: 'Сцена', lSubjectType: 'Тип субʼєкта',
     lSubjectHint: 'Додає деталі субʼєкта',
     lStyle: 'Візуальний стиль', lStyleHint: 'наведи для деталей',
-    lPrompt: 'Субʼєкт', lPromptHint: 'UA або EN',
+    lPrompt: 'ПРОМПТ', lPromptHint: 'UA або EN',
     lLighting: 'Освітлення', lMood: 'Настрій',
     lGenre: 'Жанр', lResolution: 'Роздільна здатність',
     lLoRA: 'LoRA стек', lSampler: 'Семплер + Планувальник',
@@ -1250,7 +1277,7 @@ const I18N = {
     lExisting: 'Вхідний промпт', lExistingHint: 'Будь-яка мова',
     btnGenerate: '✦ Згенерувати', btnOptimize: '✦ Оптимізувати',
     btnGenerating: 'Генерація…', btnRegenerate: '↺ Перегенерувати',
-    btnCopy: 'Копіювати (ComfyUI)', btnAddLoRA: '+ Додати LoRA',
+    btnCopy: 'Copy All', btnAddLoRA: '+ Додати LoRA',
     outPositive: 'Позитивний промпт', outNegative: 'Негативний промпт',
     outParams: 'Параметри ComfyUI', outChanged: 'Що змінилось', outTip: 'Порада ZIT',
     phFill: 'Заповніть параметри\nта натисніть Генерувати',
@@ -1519,52 +1546,68 @@ function buildPreviewCard() {
   var subjTok  = buildSubjectTokens(S.subjectType);
   var styleTok = buildStyleTokens(st);
 
+  /* ── SUMMARY line (primary readable output) ── */
+  var summaryParts = [];
+  if (S.subject.trim())             summaryParts.push(S.subject.trim());
+  if (sc.label && sc.id !== 'manual') summaryParts.push(sc.label);
+  if (sc.detail)                    summaryParts = summaryParts.concat(sc.detail.split(',').slice(0,2).map(function(x){ return x.trim(); }));
+  if (subjTok)                      summaryParts = summaryParts.concat(subjTok.split(',').slice(0,2).map(function(x){ return x.trim(); }));
+  if (st.label)                     summaryParts.push(st.label);
+  if (lit && lit.value)             summaryParts.push(S.lighting);
+  if (mo  && mo.value)              summaryParts.push(S.mood);
+  if (ge  && ge.value)              summaryParts.push(S.genre);
+  /* deduplicate + limit */
+  var seen = {};
+  summaryParts = summaryParts.filter(function(x) {
+    if (!x || seen[x]) return false;
+    seen[x] = true; return true;
+  }).slice(0, 10);
+
+  if (!summaryParts.length) return '';
+
+  var summary = summaryParts.join(', ');
+
+  /* ── TOKEN rows (secondary detail) ── */
   var rows = [];
-  var totalTokenCount = 0;
+  var totalTokenCount = summaryParts.length;
 
   /* Subject */
   if (S.subject.trim()) {
     var subj = S.subject.trim();
     var subjDisplay = subj.length > 55 ? subj.slice(0, 53) + '…' : subj;
     rows.push({ key: 'Subject', tokens: [subjDisplay], cls: 'subject-tok' });
-    totalTokenCount++;
   }
 
-  /* Scene */
+  /* Scene detail */
   if (sc.label && sc.id !== 'manual') {
-    var sceneToks = [sc.label];
+    var sceneToks = [];
     if (sc.detail) {
-      sceneToks = sceneToks.concat(sc.detail.split(',').slice(0,2).map(function(t){ return t.trim(); }));
+      sceneToks = sc.detail.split(',').slice(0,2).map(function(t){ return t.trim(); });
     }
-    rows.push({ key: 'Scene', tokens: sceneToks, cls: '' });
-    totalTokenCount += sceneToks.length;
+    if (sceneToks.length) rows.push({ key: 'Scene', tokens: sceneToks, cls: '' });
   }
 
-  /* Subject type detail */
+  /* Subject type detail — deduplicated */
   if (subjTok) {
-    var stArr = subjTok.split(',').slice(0,2).map(function(t){ return t.trim(); });
-    rows.push({ key: 'Detail', tokens: stArr, cls: '' });
-    totalTokenCount += stArr.length;
+    var stArr = subjTok.split(',').slice(0,2).map(function(t){ return t.trim(); }).filter(Boolean);
+    var stUniq = stArr.filter(function(x, i, a){ return a.indexOf(x) === i; });
+    if (stUniq.length) rows.push({ key: 'Detail', tokens: stUniq, cls: '' });
   }
 
-  /* Style */
+  /* Style — deduplicated */
   if (styleTok) {
-    var styleArr = styleTok.split(',').slice(0,3).map(function(t){ return t.trim(); });
-    rows.push({ key: 'Style', tokens: styleArr, cls: '' });
-    totalTokenCount += styleArr.length;
+    var styleArr = styleTok.split(',').slice(0,3).map(function(t){ return t.trim(); }).filter(Boolean);
+    var styleUniq = styleArr.filter(function(x, i, a){ return a.indexOf(x) === i; });
+    if (styleUniq.length) rows.push({ key: 'Style', tokens: styleUniq, cls: '' });
   }
 
-  /* Atmosphere: lighting + mood + genre */
-  var atmoToks = [];
-  if (lit && lit.value) atmoToks.push(S.lighting);
-  if (mo  && mo.value)  atmoToks.push(S.mood);
-  if (ge  && ge.value)  atmoToks.push(S.genre);
-  if (atmoToks.length) {
-    rows.push({ key: 'Atmos', tokens: atmoToks, cls: 'sec' });
-    totalTokenCount += atmoToks.length;
-  }
-
-  if (!rows.length) return '';
+  /* Atmosphere: lighting + mood + genre — deduplicated */
+  var atmoRaw = [];
+  if (lit && lit.value) atmoRaw.push(S.lighting);
+  if (mo  && mo.value)  atmoRaw.push(S.mood);
+  if (ge  && ge.value)  atmoRaw.push(S.genre);
+  var atmoToks = atmoRaw.filter(function(x, i, a){ return x && a.indexOf(x) === i; });
+  if (atmoToks.length) rows.push({ key: 'Atmos', tokens: atmoToks, cls: 'sec' });
 
   var inner = rows.map(function(row) {
     return '<div class="preview-token-row">' +
@@ -1582,6 +1625,7 @@ function buildPreviewCard() {
       '<span class="preview-card-title">▸ ' + t('lPreview') + '</span>' +
       '<span class="preview-card-count">' + totalTokenCount + ' tokens</span>' +
     '</div>' +
+    '<div class="preview-summary" title="' + esc(summary) + '">' + esc(summary) + '</div>' +
     inner +
   '</div>';
 }
@@ -1629,7 +1673,7 @@ function buildHTML() {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v2.0</span>' +
+        '<span class="title-version">v2.1</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
