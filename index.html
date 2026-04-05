@@ -1546,25 +1546,25 @@ function buildPreviewCard() {
   var subjTok  = buildSubjectTokens(S.subjectType);
   var styleTok = buildStyleTokens(st);
 
-  /* ── SUMMARY line (primary readable output) ── */
-  var summaryParts = [];
-  if (S.subject.trim())             summaryParts.push(S.subject.trim());
-  if (sc.label && sc.id !== 'manual') summaryParts.push(sc.label);
-  if (sc.detail)                    summaryParts = summaryParts.concat(sc.detail.split(',').slice(0,2).map(function(x){ return x.trim(); }));
-  if (subjTok)                      summaryParts = summaryParts.concat(subjTok.split(',').slice(0,2).map(function(x){ return x.trim(); }));
-  if (st.label)                     summaryParts.push(st.label);
-  if (lit && lit.value)             summaryParts.push(S.lighting);
-  if (mo  && mo.value)              summaryParts.push(S.mood);
-  if (ge  && ge.value)              summaryParts.push(S.genre);
-  /* deduplicate + limit */
+  /* ── SUMMARY — v2.1.1: PROMPT protected (no dedup, no limit, always first) ── */
+  var promptVal = S.subject.trim();
+
+  var otherRaw = [];
+  if (sc.label && sc.id !== 'manual') otherRaw.push(sc.label);
+  if (sc.detail)  otherRaw = otherRaw.concat(sc.detail.split(',').slice(0,2).map(function(x){ return x.trim(); }));
+  if (subjTok)    otherRaw = otherRaw.concat(subjTok.split(',').slice(0,2).map(function(x){ return x.trim(); }));
+  if (st.label)   otherRaw.push(st.label);
+  if (lit && lit.value) otherRaw.push(S.lighting);
+  if (mo  && mo.value)  otherRaw.push(S.mood);
+  if (ge  && ge.value)  otherRaw.push(S.genre);
   var seen = {};
-  summaryParts = summaryParts.filter(function(x) {
+  var otherLimited = otherRaw.filter(function(x) {
     if (!x || seen[x]) return false;
     seen[x] = true; return true;
   }).slice(0, 10);
 
+  var summaryParts = (promptVal ? [promptVal] : []).concat(otherLimited);
   if (!summaryParts.length) return '';
-
   var summary = summaryParts.join(', ');
 
   /* ── TOKEN rows (secondary detail) ── */
