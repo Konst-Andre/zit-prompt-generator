@@ -504,7 +504,7 @@
       display: flex; align-items: baseline; gap: 0; margin-bottom: 3px; flex-wrap: wrap;
     }
     .preview-token-key {
-      font-size: 9px; color: var(--t4); letter-spacing: .1em; text-transform: uppercase;
+      font-size: 9px; color: var(--t2); letter-spacing: .1em; text-transform: uppercase;
       width: 72px; flex-shrink: 0; padding-top: 2px;
     }
     .preview-tokens {
@@ -526,7 +526,7 @@
     .preview-token.subject-tok {
       color: #D0E8FF; background: rgba(47,129,247,.15); border-color: rgba(47,129,247,.35);
       font-family: 'Outfit', sans-serif; font-size: 11px;
-      max-width: 280px; overflow: hidden; text-overflow: ellipsis;
+      white-space: normal; word-break: break-word;
       opacity: 1;
     }
 
@@ -568,22 +568,6 @@
     }
     .secondary-section .field { margin-bottom: var(--s2); }
     .secondary-section .three-col { gap: var(--s2); }
-
-    /* ═══════════════════════════════════════
-       PREVIEW SUMMARY — v2.1: primary readable line
-    ═══════════════════════════════════════ */
-    .preview-summary {
-      font-size: 13px;
-      color: #D6E8FF;
-      line-height: 1.6;
-      margin-bottom: 8px;
-      font-family: 'JetBrains Mono', monospace;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      padding-bottom: 6px;
-      border-bottom: 1px solid rgba(47,129,247,.12);
-    }
 
     .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
     .three-col { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: var(--s3); }
@@ -1534,8 +1518,9 @@ function buildPromptPreview() {
 }
 
 /* ═══════════════════════════════════════════════════
-   PREVIEW CARD — v2.0 NEW: standalone block before Generate
-   Shows assembled prompt tokens in a clear visual card
+   PREVIEW CARD — v2.1.2
+   No summary. PROMPT = first row, no dedup/limit.
+   Other rows: scene/detail/style/atmos with proper dedup.
 ═══════════════════════════════════════════════════ */
 function buildPreviewCard() {
   var sc  = SCENES.find(function(x){ return x.id === S.scene; }) || {};
@@ -1546,68 +1531,56 @@ function buildPreviewCard() {
   var subjTok  = buildSubjectTokens(S.subjectType);
   var styleTok = buildStyleTokens(st);
 
-  /* ── SUMMARY — v2.1.1: PROMPT protected (no dedup, no limit, always first) ── */
-  var promptVal = S.subject.trim();
+  /* ── PROMPT: cleanup trailing commas/spaces, no JS truncation ── */
+  var promptVal = S.subject.trim().replace(/[,\s]+$/, '');
 
-  var otherRaw = [];
-  if (sc.label && sc.id !== 'manual') otherRaw.push(sc.label);
-  if (sc.detail)  otherRaw = otherRaw.concat(sc.detail.split(',').slice(0,2).map(function(x){ return x.trim(); }));
-  if (subjTok)    otherRaw = otherRaw.concat(subjTok.split(',').slice(0,2).map(function(x){ return x.trim(); }));
-  if (st.label)   otherRaw.push(st.label);
-  if (lit && lit.value) otherRaw.push(S.lighting);
-  if (mo  && mo.value)  otherRaw.push(S.mood);
-  if (ge  && ge.value)  otherRaw.push(S.genre);
-  var seen = {};
-  var otherLimited = otherRaw.filter(function(x) {
-    if (!x || seen[x]) return false;
-    seen[x] = true; return true;
-  }).slice(0, 10);
+  /* ── dedup helper: normalize key, display original ── */
+  function dedupArr(arr) {
+    var seen = {};
+    return arr.filter(function(x) {
+      if (!x) return false;
+      var k = x.toLowerCase().trim();
+      if (seen[k]) return false;
+      seen[k] = true; return true;
+    });
+  }
 
-  var summaryParts = (promptVal ? [promptVal] : []).concat(otherLimited);
-  if (!summaryParts.length) return '';
-  var summary = summaryParts.join(', ');
-
-  /* ── TOKEN rows (secondary detail) ── */
   var rows = [];
-  var totalTokenCount = summaryParts.length;
+  var totalTokenCount = 0;
 
-  /* Subject */
-  if (S.subject.trim()) {
-    var subj = S.subject.trim();
-    var subjDisplay = subj.length > 55 ? subj.slice(0, 53) + '…' : subj;
-    rows.push({ key: 'Subject', tokens: [subjDisplay], cls: 'subject-tok' });
+  /* PROMPT row — always first, no dedup, no limit */
+  if (promptVal) {
+    rows.push({ key: 'PROMPT', tokens: [promptVal], cls: 'subject-tok' });
+    totalTokenCount++;
   }
 
   /* Scene detail */
-  if (sc.label && sc.id !== 'manual') {
-    var sceneToks = [];
-    if (sc.detail) {
-      sceneToks = sc.detail.split(',').slice(0,2).map(function(t){ return t.trim(); });
-    }
-    if (sceneToks.length) rows.push({ key: 'Scene', tokens: sceneToks, cls: '' });
+  if (sc.label && sc.id !== 'manual' && sc.detail) {
+    var sceneToks = dedupArr(sc.detail.split(',').slice(0,2).map(function(t){ return t.trim(); }));
+    if (sceneToks.length) { rows.push({ key: 'Scene', tokens: sceneToks, cls: '' }); totalTokenCount += sceneToks.length; }
   }
 
-  /* Subject type detail — deduplicated */
+  /* Subject type detail */
   if (subjTok) {
-    var stArr = subjTok.split(',').slice(0,2).map(function(t){ return t.trim(); }).filter(Boolean);
-    var stUniq = stArr.filter(function(x, i, a){ return a.indexOf(x) === i; });
-    if (stUniq.length) rows.push({ key: 'Detail', tokens: stUniq, cls: '' });
+    var detailToks = dedupArr(subjTok.split(',').slice(0,2).map(function(t){ return t.trim(); }));
+    if (detailToks.length) { rows.push({ key: 'Detail', tokens: detailToks, cls: '' }); totalTokenCount += detailToks.length; }
   }
 
-  /* Style — deduplicated */
+  /* Style */
   if (styleTok) {
-    var styleArr = styleTok.split(',').slice(0,3).map(function(t){ return t.trim(); }).filter(Boolean);
-    var styleUniq = styleArr.filter(function(x, i, a){ return a.indexOf(x) === i; });
-    if (styleUniq.length) rows.push({ key: 'Style', tokens: styleUniq, cls: '' });
+    var styleToks = dedupArr(styleTok.split(',').slice(0,3).map(function(t){ return t.trim(); }));
+    if (styleToks.length) { rows.push({ key: 'Style', tokens: styleToks, cls: '' }); totalTokenCount += styleToks.length; }
   }
 
-  /* Atmosphere: lighting + mood + genre — deduplicated */
+  /* Atmos: lighting + mood + genre */
   var atmoRaw = [];
   if (lit && lit.value) atmoRaw.push(S.lighting);
   if (mo  && mo.value)  atmoRaw.push(S.mood);
   if (ge  && ge.value)  atmoRaw.push(S.genre);
-  var atmoToks = atmoRaw.filter(function(x, i, a){ return x && a.indexOf(x) === i; });
-  if (atmoToks.length) rows.push({ key: 'Atmos', tokens: atmoToks, cls: 'sec' });
+  var atmoToks = dedupArr(atmoRaw);
+  if (atmoToks.length) { rows.push({ key: 'Atmos', tokens: atmoToks, cls: 'sec' }); totalTokenCount += atmoToks.length; }
+
+  if (!rows.length) return '';
 
   var inner = rows.map(function(row) {
     return '<div class="preview-token-row">' +
@@ -1625,7 +1598,6 @@ function buildPreviewCard() {
       '<span class="preview-card-title">▸ ' + t('lPreview') + '</span>' +
       '<span class="preview-card-count">' + totalTokenCount + ' tokens</span>' +
     '</div>' +
-    '<div class="preview-summary" title="' + esc(summary) + '">' + esc(summary) + '</div>' +
     inner +
   '</div>';
 }
@@ -1859,7 +1831,8 @@ function buildHTML() {
   /* ── STEP 4: PREVIEW CARD (before generate) ── */
   if (S.mode === 'generate') {
     var pvCard = buildPreviewCard();
-    if (pvCard) h += pvCard;
+    if (pvCard) h += '<div id="preview-card-wrap">' + pvCard + '</div>';
+    else h += '<div id="preview-card-wrap"></div>';
   }
 
   /* ── Error ── */
@@ -2009,6 +1982,23 @@ function attachEvents() {
 
   function live(id, key){ var el=document.getElementById(id); if(el) el.addEventListener('input',function(){S[key]=el.value;}); }
   live('inp-sub','subject');
+
+  /* ── live preview update — no full re-render ── */
+  function updatePreview() {
+    var wrap = document.getElementById('preview-card-wrap');
+    if (!wrap) return;
+    wrap.innerHTML = buildPreviewCard() || '';
+  }
+  (function(){
+    var ta = document.getElementById('inp-sub');
+    if (!ta) return;
+    ['input','paste','change'].forEach(function(ev){
+      ta.addEventListener(ev, function(){
+        S.subject = ta.value;
+        updatePreview();
+      });
+    });
+  }());
 
   (function(){
     var ta = document.getElementById('inp-sub');
