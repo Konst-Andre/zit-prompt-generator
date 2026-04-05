@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v2.1</title>
+  <title>ZIT Prompt Generator v2.1.4</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -790,6 +790,95 @@
     }
     @media (min-width: 681px) { .mob-mode-sw { display: none; } }
     .btn-ghost.copied { border-color: var(--green-bdr); color: var(--green-txt); background: var(--green-bg); }
+
+    /* ═══════════════════════════════════════
+       TECH BAR — v2.1.4
+       Compact status-bar: flex-wrap, 1-2 rows
+    ═══════════════════════════════════════ */
+    .tech-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      align-items: center;
+      padding: 9px 11px;
+      background: rgba(7,11,15,.88);
+      border: 1px solid rgba(42,49,64,.55);
+      border-radius: var(--r-md);
+      margin-bottom: var(--s3);
+    }
+
+    .tc-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 9px;
+      background: rgba(255,255,255,.025);
+      border: 1px solid rgba(42,49,64,.65);
+      border-radius: 20px;
+      color: var(--t2);
+      white-space: nowrap;
+      transition: border-color var(--tr);
+    }
+    .tc-chip:hover { border-color: rgba(62,77,98,.75); }
+
+    .tc-label {
+      font-size: 10px;
+      color: var(--t4);
+      letter-spacing: .05em;
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    /* Override global input/select styles inside tech-bar */
+    .tech-bar select,
+    .tech-bar input[type=text] {
+      width: auto;
+      min-width: 0;
+      padding: 0;
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      font-size: 12px;
+      color: var(--t2);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .tech-bar select {
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: none;
+      cursor: pointer;
+    }
+    .tech-bar select:focus,
+    .tech-bar input[type=text]:focus {
+      border: none;
+      box-shadow: none;
+      outline: none;
+    }
+    .tech-bar select:hover:not(:focus),
+    .tech-bar input[type=text]:hover:not(:focus) {
+      border: none;
+    }
+    .tech-bar input[type=text].tc-inp-steps { width: 30px; text-align: center; color: var(--t1); }
+    .tech-bar input[type=text].tc-inp-cfg   { width: 28px; text-align: center; color: var(--t1); }
+    .tech-bar input[type=text].tc-inp-lname { min-width: 55px; max-width: 110px; color: var(--t2); }
+    .tech-bar input[type=text].tc-inp-lw    { width: 28px; text-align: center; color: var(--t3); }
+
+    .tc-sep { font-size: 11px; color: var(--t4); opacity: .6; }
+    .tc-hint { font-size: 10px; letter-spacing: .03em; }
+    .tc-lora-rm {
+      background: transparent; border: none; color: var(--t4); cursor: pointer;
+      padding: 0; font-size: 11px; line-height: 1; opacity: .7; transition: color var(--tr), opacity var(--tr);
+    }
+    .tc-lora-rm:hover { color: var(--red); opacity: 1; }
+
+    /* PROMPT row label — bolder, lighter than siblings */
+    .preview-token-row.is-prompt .preview-token-key {
+      font-weight: 600;
+      color: rgba(220,235,255,0.85);
+      letter-spacing: 0.4px;
+      margin-bottom: 2px;
+    }
   </style>
 </head>
 <body>
@@ -1616,7 +1705,7 @@ function buildPreviewCard() {
   if (!rows.length) return '';
 
   var inner = rows.map(function(row) {
-    return '<div class="preview-token-row">' +
+    return '<div class="preview-token-row' + (row.key === 'PROMPT' ? ' is-prompt' : '') + '">' +
       '<span class="preview-token-key">' + esc(row.key) + '</span>' +
       '<span class="preview-tokens">' +
         row.tokens.map(function(tok) {
@@ -1678,7 +1767,7 @@ function buildHTML() {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v2.1</span>' +
+        '<span class="title-version">v2.1.4</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
@@ -1821,12 +1910,6 @@ function buildHTML() {
       '</div>' +
     '</div>';
 
-    /* Resolution — compact single row */
-    h += '<div class="field" style="margin-bottom:var(--s4)">' +
-      '<div class="f-hdr"><label class="lbl">'+t('lResolution')+'</label></div>' +
-      '<select id="sel-res">'+RESOLUTIONS.map(function(r){return '<option value="'+esc(r.value)+'"'+(S.resolution===r.value?' selected':'')+'>'+esc(r.label)+'</option>';}).join('')+'</select>' +
-    '</div>';
-
   } /* end generate mode blocks */
 
   if (S.mode === 'enhance') {
@@ -1838,28 +1921,62 @@ function buildHTML() {
 
   h += '<hr>';
 
-  /* ── LoRA ── */
-  var loraRows = S.loras.map(function(l,i){
-    return '<div class="lora-row">' +
-      '<input type="text" data-ln="'+i+'" value="'+esc(l.name)+'" placeholder="lora_filename (no .safetensors)" style="flex:3;font-family:\'JetBrains Mono\',monospace;font-size:13px">' +
-      '<input type="text" data-lw="'+i+'" value="'+esc(l.weight)+'" placeholder="0.85" style="flex:1;text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:13px">' +
-      '<button class="btn-ghost" data-lr="'+i+'" style="color:var(--t3)">✕</button></div>';
-  }).join('');
-  h += '<div class="sec-block params-block"><div class="f-hdr"><label class="lbl">'+t('lLoRA')+'</label></div>' + loraRows + '<button class="btn-text" id="b-add-lora" style="margin-top:4px">'+t('btnAddLoRA')+'</button></div>';
+  /* ── TECH BAR: Resolution · Sampler / Scheduler · Steps · CFG · 🎲 · LoRA ── */
+  var SAMP_SHORT = { 'euler_ancestral':'euler_a', 'euler':'euler', 'dpm_2':'dpm_2', 'heun':'heun', 'dpm_2_ancestral':'dpm2_a' };
+  var RES_SHORT  = { '896x1152':'896×1152 ★', '768x1024':'768×1024', '1024x1024':'1024 sq', '1152x896':'1152×896', '1280x768':'1280×768', '1024x1536':'1024×1536' };
 
-  /* ── Sampler ── */
-  h += '<div class="sec-block params-block">' +
-    '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lSampler')+'</label></div>' +
-    '<div class="two-col"><select id="sel-samp">'+SAMPLERS.map(function(s){return '<option'+(S.sampler===s?' selected':'')+'>'+s+'</option>';}).join('')+'</select>' +
-    '<select id="sel-sch">'+SCHEDULERS.map(function(s){return '<option'+(S.scheduler===s?' selected':'')+'>'+s+'</option>';}).join('')+'</select></div>' +
-    '<div class="s-hint" style="color:'+sh.c+'">'+sh.text+'</div></div>' +
-    '<div class="three-col">' +
-    '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lSteps')+'</label></div><input type="text" id="inp-steps" value="'+esc(S.steps)+'" style="font-family:\'JetBrains Mono\',monospace;font-size:13px;text-align:center"></div>' +
-    '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lCFG')+'</label></div><input type="text" id="inp-cfg" value="'+esc(S.cfg)+'" style="font-family:\'JetBrains Mono\',monospace;font-size:13px;text-align:center"></div>' +
-    '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lSeed')+'</label></div>' +
-    '<div class="row"><input type="text" id="inp-seed" value="'+esc(S.seed)+'" placeholder="random" style="flex:1;font-family:\'JetBrains Mono\',monospace;font-size:13px">' +
-    '<button class="btn-ghost" id="b-seed" title="Random seed">🎲</button></div></div>' +
-    '</div></div>';
+  var loraChips = S.loras.map(function(l, i) {
+    if (!l.name.trim()) return '';
+    return '<span class="tc-chip">' +
+      '<input type="text" data-ln="'+i+'" value="'+esc(l.name)+'" class="tc-inp-lname" placeholder="lora name">' +
+      '<input type="text" data-lw="'+i+'" value="'+esc(l.weight)+'" class="tc-inp-lw">' +
+      '<button class="tc-lora-rm" data-lr="'+i+'" title="Remove LoRA">×</button>' +
+    '</span>';
+  }).join('');
+  var hasActiveLoRA = S.loras.some(function(l){ return l.name.trim(); });
+
+  h += '<div class="tech-bar">' +
+    /* Resolution */
+    '<span class="tc-chip" title="Resolution">' +
+      '<span class="tc-label">res</span>' +
+      '<select id="sel-res" class="tc-select">' +
+        RESOLUTIONS.map(function(r){
+          return '<option value="'+esc(r.value)+'"'+(S.resolution===r.value?' selected':'')+'>'+(RES_SHORT[r.value]||r.value)+'</option>';
+        }).join('') +
+      '</select>' +
+    '</span>' +
+    /* Sampler / Scheduler */
+    '<span class="tc-chip">' +
+      '<select id="sel-samp">' +
+        SAMPLERS.map(function(s){
+          return '<option value="'+esc(s)+'"'+(S.sampler===s?' selected':'')+'>'+(SAMP_SHORT[s]||s)+'</option>';
+        }).join('') +
+      '</select>' +
+      '<span class="tc-sep">/</span>' +
+      '<select id="sel-sch">' +
+        SCHEDULERS.map(function(s){return '<option'+(S.scheduler===s?' selected':'')+'>'+esc(s)+'</option>';}).join('') +
+      '</select>' +
+    '</span>' +
+    /* Steps */
+    '<span class="tc-chip">' +
+      '<span class="tc-label">steps</span>' +
+      '<input type="text" id="inp-steps" class="tc-inp-steps" value="'+esc(S.steps)+'">' +
+    '</span>' +
+    /* CFG */
+    '<span class="tc-chip">' +
+      '<span class="tc-label">cfg</span>' +
+      '<input type="text" id="inp-cfg" class="tc-inp-cfg" value="'+esc(S.cfg)+'">' +
+    '</span>' +
+    /* Seed — button only */
+    '<button class="btn-ghost" id="b-seed" title="Random seed" style="padding:5px 9px;font-size:13px;border-radius:20px">🎲</button>' +
+    /* Sampler hint */
+    (sh.text ? '<span class="tc-hint" style="color:'+sh.c+'">'+sh.text+'</span>' : '') +
+    /* LoRA chips */
+    loraChips +
+    '<button class="btn-text" id="b-add-lora" style="font-size:11px;color:var(--t4);">' +
+      (hasActiveLoRA ? '+ LoRA' : 'LoRA +') +
+    '</button>' +
+  '</div>';
 
   /* ── STEP 4: PREVIEW CARD (before generate) ── */
   if (S.mode === 'generate') {
