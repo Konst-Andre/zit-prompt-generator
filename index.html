@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v2.1.6</title>
+  <title>ZIT Prompt Generator v2.1.8</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -1778,7 +1778,7 @@ function buildHTML() {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v2.1.6</span>' +
+        '<span class="title-version">v2.1.8</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
@@ -1964,14 +1964,19 @@ function buildHTML() {
     '</span>' +
     /* Sampler / Scheduler */
     '<span class="tc-chip">' +
+      '<span class="tc-label">smp</span>' +
       '<select id="sel-samp">' +
         SAMPLERS.map(function(s){
           return '<option value="'+esc(s)+'"'+(S.sampler===s?' selected':'')+'>'+(SAMP_SHORT[s]||s)+'</option>';
         }).join('') +
       '</select>' +
-      '<span class="tc-sep">/</span>' +
+      '<span class="tc-sep" style="margin:0 2px">·</span>' +
+      '<span class="tc-label">sch</span>' +
       '<select id="sel-sch">' +
-        SCHEDULERS.map(function(s){return '<option'+(S.scheduler===s?' selected':'')+'>'+esc(s)+'</option>';}).join('') +
+        SCHEDULERS.map(function(s){
+          var SCH_SHORT = { 'FlowMatchEulerDiscrete':'FlowMatch', 'sgm_uniform':'sgm_unif' };
+          return '<option value="'+esc(s)+'"'+(S.scheduler===s?' selected':'')+'>'+(SCH_SHORT[s]||s)+'</option>';
+        }).join('') +
       '</select>' +
     '</span>' +
     /* Steps */
@@ -1993,8 +1998,8 @@ function buildHTML() {
     (sh.text ? '<span class="tc-hint" style="color:'+sh.c+'">'+sh.text+'</span>' : '') +
     /* LoRA: chips for all items, or LoRA+ if none */
     (S.loras.length > 0
-      ? loraChips + '<button class="btn-text" id="b-add-lora" style="font-size:11px;color:var(--t4)">+ LoRA</button>'
-      : '<button class="btn-text" id="b-add-lora" style="font-size:11px;color:var(--t4)">LoRA +</button>') +
+      ? loraChips + '<button class="btn-text" id="b-add-lora" style="font-size:11px;color:var(--t4);padding:5px 8px">+ LoRA</button>'
+      : '<button class="tc-chip" id="b-add-lora" style="cursor:pointer;border-style:dashed;color:var(--t3);background:transparent">LoRA +</button>') +
   '</div>';
 
   /* ── STEP 4: PREVIEW CARD (before generate) ── */
