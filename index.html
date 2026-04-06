@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v2.1.4</title>
+  <title>ZIT Prompt Generator v2.1.5</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -1408,7 +1408,7 @@ var S = {
   scene:'portrait', style:'photorealistic', subject:'', subjectType:'none',
   lighting:'Cinematic', mood:'', genre:'', resolution:'896x1152',
   existing:'',
-  loras:[{name:'',weight:'0.85'}],
+  loras:[],
   steps:'12', cfg:'1.5', sampler:'euler_ancestral', scheduler:'beta', seed:'',
   loading:false, result:null, error:'', dbgLog:null,
   rndMode:'normal',
@@ -1767,7 +1767,7 @@ function buildHTML() {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v2.1.4</span>' +
+        '<span class="title-version">v2.1.5</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
@@ -1921,27 +1921,32 @@ function buildHTML() {
 
   h += '<hr>';
 
-  /* ── TECH BAR: Resolution · Sampler / Scheduler · Steps · CFG · 🎲 · LoRA ── */
+  /* ── TECH BAR: Resolution · Sampler / Scheduler · Steps · CFG · Seed · LoRA ── */
   var SAMP_SHORT = { 'euler_ancestral':'euler_a', 'euler':'euler', 'dpm_2':'dpm_2', 'heun':'heun', 'dpm_2_ancestral':'dpm2_a' };
-  var RES_SHORT  = { '896x1152':'896×1152 ★', '768x1024':'768×1024', '1024x1024':'1024 sq', '1152x896':'1152×896', '1280x768':'1280×768', '1024x1536':'1024×1536' };
+  var RES_LABEL  = {
+    '896x1152':  '896×1152 · portrait ★',
+    '768x1024':  '768×1024 · portrait',
+    '1024x1024': '1024×1024 · square',
+    '1152x896':  '1152×896 · landscape',
+    '1280x768':  '1280×768 · wide',
+    '1024x1536': '1024×1536 · tall',
+  };
 
+  /* LoRA chips — show ALL items including empty-name (so input appears after click) */
   var loraChips = S.loras.map(function(l, i) {
-    if (!l.name.trim()) return '';
     return '<span class="tc-chip">' +
-      '<input type="text" data-ln="'+i+'" value="'+esc(l.name)+'" class="tc-inp-lname" placeholder="lora name">' +
+      '<input type="text" data-ln="'+i+'" value="'+esc(l.name)+'" class="tc-inp-lname" placeholder="lora_name">' +
       '<input type="text" data-lw="'+i+'" value="'+esc(l.weight)+'" class="tc-inp-lw">' +
       '<button class="tc-lora-rm" data-lr="'+i+'" title="Remove LoRA">×</button>' +
     '</span>';
   }).join('');
-  var hasActiveLoRA = S.loras.some(function(l){ return l.name.trim(); });
 
   h += '<div class="tech-bar">' +
-    /* Resolution */
+    /* Resolution — no "res" prefix, type in label */
     '<span class="tc-chip" title="Resolution">' +
-      '<span class="tc-label">res</span>' +
-      '<select id="sel-res" class="tc-select">' +
+      '<select id="sel-res">' +
         RESOLUTIONS.map(function(r){
-          return '<option value="'+esc(r.value)+'"'+(S.resolution===r.value?' selected':'')+'>'+(RES_SHORT[r.value]||r.value)+'</option>';
+          return '<option value="'+esc(r.value)+'"'+(S.resolution===r.value?' selected':'')+'>'+(RES_LABEL[r.value]||r.value)+'</option>';
         }).join('') +
       '</select>' +
     '</span>' +
@@ -1967,15 +1972,17 @@ function buildHTML() {
       '<span class="tc-label">cfg</span>' +
       '<input type="text" id="inp-cfg" class="tc-inp-cfg" value="'+esc(S.cfg)+'">' +
     '</span>' +
-    /* Seed — button only */
-    '<button class="btn-ghost" id="b-seed" title="Random seed" style="padding:5px 9px;font-size:13px;border-radius:20px">🎲</button>' +
+    /* Seed — chip with label + button */
+    '<span class="tc-chip">' +
+      '<span class="tc-label">seed</span>' +
+      '<button id="b-seed" title="Random seed" style="background:transparent;border:none;color:var(--t2);cursor:pointer;padding:0;font-size:13px;line-height:1">🎲</button>' +
+    '</span>' +
     /* Sampler hint */
     (sh.text ? '<span class="tc-hint" style="color:'+sh.c+'">'+sh.text+'</span>' : '') +
-    /* LoRA chips */
-    loraChips +
-    '<button class="btn-text" id="b-add-lora" style="font-size:11px;color:var(--t4);">' +
-      (hasActiveLoRA ? '+ LoRA' : 'LoRA +') +
-    '</button>' +
+    /* LoRA: chips for all items, or LoRA+ if none */
+    (S.loras.length > 0
+      ? loraChips + '<button class="btn-text" id="b-add-lora" style="font-size:11px;color:var(--t4)">+ LoRA</button>'
+      : '<button class="btn-text" id="b-add-lora" style="font-size:11px;color:var(--t4)">LoRA +</button>') +
   '</div>';
 
   /* ── STEP 4: PREVIEW CARD (before generate) ── */
@@ -2176,7 +2183,7 @@ function attachEvents() {
   document.querySelectorAll('[data-ln]').forEach(function(el){ el.addEventListener('input',function(){S.loras[+el.dataset.ln].name=el.value;}); });
   document.querySelectorAll('[data-lw]').forEach(function(el){ el.addEventListener('input',function(){S.loras[+el.dataset.lw].weight=el.value;}); });
   document.querySelectorAll('[data-lr]').forEach(function(el){
-    el.addEventListener('click',function(){ S.loras.splice(+el.dataset.lr,1); if(!S.loras.length) S.loras=[{name:'',weight:'0.85'}]; render(); });
+    el.addEventListener('click',function(){ S.loras.splice(+el.dataset.lr,1); render(); });
   });
   on('b-add-lora','click',function(){ S.loras.push({name:'',weight:'0.85'}); render(); });
 
