@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v2.1.5</title>
+  <title>ZIT Prompt Generator v2.1.6</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -866,6 +866,17 @@
 
     .tc-sep { font-size: 11px; color: var(--t4); opacity: .6; }
     .tc-hint { font-size: 10px; letter-spacing: .03em; }
+
+    .tech-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--t3);
+      opacity: 0.75;
+      margin-bottom: 5px;
+    }
     .tc-lora-rm {
       background: transparent; border: none; color: var(--t4); cursor: pointer;
       padding: 0; font-size: 11px; line-height: 1; opacity: .7; transition: color var(--tr), opacity var(--tr);
@@ -1767,7 +1778,7 @@ function buildHTML() {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v2.1.5</span>' +
+        '<span class="title-version">v2.1.6</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
@@ -1941,7 +1952,8 @@ function buildHTML() {
     '</span>';
   }).join('');
 
-  h += '<div class="tech-bar">' +
+  h += '<span class="tech-label">ComfyUI Params</span>' +
+    '<div class="tech-bar">' +
     /* Resolution — no "res" prefix, type in label */
     '<span class="tc-chip" title="Resolution">' +
       '<select id="sel-res">' +
