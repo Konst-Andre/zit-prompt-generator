@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v2.1.8</title>
+  <title>ZIT Prompt Generator v2.2.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -356,6 +356,14 @@
       0%   { box-shadow: 0 0 0 0 rgba(47,129,247,.0); }
       40%  { box-shadow: 0 0 16px 4px rgba(47,129,247,.35); }
       100% { box-shadow: 0 0 0 0 rgba(47,129,247,.0); }
+    }
+
+    .pill-lang-fired { animation: langFlash 380ms ease-out; }
+    @keyframes langFlash {
+      0%   { border-color: var(--bdr); color: var(--t3); transform: scale(1); }
+      25%  { border-color: var(--acc); color: var(--acc-txt); transform: scale(0.93); }
+      60%  { border-color: var(--acc); color: var(--acc-txt); transform: scale(1.04); }
+      100% { border-color: var(--bdr); color: var(--t3); transform: scale(1); }
     }
 
     .gen-row { display: flex; gap: var(--s2); align-items: stretch; margin-top: var(--s1); }
@@ -1778,7 +1786,7 @@ function buildHTML() {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v2.1.8</span>' +
+        '<span class="title-version">v2.2.0</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
@@ -1992,6 +2000,7 @@ function buildHTML() {
     /* Seed — chip with label + button */
     '<span class="tc-chip">' +
       '<span class="tc-label">seed</span>' +
+      '<span id="tc-seed-val" style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--t1);width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle">' + (S.seed ? esc(S.seed) : '<span style="color:var(--t4)">rand</span>') + '</span>' +
       '<button id="b-seed" title="Random seed" style="background:transparent;border:none;color:var(--t2);cursor:pointer;padding:0;font-size:13px;line-height:1">🎲</button>' +
     '</span>' +
     /* Sampler hint */
@@ -2129,9 +2138,15 @@ function attachEvents() {
   on('b-open-api',  'click', function(){ S.apiOpen=true; render(); });
   on('b-open-dbg',  'click', function(){ S.dbgOpen=true; render(); });
   on('b-lang',      'click', function(){
+    var btn = document.getElementById('b-lang');
     S.lang = S.lang === 'en' ? 'ua' : 'en';
     try { localStorage.setItem('zit_lang', S.lang); } catch(e) {}
-    render();
+    if (btn) {
+      btn.classList.remove('pill-lang-fired'); void btn.offsetWidth; btn.classList.add('pill-lang-fired');
+      setTimeout(render, 380);
+    } else {
+      render();
+    }
   });
 
   document.querySelectorAll('[data-pane]').forEach(function(el){ el.addEventListener('click', function(){ S.mobilePane=el.dataset.pane; render(); }); });
@@ -2204,7 +2219,7 @@ function attachEvents() {
   });
   on('b-add-lora','click',function(){ S.loras.push({name:'',weight:'0.85'}); render(); });
 
-  on('b-seed','click',function(){ S.seed=String(Math.floor(Math.random()*1e9)); var el=document.getElementById('inp-seed'); if(el) el.value=S.seed; });
+  on('b-seed','click',function(){ S.seed=String(Math.floor(Math.random()*1e9)); var el=document.getElementById('inp-seed'); if(el) el.value=S.seed; var sv=document.getElementById('tc-seed-val'); if(sv) sv.textContent=S.seed; });
 
   var ki=document.getElementById('inp-key');
   if(ki) ki.addEventListener('input',function(){ var chk=document.getElementById('chk-rem'); saveKey(ki.value, chk?chk.checked:false); });
