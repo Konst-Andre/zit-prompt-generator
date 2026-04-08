@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v2.2.3</title>
+  <title>ZIT Prompt Generator v3.0.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -735,6 +735,121 @@
     .out-txt.accent { border-color: rgba(47,129,247,.25); background: #09162A; color: #A8C8FF; }
 
     .params-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s1); margin-bottom: var(--s4); min-width: 0; }
+
+    /* ═══════════════════════════════════════
+       GENRE CHIP — clamp + expand on tap
+    ═══════════════════════════════════════ */
+    .genre-tok {
+      display: block !important;
+      max-width: 100%;
+      white-space: normal !important;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      display: -webkit-box !important;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 180ms ease;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .genre-tok.expanded {
+      -webkit-line-clamp: unset !important;
+      overflow: visible !important;
+    }
+    .preview-token-row.is-genre { align-items: flex-start; }
+
+    /* ═══════════════════════════════════════
+       ADVANCED PANEL BUTTON
+    ═══════════════════════════════════════ */
+    .btn-adv {
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+      padding: 13px 15px;
+      background: linear-gradient(180deg, #1E2A3E 0%, #151E2D 100%);
+      border: 1px solid var(--bdr2); color: var(--t2);
+      border-radius: var(--r); font-size: 17px; font-family: inherit;
+      cursor: pointer; flex-shrink: 0;
+      transition: background var(--tr), border-color var(--tr), box-shadow var(--tr), color var(--tr), transform 0.12s ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 1px 3px rgba(0,0,0,.2);
+    }
+    .btn-adv:hover { background: linear-gradient(180deg, #263348 0%, #1D2A3F 100%); border-color: var(--acc); color: var(--acc-txt); box-shadow: 0 0 10px rgba(47,129,247,.18); }
+    .btn-adv:active { transform: scale(0.95); }
+    .btn-adv.is-changed { border-color: var(--amber-bdr); color: var(--amber-txt); background: var(--amber-bg); }
+    .btn-adv.is-changed:hover { border-color: var(--amber); box-shadow: 0 0 10px rgba(227,179,65,.18); }
+    .adv-dot {
+      position: absolute; top: 6px; right: 6px;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--amber); opacity: 0.9;
+      box-shadow: 0 0 4px rgba(227,179,65,.6);
+    }
+
+    /* ═══════════════════════════════════════
+       ADVANCED PANEL OVERLAY + SHEET
+    ═══════════════════════════════════════ */
+    .adv-overlay {
+      position: fixed; inset: 0; z-index: 900;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(2px);
+      animation: fadeIn 150ms ease;
+    }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+    .adv-sheet {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 901;
+      max-height: 80vh;
+      background: var(--bg2);
+      border-top: 1px solid var(--bdr2);
+      border-radius: 14px 14px 0 0;
+      display: flex; flex-direction: column;
+      animation: slideUp 200ms ease;
+      overflow: hidden;
+    }
+    @media (min-width: 681px) {
+      .adv-sheet {
+        left: 50%; right: auto; bottom: auto; top: 50%;
+        transform: translate(-50%, -50%);
+        width: min(640px, 94vw);
+        border-radius: var(--r-lg);
+        border: 1px solid var(--bdr2);
+        animation: fadeScaleIn 180ms ease;
+        max-height: 78vh;
+      }
+      @keyframes fadeScaleIn { from { opacity:0; transform: translate(-50%,-48%) scale(.97); } to { opacity:1; transform: translate(-50%,-50%) scale(1); } }
+    }
+    @keyframes slideUp { from { transform: translateY(24px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+
+    .adv-handle {
+      width: 36px; height: 4px; border-radius: 2px;
+      background: var(--bdr2); margin: 10px auto 0; flex-shrink: 0;
+    }
+    @media (min-width: 681px) { .adv-handle { display: none; } }
+
+    .adv-hdr {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 20px 10px; flex-shrink: 0;
+      border-bottom: 1px solid var(--bdr);
+    }
+    .adv-title {
+      font-size: 11px; font-weight: 700; letter-spacing: .16em;
+      text-transform: uppercase; color: var(--t1);
+    }
+    .adv-body {
+      flex: 1; overflow-y: auto; padding: 16px 20px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .adv-section-title {
+      font-size: 10px; font-weight: 700; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--t3);
+      margin-bottom: 10px; padding-bottom: 6px;
+      border-bottom: 1px solid var(--bdr);
+    }
+    .adv-actions {
+      display: flex; gap: var(--s2); padding: 12px 20px;
+      border-top: 1px solid var(--bdr); flex-shrink: 0;
+      background: var(--bg2);
+    }
     .p-card { display: flex; justify-content: space-between; align-items: center; padding: var(--s2) var(--s3); background: var(--bg3); border: 1px solid var(--bdr); border-radius: var(--r-sm); gap: var(--s2); min-width: 0; }
     .p-key { font-size: 10px; color: var(--t3); letter-spacing: .05em; text-transform: uppercase; flex-shrink: 0; }
     .p-val { font-size: 12px; color: #A0CFFF; font-weight: 700; font-family: 'JetBrains Mono', monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1361,6 +1476,21 @@ const GENRE_MODS = {
   'Futuristic':       'showcasing sleek minimalist future tech, chrome and light, and utopian scale',
 };
 
+const SECTION_LABELS = {
+  en: {
+    scene: ['Framing', 'Environment', 'Special', 'Free'],
+    style: ['Real', 'Illustrated', 'Stylized', '3D / Digital'],
+  },
+  ua: {
+    scene: ['Кадрування', 'Середовище', 'Спеціальне', 'Довільне'],
+    style: ['Реалістичний', 'Ілюстративний', 'Стилізований', '3D / Цифровий'],
+  },
+};
+function sl(type, idx) {
+  var lang = (typeof S !== 'undefined' && S.lang) ? S.lang : 'en';
+  return (SECTION_LABELS[lang] && SECTION_LABELS[lang][type] && SECTION_LABELS[lang][type][idx]) || SECTION_LABELS.en[type][idx];
+}
+
 function rndFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
 function smartRandom(mode) {
@@ -1394,6 +1524,7 @@ const SCENE_NEGATIVES_BASE = {
 var UNIVERSAL_TAIL = ['blurry', 'text', 'watermark'];
 
 function buildNegative() {
+  if (S.customNeg && S.customNeg.trim()) return S.customNeg.trim();
   var base = SCENE_NEGATIVES_BASE[S.scene] || SCENE_NEGATIVES_BASE.manual;
   var subjectLower = (S.subject || '').toLowerCase();
   var tail = UNIVERSAL_TAIL.filter(function(token) {
@@ -1413,7 +1544,7 @@ function buildNegative() {
 ═══════════════════════════════════════════════════ */
 const I18N = {
   en: {
-    tabGenerate: 'Generate', tabOptimize: 'Optimize',
+    tabGenerate: 'Create Prompt', tabOptimize: 'Improve Prompt',
     tabOptimizeNote: '· refines for ZIT engine',
     lScene: 'Scene', lSubjectType: 'Subject Type',
     lSubjectHint: 'Adds subject detail',
@@ -1424,19 +1555,24 @@ const I18N = {
     lLoRA: 'LoRA Stack', lSampler: 'Sampler + Scheduler',
     lSteps: 'Steps', lCFG: 'CFG', lSeed: 'Seed',
     lExisting: 'Existing Prompt', lExistingHint: 'Any language',
-    btnGenerate: '✦ Generate Prompt', btnOptimize: '✦ Optimize Prompt',
+    btnGenerate: '✦ Create Prompt', btnOptimize: '✦ Improve Prompt',
     btnGenerating: 'Generating…', btnRegenerate: 'Regenerate',
     btnCopy: 'Copy All', btnAddLoRA: '+ Add LoRA',
     outPositive: 'Positive Prompt', outNegative: 'Negative Prompt',
     outParams: 'ComfyUI Params', outChanged: 'What changed', outTip: 'ZIT tip',
-    phFill: 'Fill in parameters\nand press Generate',
+    phFill: 'Fill in parameters\nand press Create Prompt',
     phSub: '· ZIT/Lumina2',
     mobParams: 'Params', mobOutput: 'Output',
     noneOpt: '— none —',
     lAtmosphere: 'Atmosphere', lPreview: 'Prompt Preview',
+    advTitle: 'Advanced Settings',
+    advNegLabel: 'Negative Prompt',
+    advNegPlaceholder: 'Custom negative (auto if empty)',
+    advReset: 'Reset', advApply: 'Apply',
+    advTooltip: 'Advanced Settings — ComfyUI config & Negative Prompt',
   },
   ua: {
-    tabGenerate: 'Генерувати', tabOptimize: 'Оптимізувати',
+    tabGenerate: 'Створити', tabOptimize: 'Покращити',
     tabOptimizeNote: '· адаптує для ZIT',
     lScene: 'Сцена', lSubjectType: 'Тип субʼєкта',
     lSubjectHint: 'Додає деталі субʼєкта',
@@ -1447,16 +1583,21 @@ const I18N = {
     lLoRA: 'LoRA стек', lSampler: 'Семплер + Планувальник',
     lSteps: 'Кроки', lCFG: 'CFG', lSeed: 'Сід',
     lExisting: 'Вхідний промпт', lExistingHint: 'Будь-яка мова',
-    btnGenerate: '✦ Згенерувати', btnOptimize: '✦ Оптимізувати',
+    btnGenerate: '✦ Створити промпт', btnOptimize: '✦ Покращити промпт',
     btnGenerating: 'Генерація…', btnRegenerate: 'Перегенерувати',
     btnCopy: 'Copy All', btnAddLoRA: '+ Додати LoRA',
     outPositive: 'Позитивний промпт', outNegative: 'Негативний промпт',
     outParams: 'Параметри ComfyUI', outChanged: 'Що змінилось', outTip: 'Порада ZIT',
-    phFill: 'Заповніть параметри\nта натисніть Генерувати',
+    phFill: 'Заповніть параметри\nта натисніть Створити',
     phSub: '· ZIT/Lumina2',
     mobParams: 'Параметри', mobOutput: 'Результат',
     noneOpt: '— немає —',
     lAtmosphere: 'Атмосфера', lPreview: 'Попередній перегляд',
+    advTitle: 'Розширені налаштування',
+    advNegLabel: 'Негативний промпт',
+    advNegPlaceholder: 'Власний негативний (авто якщо порожньо)',
+    advReset: 'Скинути', advApply: 'Застосувати',
+    advTooltip: 'Розширені — конфіг ComfyUI та негативний промпт',
   }
 };
 function t(key) {
@@ -1470,16 +1611,43 @@ function t(key) {
 var S = {
   apiKey:'', rememberKey:false, model:'qwen/qwen3-32b',
   apiOpen:false, dbgOpen:false, mobilePane:'params',
+  advOpen:false,
   mode:'generate', lang:'en',
   scene:'portrait', style:'photorealistic', subject:'', subjectType:'none',
   lighting:'Cinematic', mood:'', genre:'', resolution:'896x1152',
   existing:'',
   loras:[],
   steps:'12', cfg:'1.5', sampler:'euler_ancestral', scheduler:'beta', seed:'',
+  customNeg:'',
   loading:false, result:null, error:'', dbgLog:null,
   rndMode:'normal',
   subjectHistory:[],
 };
+
+var ADV_DEFAULTS = { steps:'12', cfg:'1.5', sampler:'euler_ancestral', scheduler:'beta', seed:'', loras:[], resolution:'896x1152', customNeg:'' };
+
+function isAdvChanged() {
+  if (S.steps !== ADV_DEFAULTS.steps) return true;
+  if (S.cfg !== ADV_DEFAULTS.cfg) return true;
+  if (S.sampler !== ADV_DEFAULTS.sampler) return true;
+  if (S.scheduler !== ADV_DEFAULTS.scheduler) return true;
+  if (S.seed !== ADV_DEFAULTS.seed) return true;
+  if (S.loras.length !== ADV_DEFAULTS.loras.length) return true;
+  if (S.resolution !== ADV_DEFAULTS.resolution) return true;
+  if (S.customNeg !== ADV_DEFAULTS.customNeg) return true;
+  return false;
+}
+
+function resetAdv() {
+  S.steps = ADV_DEFAULTS.steps;
+  S.cfg = ADV_DEFAULTS.cfg;
+  S.sampler = ADV_DEFAULTS.sampler;
+  S.scheduler = ADV_DEFAULTS.scheduler;
+  S.seed = ADV_DEFAULTS.seed;
+  S.loras = [];
+  S.resolution = ADV_DEFAULTS.resolution;
+  S.customNeg = ADV_DEFAULTS.customNeg;
+}
 
 /* ═══════════════════════════════════════════════════
    STORAGE
@@ -1773,12 +1941,12 @@ function buildPreviewCard() {
   if (atmoToks.length) { rows.push({ key: 'Atmos', tokens: atmoToks, cls: 'atmos' }); totalTokenCount += atmoToks.length; }
 
   /* Genre mod — prose phrase */
-  if (genreMod) { rows.push({ key: 'Genre', tokens: [genreMod], cls: 'atmos' }); totalTokenCount++; }
+  if (genreMod) { rows.push({ key: 'Genre', tokens: [genreMod], cls: 'atmos genre-tok', rowCls: 'is-genre' }); totalTokenCount++; }
 
   if (!rows.length) return '';
 
   var inner = rows.map(function(row) {
-    return '<div class="preview-token-row' + (row.key === 'PROMPT' ? ' is-prompt' : '') + '">' +
+    return '<div class="preview-token-row' + (row.key === 'PROMPT' ? ' is-prompt' : '') + (row.rowCls ? ' ' + row.rowCls : '') + '">' +
       '<span class="preview-token-key">' + esc(row.key) + '</span>' +
       '<span class="preview-tokens">' +
         row.tokens.map(function(tok) {
@@ -1829,8 +1997,6 @@ function render() {
 ═══════════════════════════════════════════════════ */
 function buildHTML() {
   var mob   = window.innerWidth <= 680;
-  var sk    = S.sampler + '+' + S.scheduler;
-  var sh    = SAMPLER_HINTS[sk] || { text:'Custom combination', c:'#6E7681' };
   var keyOk = !!S.apiKey.trim();
 
   /* HEADER */
@@ -1840,7 +2006,7 @@ function buildHTML() {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v2.2.3</span>' +
+        '<span class="title-version">v3.0.0</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
@@ -1942,10 +2108,10 @@ function buildHTML() {
 
     /* ── STEP 2a: SCENE — grouped ── */
     var SCENE_GROUPS = [
-      { label: 'Framing',     ids: ['portrait','half_body','full_body','landscape'],  icons: true },
-      { label: 'Environment', ids: ['urban','interior','architecture'],               icons: true },
-      { label: 'Special',     ids: ['macro','animal','product'],                      icons: false },
-      { label: 'Free',        ids: ['concept','manual'],                              icons: false },
+      { label: sl('scene',0), ids: ['portrait','half_body','full_body','landscape'],  icons: true },
+      { label: sl('scene',1), ids: ['urban','interior','architecture'],               icons: true },
+      { label: sl('scene',2), ids: ['macro','animal','product'],                      icons: false },
+      { label: sl('scene',3), ids: ['concept','manual'],                              icons: false },
     ];
     var sceneHtml = SCENE_GROUPS.map(function(grp) {
       var btns = grp.ids.map(function(id) {
@@ -1972,10 +2138,10 @@ function buildHTML() {
 
     /* ── STEP 3: STYLE — grouped ── */
     var STYLE_GROUPS = [
-      { label: 'Real',        icon: '◉', ids: ['photorealistic','cinematic','documentary','fashion','analog'] },
-      { label: 'Illustrated', icon: '◈', ids: ['digital_art','concept_art','illustration','oil_painting','watercolor','pencil_sketch','impressionism'] },
-      { label: 'Stylized',    icon: '❋', ids: ['anime','manga','comic','ink_wash','ukiyo_e'] },
-      { label: '3D / Digital',icon: '▣', ids: ['3d_render','low_poly','isometric','pixel_art','flat_design','glitch'] },
+      { label: sl('style',0), icon: '◉', ids: ['photorealistic','cinematic','documentary','fashion','analog'] },
+      { label: sl('style',1), icon: '◈', ids: ['digital_art','concept_art','illustration','oil_painting','watercolor','pencil_sketch','impressionism'] },
+      { label: sl('style',2), icon: '❋', ids: ['anime','manga','comic','ink_wash','ukiyo_e'] },
+      { label: sl('style',3), icon: '▣', ids: ['3d_render','low_poly','isometric','pixel_art','flat_design','glitch'] },
     ];
     var styleHtml = STYLE_GROUPS.map(function(grp) {
       var btns = grp.ids.map(function(id) {
@@ -2018,77 +2184,6 @@ function buildHTML() {
 
   h += '<hr>';
 
-  /* ── TECH BAR: Resolution · Sampler / Scheduler · Steps · CFG · Seed · LoRA ── */
-  var SAMP_SHORT = { 'euler_ancestral':'euler_a', 'euler':'euler', 'dpm_2':'dpm_2', 'heun':'heun', 'dpm_2_ancestral':'dpm2_a' };
-  var RES_LABEL  = {
-    '896x1152':  '896×1152 · portrait ★',
-    '768x1024':  '768×1024 · portrait',
-    '1024x1024': '1024×1024 · square',
-    '1152x896':  '1152×896 · landscape',
-    '1280x768':  '1280×768 · wide',
-    '1024x1536': '1024×1536 · tall',
-  };
-
-  /* LoRA chips — show ALL items including empty-name (so input appears after click) */
-  var loraChips = S.loras.map(function(l, i) {
-    return '<span class="tc-chip">' +
-      '<input type="text" data-ln="'+i+'" value="'+esc(l.name)+'" class="tc-inp-lname" placeholder="lora_name">' +
-      '<input type="text" data-lw="'+i+'" value="'+esc(l.weight)+'" class="tc-inp-lw">' +
-      '<button class="tc-lora-rm" data-lr="'+i+'" title="Remove LoRA">×</button>' +
-    '</span>';
-  }).join('');
-
-  h += '<span class="tech-label">ComfyUI Params</span>' +
-    '<div class="tech-bar">' +
-    /* Resolution — no "res" prefix, type in label */
-    '<span class="tc-chip" title="Resolution">' +
-      '<select id="sel-res">' +
-        RESOLUTIONS.map(function(r){
-          return '<option value="'+esc(r.value)+'"'+(S.resolution===r.value?' selected':'')+'>'+(RES_LABEL[r.value]||r.value)+'</option>';
-        }).join('') +
-      '</select>' +
-    '</span>' +
-    /* Sampler / Scheduler */
-    '<span class="tc-chip">' +
-      '<span class="tc-label">smp</span>' +
-      '<select id="sel-samp">' +
-        SAMPLERS.map(function(s){
-          return '<option value="'+esc(s)+'"'+(S.sampler===s?' selected':'')+'>'+(SAMP_SHORT[s]||s)+'</option>';
-        }).join('') +
-      '</select>' +
-      '<span class="tc-sep" style="margin:0 2px">·</span>' +
-      '<span class="tc-label">sch</span>' +
-      '<select id="sel-sch">' +
-        SCHEDULERS.map(function(s){
-          var SCH_SHORT = { 'FlowMatchEulerDiscrete':'FlowMatch', 'sgm_uniform':'sgm_unif' };
-          return '<option value="'+esc(s)+'"'+(S.scheduler===s?' selected':'')+'>'+(SCH_SHORT[s]||s)+'</option>';
-        }).join('') +
-      '</select>' +
-    '</span>' +
-    /* Steps */
-    '<span class="tc-chip">' +
-      '<span class="tc-label">steps</span>' +
-      '<input type="text" id="inp-steps" class="tc-inp-steps" value="'+esc(S.steps)+'">' +
-    '</span>' +
-    /* CFG */
-    '<span class="tc-chip">' +
-      '<span class="tc-label">cfg</span>' +
-      '<input type="text" id="inp-cfg" class="tc-inp-cfg" value="'+esc(S.cfg)+'">' +
-    '</span>' +
-    /* Seed — chip with label + button */
-    '<span class="tc-chip">' +
-      '<span class="tc-label">seed</span>' +
-      '<span id="tc-seed-val" style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--t1);width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle">' + (S.seed ? esc(S.seed) : '<span style="color:var(--t4)">rand</span>') + '</span>' +
-      '<button id="b-seed" title="Random seed" style="background:transparent;border:none;color:var(--t2);cursor:pointer;padding:0;font-size:13px;line-height:1">🎲</button>' +
-    '</span>' +
-    /* Sampler hint */
-    (sh.text ? '<span class="tc-hint" style="color:'+sh.c+'">'+sh.text+'</span>' : '') +
-    /* LoRA: chips for all items, or LoRA+ if none */
-    (S.loras.length > 0
-      ? loraChips + '<button class="btn-text" id="b-add-lora" style="font-size:11px;color:var(--t4);padding:5px 8px">+ LoRA</button>'
-      : '<button class="tc-chip" id="b-add-lora" style="cursor:pointer;border-style:dashed;color:var(--t3);background:transparent">LoRA +</button>') +
-  '</div>';
-
   /* ── STEP 4: PREVIEW CARD (before generate) ── */
   if (S.mode === 'generate') {
     var pvCard = buildPreviewCard();
@@ -2102,12 +2197,18 @@ function buildHTML() {
       (!S.dbgOpen?'<button class="btn-text" id="b-open-dbg" style="margin-top:6px;color:var(--amber-txt);font-size:12px">→ Open Debug Panel</button>':'') + '</div>';
   }
 
-  /* ── Neg preview ── */
+  /* ── Neg preview — auto or custom indicator ── */
   if (S.mode === 'generate') {
-    h += '<div class="neg-preview"><span class="neg-preview-label">NEG</span><span class="neg-preview-text">'+esc(buildNegative())+'</span></div>';
+    var negDisp = buildNegative();
+    var negCustom = S.customNeg && S.customNeg.trim();
+    h += '<div class="neg-preview">' +
+      '<span class="neg-preview-label">NEG' + (negCustom ? ' ✎' : '') + '</span>' +
+      '<span class="neg-preview-text">'+esc(negDisp)+'</span>' +
+    '</div>';
   }
 
-  /* ── STEP 5: GENERATE ROW ── */
+  /* ── STEP 5: GENERATE ROW + ⚙ ── */
+  var advChanged = isAdvChanged();
   if (S.mode === 'generate') {
     var badgeText = '', badgeClass = 'rnd-badge';
     if (S.rndMode === 'creative') { badgeText='Shift: creative mode'; badgeClass+=' creative'; }
@@ -2122,10 +2223,12 @@ function buildHTML() {
           : t('btnGenerate')) +
       '</button>' +
       '<button class="btn-random" id="b-random" title="Random subject — Shift: creative — DblClick: wild" style="min-width:48px">🔀</button>' +
+      '<button class="btn-adv'+(advChanged?' is-changed':'')+'" id="b-adv" title="'+t('advTooltip')+'">⚙' + (advChanged?'<span class="adv-dot"></span>':'') + '</button>' +
     '</div>' +
     '<div class="'+badgeClass+'" id="rnd-badge">'+badgeText+'</div>';
   } else {
-    h += '<button class="btn-primary'+(S.loading?' loading':'')+'" id="b-gen"'+(S.loading?' disabled':'')+'>' +
+    var improveDisabled = (!S.existing.trim() || S.loading);
+    h += '<button class="btn-primary'+(S.loading?' loading':'')+(improveDisabled&&!S.loading?' btn-secondary':'')+'" id="b-gen"'+(improveDisabled?' disabled':'')+'>' +
       (S.loading
         ? '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center"><span style="display:inline-block;animation:spin .65s linear infinite;opacity:.7">⟳</span> '+t('btnGenerating')+'</span>'
         : t('btnOptimize')) +
@@ -2200,7 +2303,112 @@ function buildHTML() {
     h += '</div>'; /* output-main */
   }
 
-  h += '</div></div>'; /* col-r + body-grid */
+  h += '</div>'; /* col-r */
+  h += '</div>'; /* body-grid */
+
+  /* ═══════════════════════════════════════
+     ADVANCED PANEL OVERLAY
+  ═══════════════════════════════════════ */
+  if (S.advOpen) {
+    var SAMP_SHORT2 = { 'euler_ancestral':'euler_a', 'euler':'euler', 'dpm_2':'dpm_2', 'heun':'heun', 'dpm_2_ancestral':'dpm2_a' };
+    var RES_LABEL2  = {
+      '896x1152':  '896×1152 · portrait ★',
+      '768x1024':  '768×1024 · portrait',
+      '1024x1024': '1024×1024 · square',
+      '1152x896':  '1152×896 · landscape',
+      '1280x768':  '1280×768 · wide',
+      '1024x1536': '1024×1536 · tall',
+    };
+    var loraChipsAdv = S.loras.map(function(l, i) {
+      return '<span class="tc-chip">' +
+        '<input type="text" data-ln="'+i+'" value="'+esc(l.name)+'" class="tc-inp-lname" placeholder="lora_name">' +
+        '<input type="text" data-lw="'+i+'" value="'+esc(l.weight)+'" class="tc-inp-lw">' +
+        '<button class="tc-lora-rm" data-lr="'+i+'" title="Remove LoRA">×</button>' +
+      '</span>';
+    }).join('');
+    var skAdv = S.sampler + '+' + S.scheduler;
+    var shAdv = SAMPLER_HINTS[skAdv] || { text:'Custom combination', c:'#6E7681' };
+
+    h += '<div class="adv-overlay" id="adv-overlay"></div>' +
+    '<div class="adv-sheet" id="adv-sheet">' +
+      '<div class="adv-handle"></div>' +
+      '<div class="adv-hdr">' +
+        '<span class="adv-title">' + t('advTitle') + '</span>' +
+        '<button class="btn-ghost" id="b-adv-close" style="padding:3px 8px">✕</button>' +
+      '</div>' +
+      '<div class="adv-body">' +
+
+        /* ─── COMFYUI CONFIG ─── */
+        '<div class="adv-section-title">COMFYUI CONFIG</div>' +
+        '<span class="tech-label">ComfyUI Params</span>' +
+        '<div class="tech-bar">' +
+          /* Resolution */
+          '<span class="tc-chip" title="Resolution">' +
+            '<select id="sel-res">' +
+              RESOLUTIONS.map(function(r){
+                return '<option value="'+esc(r.value)+'"'+(S.resolution===r.value?' selected':'')+'>'+(RES_LABEL2[r.value]||r.value)+'</option>';
+              }).join('') +
+            '</select>' +
+          '</span>' +
+          /* Sampler / Scheduler */
+          '<span class="tc-chip">' +
+            '<span class="tc-label">smp</span>' +
+            '<select id="sel-samp">' +
+              SAMPLERS.map(function(s){
+                return '<option value="'+esc(s)+'"'+(S.sampler===s?' selected':'')+'>'+(SAMP_SHORT2[s]||s)+'</option>';
+              }).join('') +
+            '</select>' +
+            '<span class="tc-sep" style="margin:0 2px">·</span>' +
+            '<span class="tc-label">sch</span>' +
+            '<select id="sel-sch">' +
+              SCHEDULERS.map(function(s){
+                var SCH_SHORT = { 'FlowMatchEulerDiscrete':'FlowMatch', 'sgm_uniform':'sgm_unif' };
+                return '<option value="'+esc(s)+'"'+(S.scheduler===s?' selected':'')+'>'+(SCH_SHORT[s]||s)+'</option>';
+              }).join('') +
+            '</select>' +
+          '</span>' +
+          /* Steps */
+          '<span class="tc-chip">' +
+            '<span class="tc-label">steps</span>' +
+            '<input type="text" id="inp-steps" class="tc-inp-steps" value="'+esc(S.steps)+'">' +
+          '</span>' +
+          /* CFG */
+          '<span class="tc-chip">' +
+            '<span class="tc-label">cfg</span>' +
+            '<input type="text" id="inp-cfg" class="tc-inp-cfg" value="'+esc(S.cfg)+'">' +
+          '</span>' +
+          /* Seed */
+          '<span class="tc-chip">' +
+            '<span class="tc-label">seed</span>' +
+            '<span id="tc-seed-val" style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--t1);width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle">' + (S.seed ? esc(S.seed) : '<span style="color:var(--t4)">rand</span>') + '</span>' +
+            '<button id="b-seed" title="Random seed" style="background:transparent;border:none;color:var(--t2);cursor:pointer;padding:0;font-size:13px;line-height:1">🎲</button>' +
+          '</span>' +
+          (shAdv.text ? '<span class="tc-hint" style="color:'+shAdv.c+'">'+shAdv.text+'</span>' : '') +
+          /* LoRA */
+          (S.loras.length > 0
+            ? loraChipsAdv + '<button class="btn-text" id="b-add-lora" style="font-size:11px;color:var(--t4);padding:5px 8px">+ LoRA</button>'
+            : '<button class="tc-chip" id="b-add-lora" style="cursor:pointer;border-style:dashed;color:var(--t3);background:transparent">LoRA +</button>') +
+        '</div>' +
+
+        /* ─── NEGATIVE PROMPT ─── */
+        '<div class="adv-section-title" style="margin-top:18px">NEGATIVE PROMPT</div>' +
+        '<div class="field" style="margin-bottom:0">' +
+          '<div class="f-hdr" style="margin-bottom:6px">' +
+            '<label class="lbl" style="font-size:11px">' + t('advNegLabel') + '</label>' +
+            (S.customNeg ? '<button class="btn-text" id="b-adv-neg-clr" style="font-size:11px;color:var(--red-txt)">✕ Reset to auto</button>' : '') +
+          '</div>' +
+          '<textarea id="inp-custom-neg" rows="3" style="font-size:12px;font-family:\'JetBrains Mono\',monospace;min-height:72px" placeholder="' + t('advNegPlaceholder') + '">' + esc(S.customNeg) + '</textarea>' +
+          '<p style="font-size:10px;color:var(--t4);margin-top:4px">Auto: <em style="color:var(--t3)">' + esc((function(){ var tmp=S.customNeg; S.customNeg=''; var r=buildNegative(); S.customNeg=tmp; return r; })()) + '</em></p>' +
+        '</div>' +
+
+      '</div>' + /* adv-body */
+      '<div class="adv-actions">' +
+        '<button class="btn-primary btn-secondary" id="b-adv-reset" style="margin-top:0;font-size:13px;padding:10px 16px;width:auto">'+t('advReset')+'</button>' +
+        '<button class="btn-primary" id="b-adv-apply" style="margin-top:0;font-size:13px;padding:10px 16px;flex:1">'+t('advApply')+'</button>' +
+      '</div>' +
+    '</div>';
+  }
+
   return h;
 }
 
@@ -2215,6 +2423,31 @@ function attachEvents() {
   on('b-api-close', 'click', function(){ S.apiOpen=false; S.dbgOpen=false; render(); });
   on('b-open-api',  'click', function(){ S.apiOpen=true; render(); });
   on('b-open-dbg',  'click', function(){ S.dbgOpen=true; render(); });
+
+  /* ── ADVANCED PANEL ── */
+  on('b-adv', 'click', function(){ S.advOpen=true; render(); });
+  on('b-adv-close', 'click', function(){ S.advOpen=false; render(); });
+  on('b-adv-apply', 'click', function(){ S.advOpen=false; render(); });
+  on('b-adv-reset', 'click', function(){ resetAdv(); render(); });
+  on('b-adv-neg-clr', 'click', function(){ S.customNeg=''; render(); });
+
+  /* tap overlay to close */
+  (function(){
+    var ov = document.getElementById('adv-overlay');
+    if (ov) ov.addEventListener('click', function(){ S.advOpen=false; render(); });
+  }());
+
+  /* custom neg live */
+  (function(){
+    var el = document.getElementById('inp-custom-neg');
+    if (!el) return;
+    el.addEventListener('input', function(){ S.customNeg = el.value; });
+  }());
+
+  /* ── GENRE CHIP EXPAND ── */
+  document.querySelectorAll('.genre-tok').forEach(function(el){
+    el.addEventListener('click', function(){ el.classList.toggle('expanded'); });
+  });
   on('b-lang',      'click', function(){
     var btn = document.getElementById('b-lang');
     S.lang = S.lang === 'en' ? 'ua' : 'en';
@@ -2282,6 +2515,13 @@ function attachEvents() {
       S.existing = existEl.value;
       var hint = existEl.closest('.field').querySelector('.hint span');
       if (hint) { var n=existEl.value.length; hint.textContent=n+'/1500'; hint.style.color=n>1400?'var(--red)':n>1000?'var(--amber)':'var(--t4)'; }
+      /* update disabled state on gen button without full re-render */
+      var gb = document.getElementById('b-gen');
+      if (gb) {
+        var dis = !S.existing.trim();
+        gb.disabled = dis;
+        gb.classList.toggle('btn-secondary', dis);
+      }
     });
   }
   live('inp-steps','steps'); live('inp-cfg','cfg'); live('inp-seed','seed');
