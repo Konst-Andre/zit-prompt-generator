@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v2.2.1</title>
+  <title>ZIT Prompt Generator v2.2.3</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -396,67 +396,91 @@
     .rnd-badge.wild     { color: var(--red-txt); }
 
     /* ═══════════════════════════════════════
-       SCENE ICON GRID
+       SCENE + STYLE — SEL-BTN SYSTEM v2.2.3
     ═══════════════════════════════════════ */
-    .icon-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: var(--s1); }
-    .icon-tile {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: var(--s2) var(--s1);
-      background: linear-gradient(180deg, #2A3548 0%, #1E2C3E 100%);
-      border: 1px solid var(--bdr); border-radius: var(--r-sm);
-      cursor: pointer; gap: 3px;
-      transition: border-color var(--tr), background var(--tr), box-shadow var(--tr);
-      user-select: none;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 1px 3px rgba(0,0,0,.2);
-    }
-    .icon-tile:hover {
-      border-color: var(--bdr2);
-      background: linear-gradient(180deg, #303F58 0%, #263348 100%);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 0 0 1px rgba(47,129,247,.15),
-                  0 2px 6px rgba(47,129,247,.08);
-    }
-    .icon-tile:active { transform: scale(0.95); }
-    .icon-tile.active {
-      background: linear-gradient(180deg, #132543 0%, #0C1E3A 100%);
-      border-color: var(--acc);
-      box-shadow: inset 0 1px 0 rgba(47,129,247,.25), 0 0 10px rgba(47,129,247,.18),
-                  0 0 0 1px rgba(47,129,247,.1);
-    }
-    .i-glyph { font-size: 15px; line-height: 1; color: var(--t2); }
-    .i-label { font-size: 11px; color: var(--t3); text-align: center; line-height: 1.25; letter-spacing: .01em; }
-    .icon-tile.active .i-glyph { color: var(--acc-txt); }
-    .icon-tile.active .i-label { color: var(--acc-txt); }
-    .icon-tile:hover .i-glyph { color: var(--t1); }
-    .icon-tile:hover .i-label { color: var(--t2); }
 
-    /* ═══════════════════════════════════════
-       STYLE PILLS
-    ═══════════════════════════════════════ */
+    /* Base selection button */
+    .sel-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 34px;
+      padding: 0 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.25));
+      border: 1px solid var(--bdr);
+      border-radius: var(--r-sm);
+      font-size: 12px; font-weight: 500; color: var(--t3);
+      cursor: pointer; white-space: nowrap; user-select: none;
+      transition: border-color var(--tr), color var(--tr),
+                  background var(--tr), box-shadow var(--tr);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 1px 2px rgba(0,0,0,.2);
+    }
+    .sel-btn:hover {
+      border-color: var(--bdr2); color: var(--t2);
+      background: rgba(255,255,255,.05);
+    }
+    .sel-btn:active { transform: scale(0.97); }
+    .sel-btn.active {
+      background: linear-gradient(180deg, rgba(47,129,247,.22), rgba(47,129,247,.08));
+      border-color: var(--acc); color: #fff; font-weight: 600;
+      box-shadow: 0 0 0 1px rgba(47,129,247,.2), 0 2px 6px rgba(47,129,247,.1);
+    }
+
+    /* Group container */
+    .sel-group {
+      padding-top: 10px;
+      margin-top: 6px;
+      border-top: 1px solid rgba(42,49,64,.55);
+    }
+    .sel-group:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+
+    /* Category label */
+    .cat-label {
+      display: block;
+      font-size: 10px; font-weight: 600;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: var(--t3); opacity: .7;
+      margin-bottom: 6px;
+    }
+    .cat-label .cat-icon {
+      opacity: .75; margin-right: 5px;
+      font-style: normal; letter-spacing: 0;
+    }
+    /* Icon inside sel-btn */
+    .sel-btn .btn-icon {
+      opacity: .65; margin-right: 6px; font-style: normal;
+      transition: opacity var(--tr); line-height: 1;
+    }
+    .sel-btn:hover  .btn-icon { opacity: .85; }
+    .sel-btn.active .btn-icon { opacity: 1; }
+
+    /* Button row */
+    .sel-row { display: flex; flex-wrap: wrap; gap: 5px; }
+
+    /* Keep pill-row + st-pill for Subject Type pills */
     .pill-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: var(--s2); }
     .st-pill {
-      padding: 6px 16px;
+      padding: 6px 14px;
       background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.25));
       border: 1px solid var(--bdr); border-radius: 999px;
-      font-size: 13px; font-weight: 600; color: var(--t4);
+      font-size: 12px; font-weight: 500; color: var(--t4);
       cursor: pointer;
-      transition: border-color var(--tr), color var(--tr), background var(--tr),
-                  box-shadow var(--tr), transform 0.14s ease;
-      user-select: none; letter-spacing: .01em;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 1px 2px rgba(0,0,0,.3);
+      transition: border-color var(--tr), color var(--tr), background var(--tr), transform 0.14s ease;
+      user-select: none;
     }
-    .st-pill:hover { border-color: var(--bdr2); color: var(--t2); background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.3)); }
+    .st-pill:hover { border-color: var(--bdr2); color: var(--t2); background: rgba(255,255,255,.05); }
     .st-pill:active { transform: scale(0.97); }
     .st-pill.active {
       background: linear-gradient(180deg, rgba(47,129,247,.22), rgba(47,129,247,.08));
-      border-color: var(--acc); color: #fff; font-weight: 700;
-      transform: translateY(-1px);
-      box-shadow: 0 0 0 1px rgba(47,129,247,.35), 0 2px 6px rgba(47,129,247,.12);
+      border-color: var(--acc); color: #fff; font-weight: 600;
+      box-shadow: 0 0 0 1px rgba(47,129,247,.2);
     }
-    .st-pill .st-icon { opacity: .5; transition: opacity var(--tr); font-style: normal; }
+    .st-pill .st-icon { opacity: .55; transition: opacity var(--tr); font-style: normal; }
     .st-pill:hover .st-icon { opacity: .8; }
     .st-pill.active .st-icon { opacity: 1; }
 
     hr { border: none; border-top: 1px solid var(--bdr); margin: var(--s3) 0 var(--s4); }
+
 
     @keyframes hintFade {
       from { opacity: 0; transform: translateY(3px); }
@@ -790,7 +814,6 @@
     @media (max-width: 680px) {
       .body-grid { grid-template-columns: 1fr; }
       .col-l { border-right: none; }
-      .icon-grid { grid-template-columns: repeat(4,1fr); }
       .col { padding: var(--s4); }
       .hdr { padding: var(--s3) var(--s4); }
       .pane-hidden { display: none; }
@@ -1817,7 +1840,7 @@ function buildHTML() {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v2.2.1</span>' +
+        '<span class="title-version">v2.2.3</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
@@ -1917,12 +1940,28 @@ function buildHTML() {
       '</div>' +
     '</div>';
 
-    /* ── STEP 2a: SCENE ── */
-    var tiles = SCENES.map(function(s){
-      return '<div class="icon-tile'+(S.scene===s.id?' active':'')+'" data-scene="'+s.id+'" title="'+esc(s.label)+'">' +
-        '<span class="i-glyph">'+s.icon+'</span><span class="i-label">'+esc(s.label)+'</span></div>';
+    /* ── STEP 2a: SCENE — grouped ── */
+    var SCENE_GROUPS = [
+      { label: 'Framing',     ids: ['portrait','half_body','full_body','landscape'],  icons: true },
+      { label: 'Environment', ids: ['urban','interior','architecture'],               icons: true },
+      { label: 'Special',     ids: ['macro','animal','product'],                      icons: false },
+      { label: 'Free',        ids: ['concept','manual'],                              icons: false },
+    ];
+    var sceneHtml = SCENE_GROUPS.map(function(grp) {
+      var btns = grp.ids.map(function(id) {
+        var sc = SCENES.find(function(x){ return x.id === id; });
+        if (!sc) return '';
+        var iconHtml = (grp.icons && sc.icon)
+          ? '<span class="btn-icon">'+sc.icon+'</span>'
+          : '';
+        return '<button class="sel-btn'+(S.scene===id?' active':'')+'" data-scene="'+id+'" title="'+esc(sc.label)+'">'+iconHtml+esc(sc.label)+'</button>';
+      }).join('');
+      return '<div class="sel-group">' +
+        '<span class="cat-label">'+esc(grp.label)+'</span>' +
+        '<div class="sel-row">'+btns+'</div>' +
+      '</div>';
     }).join('');
-    h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">'+t('lScene')+'</label></div><div class="icon-grid">'+tiles+'</div></div>';
+    h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">'+t('lScene')+'</label></div>'+sceneHtml+'</div>';
 
     /* ── STEP 2b: SUBJECT TYPE (compact, below scene) ── */
     var subjPills = SUBJECTS.map(function(s){
@@ -1931,17 +1970,25 @@ function buildHTML() {
     }).join('');
     h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">'+t('lSubjectType')+'</label><span class="hint">'+t('lSubjectHint')+'</span></div><div class="pill-row" style="margin-bottom:0">'+subjPills+'</div></div>';
 
-    /* ── STEP 3: STYLE (primary) ── */
-    var grps = [];
-    STYLES.forEach(function(s){ if(grps.indexOf(s.grp)<0) grps.push(s.grp); });
-    var stylePills = grps.map(function(g){
-      return '<div class="grp-lbl">'+esc(g)+'</div><div class="pill-row">' +
-        STYLES.filter(function(s){return s.grp===g;}).map(function(s){
-          return '<div class="st-pill'+(S.style===s.id?' active':'')+'" data-style="'+s.id+'"'+(s.detail?' title="'+esc(s.detail)+'"':'')+'>'+
-            '<span class="st-icon">'+esc(s.icon||'·')+'</span> '+esc(s.label)+'</div>';
-        }).join('') + '</div>';
+    /* ── STEP 3: STYLE — grouped ── */
+    var STYLE_GROUPS = [
+      { label: 'Real',        icon: '◉', ids: ['photorealistic','cinematic','documentary','fashion','analog'] },
+      { label: 'Illustrated', icon: '◈', ids: ['digital_art','concept_art','illustration','oil_painting','watercolor','pencil_sketch','impressionism'] },
+      { label: 'Stylized',    icon: '❋', ids: ['anime','manga','comic','ink_wash','ukiyo_e'] },
+      { label: '3D / Digital',icon: '▣', ids: ['3d_render','low_poly','isometric','pixel_art','flat_design','glitch'] },
+    ];
+    var styleHtml = STYLE_GROUPS.map(function(grp) {
+      var btns = grp.ids.map(function(id) {
+        var st = STYLES.find(function(x){ return x.id === id; });
+        if (!st) return '';
+        return '<button class="sel-btn'+(S.style===id?' active':'')+'" data-style="'+id+'"'+(st.detail?' title="'+esc(st.detail)+'"':'')+'>'+esc(st.label)+'</button>';
+      }).join('');
+      return '<div class="sel-group">' +
+        '<span class="cat-label"><span class="cat-icon">'+grp.icon+'</span>'+esc(grp.label)+'</span>' +
+        '<div class="sel-row">'+btns+'</div>' +
+      '</div>';
     }).join('');
-    h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">'+t('lStyle')+'</label><span class="hint">'+t('lStyleHint')+'</span></div>'+stylePills+'</div>';
+    h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">'+t('lStyle')+'</label><span class="hint">'+t('lStyleHint')+'</span></div>'+styleHtml+'</div>';
 
     /* ── STEP 3 secondary: Lighting | Mood | Genre (dimmer 3-col) ── */
     h += '<div class="secondary-section">' +
