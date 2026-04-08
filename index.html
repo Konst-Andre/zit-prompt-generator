@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v2.2.0</title>
+  <title>ZIT Prompt Generator v2.2.1</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -1005,14 +1005,29 @@ const SUBJECTS = [
   { id:'environment', label:'Environment', icon:'🏞️', tokens:['environmental depth', 'spatial composition', 'atmospheric perspective'],         tip:'Scene-focused composition' },
 ];
 
-function buildSubjectTokens(subjectId) {
+function buildSubjectTokens(subjectId, styleDetail) {
   var subj = SUBJECTS.find(function(x){ return x.id === subjectId; });
   if (!subj || !subj.tokens || !subj.tokens.length) return '';
-  return subj.tokens.join(', ');
+  var base = subj.tokens.join(', ');
+  if (!styleDetail) return base;
+  var styleLower = styleDetail.toLowerCase();
+  var filtered = base.split(/,\s*/).filter(function(t) {
+    return !styleLower.includes(t.toLowerCase().trim());
+  });
+  return filtered.join(', ');
 }
 
 function buildStyleTokens(styleObj) {
   return (styleObj && styleObj.detail) ? styleObj.detail : '';
+}
+
+var SCENE_CAMERA_DEFAULTS = {
+  concept: 'dynamic framing, artistic composition',
+  manual:  'intentional composition, creative perspective',
+};
+function getSceneCamera(sc) {
+  if (sc && sc.camera && sc.camera.trim()) return sc.camera.trim();
+  return SCENE_CAMERA_DEFAULTS[sc && sc.id] || '';
 }
 
 const LIGHTINGS = [
@@ -1309,18 +1324,18 @@ const RANDOM_POOL = {
 };
 
 const GENRE_MODS = {
-  'Cyberpunk':        ', neon lights, rain, futuristic tech, digital overlays',
-  'Fantasy':          ', magical atmosphere, mystical elements, otherworldly beauty',
-  'Dark Fantasy':     ', dark gothic atmosphere, ominous shadows, cursed imagery',
-  'Sci-Fi':           ', advanced technology, space-age aesthetic, clean futurism',
-  'Solarpunk':        ', lush greenery, sustainable tech, warm optimistic light',
-  'Noir':             ', high contrast black shadow, 1940s atmosphere, moral ambiguity',
-  'Post-Apocalyptic': ', ruins, overgrown decay, dust and ash, survival aesthetic',
-  'Historical':       ', period-accurate details, aged textures, historical authenticity',
-  'Mythological':     ', divine scale, ancient symbols, timeless mythic power',
-  'Surreal':          ', dreamlike logic, impossible geometry, uncanny atmosphere',
-  'Horror':           ', dread atmosphere, unsettling shadows, psychological tension',
-  'Futuristic':       ', sleek minimalist future tech, chrome and light, utopian scale',
+  'Cyberpunk':        'with neon lights reflecting on wet streets, rain-slicked surfaces, and holographic digital overlays',
+  'Fantasy':          'infused with magical atmosphere, mystical elements, and otherworldly beauty',
+  'Dark Fantasy':     'shrouded in dark gothic atmosphere, ominous shadows, and cursed imagery',
+  'Sci-Fi':           'featuring advanced technology, space-age aesthetic, and clean futurism',
+  'Solarpunk':        'blending lush greenery, sustainable technology, and warm optimistic light',
+  'Noir':             'defined by high-contrast black shadows, 1940s atmosphere, and moral ambiguity',
+  'Post-Apocalyptic': 'filled with ruins, overgrown decay, dust and ash, and survival aesthetic',
+  'Historical':       'enriched with period-accurate details, aged textures, and historical authenticity',
+  'Mythological':     'elevated by divine scale, ancient symbols, and timeless mythic power',
+  'Surreal':          'woven with dreamlike logic, impossible geometry, and uncanny atmosphere',
+  'Horror':           'steeped in dread atmosphere, unsettling shadows, and psychological tension',
+  'Futuristic':       'showcasing sleek minimalist future tech, chrome and light, and utopian scale',
 };
 
 function rndFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
@@ -1333,33 +1348,42 @@ function smartRandom(mode) {
   else if (mode === 'creative') tier = pool.creative || pool.normal;
   else                          tier = pool.normal;
   var subject = rndFrom(tier);
-  if (S.genre && GENRE_MODS[S.genre]) {
-    var lower = subject.toLowerCase();
-    var keywords = S.genre.toLowerCase().split(/[\s\-]/);
-    var alreadyContains = keywords.some(function(k){ return k.length > 4 && lower.indexOf(k) !== -1; });
-    if (!alreadyContains) subject += GENRE_MODS[S.genre];
-  }
   return subject;
 }
 
 /* ═══════════════════════════════════════════════════
    NEGATIVES
 ═══════════════════════════════════════════════════ */
-const SCENE_NEGATIVES = {
-  portrait:     'blurry, bad anatomy, deformed hands, extra fingers, distorted face, asymmetrical eyes, text, watermark',
-  half_body:    'blurry, bad anatomy, deformed hands, extra fingers, distorted face, asymmetrical eyes, text, watermark',
-  full_body:    'blurry, bad anatomy, deformed hands, extra fingers, mutated hands, text, watermark',
-  landscape:    'blurry, out of focus, noise, compression artifacts, overexposed, text, watermark',
-  urban:        'blurry, noise, compression artifacts, overexposed, text, watermark',
-  interior:     'blurry, out of focus, distortion, noise, text, watermark',
-  architecture: 'blurry, distortion, noise, compression artifacts, overexposed, text, watermark',
-  macro:        'blurry, out of focus, distortion, reflection artifacts, uneven lighting, text, watermark',
-  animal:       'blurry, bad anatomy, deformed, extra limbs, text, watermark',
-  product:      'blurry, distortion, reflection artifacts, uneven lighting, out of focus, text, watermark',
-  concept:      'blurry, bad anatomy, deformed hands, extra fingers, text, watermark',
-  manual:       'blurry, out of focus, bad anatomy, deformed hands, text, watermark',
+const SCENE_NEGATIVES_BASE = {
+  portrait:     'bad anatomy, deformed hands, extra fingers, distorted face, asymmetrical eyes',
+  half_body:    'bad anatomy, deformed hands, extra fingers, distorted face, asymmetrical eyes',
+  full_body:    'bad anatomy, deformed hands, extra fingers, mutated hands',
+  landscape:    'out of focus, noise, compression artifacts, overexposed',
+  urban:        'noise, compression artifacts, overexposed',
+  interior:     'out of focus, distortion, noise',
+  architecture: 'distortion, noise, compression artifacts, overexposed',
+  macro:        'out of focus, distortion, reflection artifacts, uneven lighting',
+  animal:       'bad anatomy, deformed, extra limbs',
+  product:      'distortion, reflection artifacts, uneven lighting, out of focus',
+  concept:      'bad anatomy, deformed hands, extra fingers',
+  manual:       'out of focus, bad anatomy, deformed hands',
 };
-function buildNegative() { return SCENE_NEGATIVES[S.scene] || SCENE_NEGATIVES.manual; }
+var UNIVERSAL_TAIL = ['blurry', 'text', 'watermark'];
+
+function buildNegative() {
+  var base = SCENE_NEGATIVES_BASE[S.scene] || SCENE_NEGATIVES_BASE.manual;
+  var subjectLower = (S.subject || '').toLowerCase();
+  var tail = UNIVERSAL_TAIL.filter(function(token) {
+    if (token === 'text'      && subjectLower.indexOf('text overlay') !== -1)    return false;
+    if (token === 'blurry'    && subjectLower.indexOf('motion blur') !== -1)     return false;
+    if (token === 'watermark' && subjectLower.indexOf('watermark effect') !== -1) return false;
+    return true;
+  });
+  var combined = base.split(/,\s*/).concat(tail).map(function(t){ return t.trim(); }).filter(Boolean);
+  var seen = {};
+  var unique = combined.filter(function(t){ var k=t.toLowerCase(); if(seen[k]) return false; seen[k]=true; return true; });
+  return unique.join(', ');
+}
 
 /* ═══════════════════════════════════════════════════
    I18N
@@ -1492,7 +1516,7 @@ function doRandom(mode) {
    PROMPT BUILDERS
 ═══════════════════════════════════════════════════ */
 function buildSystem() {
-  return 'You are a prompt engineer for ZIT (Z-Image Turbo), a Lumina2-based diffusion model with Qwen3-4B text encoder.\n\nArchitecture rules:\n- CFG 1.5 optimal (not 6–8 like SDXL)\n- Steps 10–15 (turbo)\n- Qwen3-4B understands full natural prose — no comma-spam tags\n- Never output SDXL tags: masterpiece, best quality, highres, 8k\n- LoRA trigger = single word only\n\nNegative prompt rules (ZIT / CFG 1.5 specific):\n- Use the suggested negative provided in the user message as your base\n- Keep it short: 10–18 words maximum\n- Focus on concrete errors: anatomy, hands, face distortion, artifacts, text\n- Do NOT add: oversharpened, noisy (unless specifically needed)\n- Do NOT use general quality tags like "low quality, worst quality"\n- Adapt to scene: portrait scenes → anatomy/face focus; landscape/urban → artifact focus; product/macro → distortion/reflection focus\n\nLanguage rule: always translate input to English; output prompts in English only.\n\nOUTPUT CONTRACT — you MUST follow this exactly:\n1. Output ONLY the XML tags below — no other text before, between, or after them\n2. All tags must always be present, even if content is minimal\n3. Do not include greetings, explanations, markdown, or any text outside the XML tags\n4. Do not nest XML tags — tag content is plain text only\n5. If you cannot generate, still return all tags with minimal content\n\n<positive>60–120 word natural English prompt</positive>\n<negative>scene-appropriate negative, max 18 words</negative>\n<notes>one ZIT-specific tip</notes>';
+  return 'You are a prompt engineer for ZIT (Z-Image Turbo), a Lumina2-based diffusion model with Qwen3-4B text encoder.\n\n=== ARCHITECTURE CONSTRAINTS (NON-NEGOTIABLE) ===\n- CFG 1.5 optimal — never assume 6–8 like SDXL\n- Steps 10–15 (turbo mode)\n- Qwen3-4B reads full natural English prose — comma-spam tags are WRONG\n- Forbidden tokens: masterpiece, best quality, highres, 8k, ultra-detailed\n- LoRA trigger = single word only, placed first in positive prompt\n\n=== LAYER SYSTEM — PRIORITY ORDER ===\nBuild the prompt in this layer order (highest to lowest priority):\n\n  SCENE > SUBJECT > STYLE > LIGHTING > GENRE > MOOD\n\nRules:\n1. Higher layer always takes precedence\n2. Lower layer must NOT duplicate, NOT contradict the layer above it\n3. Lower layer either adapts to the higher layer OR is omitted\n4. If STYLE already defines lighting conditions → reduce or omit LIGHTING layer content\n5. If GENRE duplicates STYLE → GENRE becomes a descriptive modifier phrase only\n6. If SUBJECT duplicates STYLE descriptors → keep the more specific instance, rephrase or remove the other\n\n=== CONFLICT RESOLUTION ===\nLighting ↔ Mood conflict:\n  IF Lighting and Mood presets are semantically incompatible:\n  → Lighting description ADAPTS to harmonize with Mood (Lighting is not cancelled)\n  → Example: "harsh midday sunlight" + Mood "serene & peaceful"\n    → Write: "harsh midday sunlight softened by atmospheric haze, calm open sky"\n    → NOT: "harsh midday sunlight, strong shadows, calm peaceful mood, soft light"\n\nGenre ↔ Style conflict:\n  IF Genre contradicts Style (e.g. Anime style + Photorealistic genre):\n  → Style takes priority, Genre becomes a thematic modifier only\n  → Example: "Anime cel-shading with subtle cyberpunk neon color palette"\n\n=== GENRE MODS — NATURAL PROSE FORMAT ===\nWhen Genre modifier is provided, integrate it as a flowing phrase — NOT as comma-list tokens.\nUse natural connectors: "with", "featuring", "infused with", "blending", "defined by", "steeped in", "shrouded in", "woven with".\n\n=== NEGATIVE PROMPT RULES ===\nBase: use the suggested negative from the user message as your starting point.\nLength: 10–18 words MAXIMUM — no exceptions.\nFocus: concrete visual errors only — anatomy, hands, face distortion, artifacts.\nForbidden in negative: low quality, worst quality, oversharpened, noisy (unless specifically needed).\n\nScene adaptation:\n  portrait / half_body / full_body → anatomy, bad hands, face distortion\n  landscape / urban / interior → compression artifacts, overexposed, noise\n  product / macro → distortion, reflection artifacts, uneven lighting\n  concept / animal → anatomy, deformed, extra limbs\n\n=== LANGUAGE RULE ===\nAlways translate non-English subject input to English.\nAll prompt output (positive, negative, notes, changes) must be English only.\n\n=== OUTPUT STRUCTURE — NON-NEGOTIABLE XML CONTRACT ===\nOutput ONLY the XML tags below — no other text before, between, or after them.\nAll tags must always be present, even if content is minimal.\nDo not include greetings, explanations, markdown, or any text outside the XML tags.\nDo not nest XML tags — tag content is plain text only.\nIf generation fails, still return all tags with minimal valid content.\nDo not output <think> blocks or reasoning — output XML only.\n\n<positive>\n60–120 word natural English prompt. Layers integrated as flowing prose in priority order:\nSCENE → SUBJECT → STYLE → LIGHTING → GENRE (as prose phrase) → MOOD (as light modifier).\n</positive>\n<negative>\nScene-appropriate negative, 10–18 words maximum, concrete errors only + universal tail.\n</negative>\n<notes>\nOne concise ZIT-specific tip (CFG, steps, LoRA strength, sampler, or prompt structure).\n</notes>\n\nEnhance mode only — add after <notes>:\n<changes>\n• 3–5 bullet points of improvements made\n• Start each with action verb: Removed / Rewrote / Adjusted / Harmonized / Added\n• Reference ZIT-specific rationale where applicable\n</changes>\n\n=== VALIDATION BEFORE OUTPUT ===\nCheck all before returning:\n✔ No duplicate descriptors across layers\n✔ No layer conflicts\n✔ Negative ≤18 words\n✔ Genre mods written as prose phrase, not comma list\n✔ No forbidden tokens (masterpiece, best quality, highres, 8k, ultra-detailed)\n✔ All XML tags present\n✔ No text outside XML tags\nIF any check fails → regenerate once → if still fails → return minimal valid XML';
 }
 function buildUser() {
   var sc = SCENES.find(function(x){return x.id===S.scene;}) || {};
@@ -1500,22 +1524,24 @@ function buildUser() {
   var parts = S.resolution.split('x');
   var w = parts[0], h = parts[1];
   var orient = (+w < +h) ? 'portrait' : (+w > +h) ? 'landscape' : 'square';
+  var styleTok = buildStyleTokens(st);
   if (S.mode === 'enhance') {
-    var subjEnhTok = buildSubjectTokens(S.subjectType);
+    var subjEnhTok = buildSubjectTokens(S.subjectType, styleTok);
     return 'Improve this prompt for ZIT/Lumina2. Fix SDXL tags, rewrite as natural prose for Qwen3-4B.\nAfter <notes> add: <changes>bullet list of improvements</changes>\n' +
       (subjEnhTok ? '\nSubject focus (use only if relevant to the prompt): ' + subjEnhTok : '') +
       '\n\nPrompt: "' + S.existing.slice(0, 1500) + '"';
   }
-  var subjTok  = buildSubjectTokens(S.subjectType);
-  var styleTok = buildStyleTokens(st);
+  var subjTok  = buildSubjectTokens(S.subjectType, styleTok);
+  var genreVal = (GENRES.find(function(x){return x.label===S.genre;})||{value:''}).value || 'none';
+  var genreMod = (S.genre && GENRE_MODS[S.genre]) ? GENRE_MODS[S.genre] : 'none';
   return 'Generate ZIT prompt:\nSubject (translate to English if needed): ' + S.subject +
     (subjTok  ? '\nSubject detail: ' + subjTok : '') +
     '\nScene: ' + (sc.label||S.scene) + ' | Detail: ' + (sc.detail||'high detail') +
     '\nStyle: ' + (st.label||S.style) + (styleTok?' — '+styleTok:'') +
-    '\nCamera: ' + (sc.camera||'standard') +
+    '\nCamera: ' + getSceneCamera(sc) +
     '\nLighting: ' + (LIGHTINGS.find(function(x){return x.label===S.lighting;})||{value:S.lighting}).value +
     ' | Mood: ' + ((MOODS.find(function(x){return x.label===S.mood;})||{value:''}).value||'neutral') +
-    ' | Genre: ' + ((GENRES.find(function(x){return x.label===S.genre;})||{value:''}).value||'none') +
+    '\nGenre: ' + genreVal + ' | Genre modifier (integrate as prose phrase): ' + genreMod +
     '\nResolution: ' + w + '×' + h + ' (' + orient + ') | CFG: ' + S.cfg + ' | Steps: ' + S.steps +
     '\nSampler: ' + S.sampler + ' + ' + S.scheduler +
     '\nSuggested negative (adapt if needed): ' + buildNegative();
@@ -1644,9 +1670,10 @@ function buildPromptPreview() {
   var lit = LIGHTINGS.find(function(x){ return x.label === S.lighting; });
   var mo  = MOODS.find(function(x){ return x.label === S.mood; });
   var ge  = GENRES.find(function(x){ return x.label === S.genre; });
+  var styleTok = buildStyleTokens(st);
   var parts = [
-    buildSubjectTokens(S.subjectType) || null,
-    buildStyleTokens(st)              || null,
+    buildSubjectTokens(S.subjectType, styleTok) || null,
+    styleTok              || null,
     lit && lit.value ? lit.value      : null,
     mo  && mo.value  ? mo.value       : null,
     ge  && ge.value  ? ge.value       : null,
@@ -1669,8 +1696,9 @@ function buildPreviewCard() {
   var lit = LIGHTINGS.find(function(x){ return x.label === S.lighting; });
   var mo  = MOODS.find(function(x){ return x.label === S.mood; });
   var ge  = GENRES.find(function(x){ return x.label === S.genre; });
-  var subjTok  = buildSubjectTokens(S.subjectType);
   var styleTok = buildStyleTokens(st);
+  var subjTok  = buildSubjectTokens(S.subjectType, styleTok);
+  var genreMod = (S.genre && GENRE_MODS[S.genre]) ? GENRE_MODS[S.genre] : null;
 
   /* ── PROMPT: cleanup trailing commas/spaces, no JS truncation ── */
   var promptVal = S.subject.trim().replace(/[,\s]+$/, '');
@@ -1720,6 +1748,9 @@ function buildPreviewCard() {
   if (ge  && ge.value)  atmoRaw.push(S.genre);
   var atmoToks = dedupArr(atmoRaw);
   if (atmoToks.length) { rows.push({ key: 'Atmos', tokens: atmoToks, cls: 'atmos' }); totalTokenCount += atmoToks.length; }
+
+  /* Genre mod — prose phrase */
+  if (genreMod) { rows.push({ key: 'Genre', tokens: [genreMod], cls: 'atmos' }); totalTokenCount++; }
 
   if (!rows.length) return '';
 
@@ -1786,7 +1817,7 @@ function buildHTML() {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v2.2.0</span>' +
+        '<span class="title-version">v2.2.1</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
