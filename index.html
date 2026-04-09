@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v3.0.0</title>
+  <title>ZIT Prompt Generator v3.1.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -129,18 +129,32 @@
        TAB BAR
     ═══════════════════════════════════════ */
     .tab-bar {
-      display: flex; padding: 0 var(--s5);
+      display: flex; padding: 8px var(--s5);
       border-bottom: 1px solid var(--bdr);
-      background: var(--bg2); gap: 2px;
+      background: var(--bg2); gap: 6px;
+      align-items: center;
     }
     .tab-btn {
-      padding: var(--s3) var(--s4); background: transparent; border: none;
+      padding: 7px 16px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 20px;
       color: var(--t3); font-size: 13px; font-weight: 500; cursor: pointer;
-      font-family: inherit; border-bottom: 2px solid transparent;
-      margin-bottom: -1px; transition: color var(--tr), border-color var(--tr); letter-spacing: .01em;
+      font-family: inherit;
+      transition: color var(--tr), border-color var(--tr), background var(--tr);
+      letter-spacing: .01em;
     }
-    .tab-btn:hover { color: var(--t2); }
-    .tab-btn.active { color: var(--t1); border-bottom-color: var(--acc); }
+    .tab-btn:hover {
+      color: var(--t2);
+      background: rgba(255,255,255,.05);
+      border-color: var(--bdr);
+    }
+    .tab-btn.active {
+      color: var(--t1);
+      background: linear-gradient(180deg, rgba(47,129,247,.18), rgba(47,129,247,.06));
+      border-color: rgba(47,129,247,.4);
+      font-weight: 600;
+    }
 
     /* ═══════════════════════════════════════
        LAYOUT
@@ -160,6 +174,16 @@
       width: 32px; height: 2px; background: var(--acc); opacity: .7; border-radius: 2px;
     }
     .info-card .lbl::after, .out-hdr .lbl::after { display: none; }
+
+    /* Gradient labels — primary blocks only (variant C) */
+    .prompt-main .lbl,
+    .sec-block > .f-hdr > .lbl,
+    .sec-block > div > .f-hdr > .lbl {
+      background: linear-gradient(90deg, #fff 0%, #9ecbff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
     .hint { font-size: 11px; color: var(--t4); }
     .grp-lbl {
       font-size: 10px; font-weight: 700; color: var(--t2); letter-spacing: .14em;
@@ -185,6 +209,7 @@
     }
     input:hover:not(:focus), textarea:hover:not(:focus), select:hover:not(:focus) { border-color: var(--bdr2); }
     textarea { resize: vertical; line-height: 1.65; font-size: 14px; min-height: 80px; border-radius: var(--r); }
+    #inp-sub { min-height: 72px; max-height: 320px; overflow-y: auto; resize: none; }
     select {
       cursor: pointer;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236E7681' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
@@ -1548,14 +1573,14 @@ const I18N = {
     tabOptimizeNote: '· refines for ZIT engine',
     lScene: 'Scene', lSubjectType: 'Subject Type',
     lSubjectHint: 'Adds subject detail',
-    lStyle: 'Visual Style', lStyleHint: 'hover for detail',
+    lStyle: 'Visual Style', lStyleHint: 'see style details',
     lPrompt: 'PROMPT', lPromptHint: 'UA or EN',
     lLighting: 'Lighting', lMood: 'Mood',
     lGenre: 'Genre', lResolution: 'Resolution',
     lLoRA: 'LoRA Stack', lSampler: 'Sampler + Scheduler',
     lSteps: 'Steps', lCFG: 'CFG', lSeed: 'Seed',
     lExisting: 'Existing Prompt', lExistingHint: 'Any language',
-    btnGenerate: '✦ Create Prompt', btnOptimize: '✦ Improve Prompt',
+    btnGenerate: '✦ Generate Prompt', btnOptimize: '✦ Improve Prompt',
     btnGenerating: 'Generating…', btnRegenerate: 'Regenerate',
     btnCopy: 'Copy All', btnAddLoRA: '+ Add LoRA',
     outPositive: 'Positive Prompt', outNegative: 'Negative Prompt',
@@ -1570,13 +1595,15 @@ const I18N = {
     advNegPlaceholder: 'Custom negative (auto if empty)',
     advReset: 'Reset', advApply: 'Apply',
     advTooltip: 'Advanced Settings — ComfyUI config & Negative Prompt',
+    btnImproveThis: '↑ Improve this prompt',
+    btnCopySubject: '⎘ Copy',
   },
   ua: {
     tabGenerate: 'Створити', tabOptimize: 'Покращити',
     tabOptimizeNote: '· адаптує для ZIT',
     lScene: 'Сцена', lSubjectType: 'Тип субʼєкта',
     lSubjectHint: 'Додає деталі субʼєкта',
-    lStyle: 'Візуальний стиль', lStyleHint: 'наведи для деталей',
+    lStyle: 'Візуальний стиль', lStyleHint: 'деталі стилю',
     lPrompt: 'ПРОМПТ', lPromptHint: 'UA або EN',
     lLighting: 'Освітлення', lMood: 'Настрій',
     lGenre: 'Жанр', lResolution: 'Роздільна здатність',
@@ -1598,6 +1625,8 @@ const I18N = {
     advNegPlaceholder: 'Власний негативний (авто якщо порожньо)',
     advReset: 'Скинути', advApply: 'Застосувати',
     advTooltip: 'Розширені — конфіг ComfyUI та негативний промпт',
+    btnImproveThis: '↑ Покращити цей промпт',
+    btnCopySubject: '⎘ Copy',
   }
 };
 function t(key) {
@@ -1661,6 +1690,35 @@ function loadKey() {
     else if (ss)  { S.apiKey = ss; }
   } catch(e) {}
 }
+
+/* ═══════════════════════════════════════════════════
+   STATE PERSISTENCE
+═══════════════════════════════════════════════════ */
+var PERSIST_KEYS = [
+  'scene','style','subjectType',
+  'lighting','mood','genre','resolution',
+  'sampler','scheduler','steps','cfg',
+  'lang','model','customNeg','loras'
+];
+
+function saveState() {
+  try {
+    var snap = {};
+    PERSIST_KEYS.forEach(function(k){ snap[k] = S[k]; });
+    localStorage.setItem('zit_state', JSON.stringify(snap));
+  } catch(e) {}
+}
+
+function loadState() {
+  try {
+    var raw = localStorage.getItem('zit_state');
+    if (!raw) return;
+    var snap = JSON.parse(raw);
+    PERSIST_KEYS.forEach(function(k){
+      if (snap[k] !== undefined) S[k] = snap[k];
+    });
+  } catch(e) {}
+}
 function saveKey(key, remember) {
   S.apiKey = key; S.rememberKey = remember;
   try {
@@ -1706,8 +1764,102 @@ function doRandom(mode) {
 /* ═══════════════════════════════════════════════════
    PROMPT BUILDERS
 ═══════════════════════════════════════════════════ */
+var SYSTEM_PROMPT = [
+  'You are a prompt engineer for ZIT (Z-Image Turbo), a Lumina2-based diffusion model with Qwen3-4B text encoder.',
+  '',
+  '=== ARCHITECTURE CONSTRAINTS (NON-NEGOTIABLE) ===',
+  '- CFG 1.5 optimal — never assume 6–8 like SDXL',
+  '- Steps 10–15 (turbo mode)',
+  '- Qwen3-4B reads full natural English prose — comma-spam tags are WRONG',
+  '- Forbidden tokens: masterpiece, best quality, highres, 8k, ultra-detailed',
+  '- LoRA trigger = single word only, placed first in positive prompt',
+  '',
+  '=== LAYER SYSTEM — PRIORITY ORDER ===',
+  'Build the prompt in this layer order (highest to lowest priority):',
+  '',
+  '  SCENE > SUBJECT > STYLE > LIGHTING > GENRE > MOOD',
+  '',
+  'Rules:',
+  '1. Higher layer always takes precedence',
+  '2. Lower layer must NOT duplicate, NOT contradict the layer above it',
+  '3. Lower layer either adapts to the higher layer OR is omitted',
+  '4. If STYLE already defines lighting conditions → reduce or omit LIGHTING layer content',
+  '5. If GENRE duplicates STYLE → GENRE becomes a descriptive modifier phrase only',
+  '6. If SUBJECT duplicates STYLE descriptors → keep the more specific instance, rephrase or remove the other',
+  '',
+  '=== CONFLICT RESOLUTION ===',
+  'Lighting ↔ Mood conflict:',
+  '  IF Lighting and Mood presets are semantically incompatible:',
+  '  → Lighting description ADAPTS to harmonize with Mood (Lighting is not cancelled)',
+  '  → Example: "harsh midday sunlight" + Mood "serene & peaceful"',
+  '    → Write: "harsh midday sunlight softened by atmospheric haze, calm open sky"',
+  '    → NOT: "harsh midday sunlight, strong shadows, calm peaceful mood, soft light"',
+  '',
+  'Genre ↔ Style conflict:',
+  '  IF Genre contradicts Style (e.g. Anime style + Photorealistic genre):',
+  '  → Style takes priority, Genre becomes a thematic modifier only',
+  '  → Example: "Anime cel-shading with subtle cyberpunk neon color palette"',
+  '',
+  '=== GENRE MODS — NATURAL PROSE FORMAT ===',
+  'When Genre modifier is provided, integrate it as a flowing phrase — NOT as comma-list tokens.',
+  'Use natural connectors: "with", "featuring", "infused with", "blending", "defined by", "steeped in", "shrouded in", "woven with".',
+  '',
+  '=== NEGATIVE PROMPT RULES ===',
+  'Base: use the suggested negative from the user message as your starting point.',
+  'Length: 10–18 words MAXIMUM — no exceptions.',
+  'Focus: concrete visual errors only — anatomy, hands, face distortion, artifacts.',
+  'Forbidden in negative: low quality, worst quality, oversharpened, noisy (unless specifically needed).',
+  '',
+  'Scene adaptation:',
+  '  portrait / half_body / full_body → anatomy, bad hands, face distortion',
+  '  landscape / urban / interior → compression artifacts, overexposed, noise',
+  '  product / macro → distortion, reflection artifacts, uneven lighting',
+  '  concept / animal → anatomy, deformed, extra limbs',
+  '',
+  '=== LANGUAGE RULE ===',
+  'Always translate non-English subject input to English.',
+  'All prompt output (positive, negative, notes, changes) must be English only.',
+  '',
+  '=== OUTPUT STRUCTURE — NON-NEGOTIABLE XML CONTRACT ===',
+  'Output ONLY the XML tags below — no other text before, between, or after them.',
+  'All tags must always be present, even if content is minimal.',
+  'Do not include greetings, explanations, markdown, or any text outside the XML tags.',
+  'Do not nest XML tags — tag content is plain text only.',
+  'If generation fails, still return all tags with minimal valid content.',
+  'Do not output <think> blocks or reasoning — output XML only.',
+  '',
+  '<positive>',
+  '60–120 word natural English prompt. Layers integrated as flowing prose in priority order:',
+  'SCENE → SUBJECT → STYLE → LIGHTING → GENRE (as prose phrase) → MOOD (as light modifier).',
+  '</positive>',
+  '<negative>',
+  'Scene-appropriate negative, 10–18 words maximum, concrete errors only + universal tail.',
+  '</negative>',
+  '<notes>',
+  'One concise ZIT-specific tip (CFG, steps, LoRA strength, sampler, or prompt structure).',
+  '</notes>',
+  '',
+  'Enhance mode only — add after <notes>:',
+  '<changes>',
+  '• 3–5 bullet points of improvements made',
+  '• Start each with action verb: Removed / Rewrote / Adjusted / Harmonized / Added',
+  '• Reference ZIT-specific rationale where applicable',
+  '</changes>',
+  '',
+  '=== VALIDATION BEFORE OUTPUT ===',
+  'Check all before returning:',
+  '✔ No duplicate descriptors across layers',
+  '✔ No layer conflicts',
+  '✔ Negative ≤18 words',
+  '✔ Genre mods written as prose phrase, not comma list',
+  '✔ No forbidden tokens (masterpiece, best quality, highres, 8k, ultra-detailed)',
+  '✔ All XML tags present',
+  '✔ No text outside XML tags',
+  'IF any check fails → regenerate once → if still fails → return minimal valid XML',
+].join('\n');
+
 function buildSystem() {
-  return 'You are a prompt engineer for ZIT (Z-Image Turbo), a Lumina2-based diffusion model with Qwen3-4B text encoder.\n\n=== ARCHITECTURE CONSTRAINTS (NON-NEGOTIABLE) ===\n- CFG 1.5 optimal — never assume 6–8 like SDXL\n- Steps 10–15 (turbo mode)\n- Qwen3-4B reads full natural English prose — comma-spam tags are WRONG\n- Forbidden tokens: masterpiece, best quality, highres, 8k, ultra-detailed\n- LoRA trigger = single word only, placed first in positive prompt\n\n=== LAYER SYSTEM — PRIORITY ORDER ===\nBuild the prompt in this layer order (highest to lowest priority):\n\n  SCENE > SUBJECT > STYLE > LIGHTING > GENRE > MOOD\n\nRules:\n1. Higher layer always takes precedence\n2. Lower layer must NOT duplicate, NOT contradict the layer above it\n3. Lower layer either adapts to the higher layer OR is omitted\n4. If STYLE already defines lighting conditions → reduce or omit LIGHTING layer content\n5. If GENRE duplicates STYLE → GENRE becomes a descriptive modifier phrase only\n6. If SUBJECT duplicates STYLE descriptors → keep the more specific instance, rephrase or remove the other\n\n=== CONFLICT RESOLUTION ===\nLighting ↔ Mood conflict:\n  IF Lighting and Mood presets are semantically incompatible:\n  → Lighting description ADAPTS to harmonize with Mood (Lighting is not cancelled)\n  → Example: "harsh midday sunlight" + Mood "serene & peaceful"\n    → Write: "harsh midday sunlight softened by atmospheric haze, calm open sky"\n    → NOT: "harsh midday sunlight, strong shadows, calm peaceful mood, soft light"\n\nGenre ↔ Style conflict:\n  IF Genre contradicts Style (e.g. Anime style + Photorealistic genre):\n  → Style takes priority, Genre becomes a thematic modifier only\n  → Example: "Anime cel-shading with subtle cyberpunk neon color palette"\n\n=== GENRE MODS — NATURAL PROSE FORMAT ===\nWhen Genre modifier is provided, integrate it as a flowing phrase — NOT as comma-list tokens.\nUse natural connectors: "with", "featuring", "infused with", "blending", "defined by", "steeped in", "shrouded in", "woven with".\n\n=== NEGATIVE PROMPT RULES ===\nBase: use the suggested negative from the user message as your starting point.\nLength: 10–18 words MAXIMUM — no exceptions.\nFocus: concrete visual errors only — anatomy, hands, face distortion, artifacts.\nForbidden in negative: low quality, worst quality, oversharpened, noisy (unless specifically needed).\n\nScene adaptation:\n  portrait / half_body / full_body → anatomy, bad hands, face distortion\n  landscape / urban / interior → compression artifacts, overexposed, noise\n  product / macro → distortion, reflection artifacts, uneven lighting\n  concept / animal → anatomy, deformed, extra limbs\n\n=== LANGUAGE RULE ===\nAlways translate non-English subject input to English.\nAll prompt output (positive, negative, notes, changes) must be English only.\n\n=== OUTPUT STRUCTURE — NON-NEGOTIABLE XML CONTRACT ===\nOutput ONLY the XML tags below — no other text before, between, or after them.\nAll tags must always be present, even if content is minimal.\nDo not include greetings, explanations, markdown, or any text outside the XML tags.\nDo not nest XML tags — tag content is plain text only.\nIf generation fails, still return all tags with minimal valid content.\nDo not output <think> blocks or reasoning — output XML only.\n\n<positive>\n60–120 word natural English prompt. Layers integrated as flowing prose in priority order:\nSCENE → SUBJECT → STYLE → LIGHTING → GENRE (as prose phrase) → MOOD (as light modifier).\n</positive>\n<negative>\nScene-appropriate negative, 10–18 words maximum, concrete errors only + universal tail.\n</negative>\n<notes>\nOne concise ZIT-specific tip (CFG, steps, LoRA strength, sampler, or prompt structure).\n</notes>\n\nEnhance mode only — add after <notes>:\n<changes>\n• 3–5 bullet points of improvements made\n• Start each with action verb: Removed / Rewrote / Adjusted / Harmonized / Added\n• Reference ZIT-specific rationale where applicable\n</changes>\n\n=== VALIDATION BEFORE OUTPUT ===\nCheck all before returning:\n✔ No duplicate descriptors across layers\n✔ No layer conflicts\n✔ Negative ≤18 words\n✔ Genre mods written as prose phrase, not comma list\n✔ No forbidden tokens (masterpiece, best quality, highres, 8k, ultra-detailed)\n✔ All XML tags present\n✔ No text outside XML tags\nIF any check fails → regenerate once → if still fails → return minimal valid XML';
+  return SYSTEM_PROMPT;
 }
 function buildUser() {
   var sc = SCENES.find(function(x){return x.id===S.scene;}) || {};
@@ -1881,7 +2033,10 @@ function buildPromptPreview() {
    No summary. PROMPT = first row, no dedup/limit.
    Other rows: scene/detail/style/atmos with proper dedup.
 ═══════════════════════════════════════════════════ */
-function buildPreviewCard() {
+/* ═══════════════════════════════════════════════════
+   COMPUTE PROMPT TOKENS — pure logic, no HTML
+═══════════════════════════════════════════════════ */
+function computePromptTokens() {
   var sc  = SCENES.find(function(x){ return x.id === S.scene; }) || {};
   var st  = STYLES.find(function(x){ return x.id === S.style; }) || {};
   var lit = LIGHTINGS.find(function(x){ return x.label === S.lighting; });
@@ -1890,11 +2045,8 @@ function buildPreviewCard() {
   var styleTok = buildStyleTokens(st);
   var subjTok  = buildSubjectTokens(S.subjectType, styleTok);
   var genreMod = (S.genre && GENRE_MODS[S.genre]) ? GENRE_MODS[S.genre] : null;
-
-  /* ── PROMPT: cleanup trailing commas/spaces, no JS truncation ── */
   var promptVal = S.subject.trim().replace(/[,\s]+$/, '');
 
-  /* ── dedup helper: normalize key, display original ── */
   function dedupArr(arr) {
     var seen = {};
     return arr.filter(function(x) {
@@ -1906,46 +2058,40 @@ function buildPreviewCard() {
   }
 
   var rows = [];
-  var totalTokenCount = 0;
+  var totalCount = 0;
 
-  /* PROMPT row — always first, no dedup, no limit */
   if (promptVal) {
-    rows.push({ key: 'PROMPT', tokens: [promptVal], cls: 'subject-tok' });
-    totalTokenCount++;
+    rows.push({ key: 'PROMPT', tokens: [promptVal], cls: 'subject-tok', rowCls: '' });
+    totalCount++;
   }
-
-  /* Scene detail */
   if (sc.label && sc.id !== 'manual' && sc.detail) {
     var sceneToks = dedupArr(sc.detail.split(',').slice(0,2).map(function(t){ return t.trim(); }));
-    if (sceneToks.length) { rows.push({ key: 'Scene', tokens: sceneToks, cls: '' }); totalTokenCount += sceneToks.length; }
+    if (sceneToks.length) { rows.push({ key: 'Scene', tokens: sceneToks, cls: '', rowCls: '' }); totalCount += sceneToks.length; }
   }
-
-  /* Subject type detail */
   if (subjTok) {
     var detailToks = dedupArr(subjTok.split(',').slice(0,2).map(function(t){ return t.trim(); }));
-    if (detailToks.length) { rows.push({ key: 'Detail', tokens: detailToks, cls: '' }); totalTokenCount += detailToks.length; }
+    if (detailToks.length) { rows.push({ key: 'Detail', tokens: detailToks, cls: '', rowCls: '' }); totalCount += detailToks.length; }
   }
-
-  /* Style */
   if (styleTok) {
     var styleToks = dedupArr(styleTok.split(',').slice(0,3).map(function(t){ return t.trim(); }));
-    if (styleToks.length) { rows.push({ key: 'Style', tokens: styleToks, cls: '' }); totalTokenCount += styleToks.length; }
+    if (styleToks.length) { rows.push({ key: 'Style', tokens: styleToks, cls: '', rowCls: '' }); totalCount += styleToks.length; }
   }
-
-  /* Atmos: lighting + mood + genre */
   var atmoRaw = [];
   if (lit && lit.value) atmoRaw.push(S.lighting);
   if (mo  && mo.value)  atmoRaw.push(S.mood);
   if (ge  && ge.value)  atmoRaw.push(S.genre);
   var atmoToks = dedupArr(atmoRaw);
-  if (atmoToks.length) { rows.push({ key: 'Atmos', tokens: atmoToks, cls: 'atmos' }); totalTokenCount += atmoToks.length; }
+  if (atmoToks.length) { rows.push({ key: 'Atmos', tokens: atmoToks, cls: 'atmos', rowCls: '' }); totalCount += atmoToks.length; }
+  if (genreMod) { rows.push({ key: 'Genre', tokens: [genreMod], cls: 'atmos genre-tok', rowCls: 'is-genre' }); totalCount++; }
 
-  /* Genre mod — prose phrase */
-  if (genreMod) { rows.push({ key: 'Genre', tokens: [genreMod], cls: 'atmos genre-tok', rowCls: 'is-genre' }); totalTokenCount++; }
+  return { rows: rows, totalCount: totalCount };
+}
 
-  if (!rows.length) return '';
+function buildPreviewCard() {
+  var data = computePromptTokens();
+  if (!data.rows.length) return '';
 
-  var inner = rows.map(function(row) {
+  var inner = data.rows.map(function(row) {
     return '<div class="preview-token-row' + (row.key === 'PROMPT' ? ' is-prompt' : '') + (row.rowCls ? ' ' + row.rowCls : '') + '">' +
       '<span class="preview-token-key">' + esc(row.key) + '</span>' +
       '<span class="preview-tokens">' +
@@ -1959,7 +2105,7 @@ function buildPreviewCard() {
   return '<div class="preview-card">' +
     '<div class="preview-card-hdr">' +
       '<span class="preview-card-title">▸ ' + t('lPreview') + '</span>' +
-      '<span class="preview-card-count">' + totalTokenCount + ' tokens</span>' +
+      '<span class="preview-card-count">' + data.totalCount + ' tokens</span>' +
     '</div>' +
     inner +
   '</div>';
@@ -1975,9 +2121,83 @@ function forceRepaint() {
   });
 }
 
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+/* ═══════════════════════════════════════════════════
+   DEBOUNCE
+═══════════════════════════════════════════════════ */
+function debounce(fn, ms) {
+  var timer;
+  return function() {
+    clearTimeout(timer);
+    timer = setTimeout(fn, ms);
+  };
+}
+
+var debouncedPreview = debounce(function() {
+  var wrap = document.getElementById('preview-card-wrap');
+  if (wrap) wrap.innerHTML = buildPreviewCard() || '';
+}, 200);
+
+var debouncedNeg = debounce(function() {
+  var el = document.querySelector('.neg-preview-text');
+  if (el) el.textContent = buildNegative();
+}, 200);
+
 function render() {
   document.getElementById('app').innerHTML = buildHTML();
   attachEvents();
+}
+
+/* ═══════════════════════════════════════════════════
+   PATCH — хірургічні DOM-оновлення без повного render
+═══════════════════════════════════════════════════ */
+function canGenerate() {
+  if (S.mode === 'generate') return !!S.subject.trim();
+  if (S.mode === 'enhance')  return !!S.existing.trim();
+  return false;
+}
+
+function buildNegPreviewHTML() {
+  var negDisp = buildNegative();
+  var negCustom = S.customNeg && S.customNeg.trim();
+  return '<div class="neg-preview">' +
+    '<span class="neg-preview-label">NEG' + (negCustom ? ' ✎' : '') + '</span>' +
+    '<span class="neg-preview-text">' + esc(negDisp) + '</span>' +
+  '</div>';
+}
+
+function buildAdvBtnClass() {
+  return 'btn-adv' + (isAdvChanged() ? ' is-changed' : '');
+}
+
+var PATCH_TARGETS = {
+  preview: '#preview-card-wrap',
+  neg:     '.neg-preview',
+  genBtn:  '#b-gen',
+  advBtn:  '#b-adv',
+};
+
+function patch(target) {
+  var el = document.querySelector(PATCH_TARGETS[target]);
+  if (!el) return;
+  switch (target) {
+    case 'preview':
+      el.innerHTML = buildPreviewCard() || '';
+      break;
+    case 'neg':
+      el.outerHTML = buildNegPreviewHTML();
+      break;
+    case 'genBtn':
+      el.disabled = !canGenerate();
+      break;
+    case 'advBtn':
+      el.className = buildAdvBtnClass();
+      break;
+  }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -2006,7 +2226,7 @@ function buildHTML() {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v3.0.0</span>' +
+        '<span class="title-version">v3.1.0</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
@@ -2029,7 +2249,7 @@ function buildHTML() {
     h += '<div class="slide-panel api-bg">' +
       '<div class="sp-hdr"><div class="sp-title green">GROQ API SETTINGS</div>' +
       '<button class="btn-ghost" id="b-api-close" style="padding:3px 8px">✕</button></div>' +
-      '<p style="font-size:11px;color:var(--t4);margin-bottom:12px">Free key: <a href="https://console.groq.com/keys" target="_blank" style="color:var(--acc-txt)">console.groq.com/keys</a> &nbsp;·&nbsp; Does not use Anthropic tokens</p>' +
+      '<p style="font-size:11px;color:var(--t4);margin-bottom:12px">Free key: <a href="https://console.groq.com/keys" target="_blank" style="color:var(--acc-txt)">console.groq.com/keys</a></p>' +
       '<div class="field"><div class="f-hdr"><label class="lbl">API Key</label></div>' +
         '<div class="row"><input type="password" id="inp-key" value="'+esc(S.apiKey)+'" placeholder="gsk_..." style="flex:1;font-family:\'JetBrains Mono\',monospace;font-size:13px">' +
         (S.apiKey?'<button class="btn-ghost" id="b-key-clr" style="color:var(--red)">✕</button>':'') +
@@ -2100,7 +2320,13 @@ function buildHTML() {
 
     h += '<div class="prompt-main">' +
       '<div class="field">' +
-        '<div class="f-hdr"><label class="lbl">'+t('lPrompt')+'</label><span class="hint">'+t('lPromptHint')+'</span></div>' +
+        '<div class="f-hdr">' +
+          '<label class="lbl">'+t('lPrompt')+'</label>' +
+          '<div style="display:flex;align-items:center;gap:6px">' +
+            '<span class="hint">'+t('lPromptHint')+'</span>' +
+            '<button class="btn-copy" id="b-cp-sub" style="opacity:.6">'+t('btnCopySubject')+'</button>' +
+          '</div>' +
+        '</div>' +
         '<textarea id="inp-sub" rows="3" placeholder="e.g: '+esc(stPh)+'&#10;• your own idea here">'+esc(S.subject)+'</textarea>' +
         histHtml +
       '</div>' +
@@ -2216,6 +2442,7 @@ function buildHTML() {
 
     h += '<div class="gen-row">' +
       '<button class="btn-primary'+(S.loading?' loading':'')+'" id="b-gen"'+(S.loading?' disabled':'')+' ' +
+        (!mob ? 'title="Ctrl+Enter" ' : '') +
         (!S.loading?'style="box-shadow:0 4px 24px rgba(47,129,247,.28),0 2px 8px rgba(47,129,247,.18),inset 0 1px 0 rgba(255,255,255,.22)"':'')+
         '>' +
         (S.loading
@@ -2291,6 +2518,12 @@ function buildHTML() {
       '<button class="btn-ghost btn-regen" id="b-regen"><span class="act-icon">↺</span> '+t('btnRegenerate')+'</button>' +
       '<button class="btn-ghost btn-act-copy" id="b-cp-all"><span class="act-icon">⧉</span> '+t('btnCopy')+'</button>' +
     '</div>';
+
+    h += '<button class="btn-ghost" id="b-improve-this" style="' +
+      'width:100%;margin-bottom:var(--s3);' +
+      'color:var(--acc-txt);border-color:rgba(47,129,247,.3);' +
+      'font-size:12px;padding:7px 12px' +
+    '">' + t('btnImproveThis') + '</button>';
 
     var pp = r.params;
     var pcards = [['Steps',pp.steps],['CFG',pp.cfg],['Sampler',pp.sampler],['Scheduler',pp.scheduler],['Resolution',pp.resolution],['Seed',pp.seed]];
@@ -2418,6 +2651,10 @@ function buildHTML() {
 function attachEvents() {
   function on(id, ev, fn) { var el=document.getElementById(id); if(el) el.addEventListener(ev,fn); }
 
+  /* prevent duplicate keyboard listener on re-render */
+  document.removeEventListener('keydown', _kbHandler);
+  document.addEventListener('keydown', _kbHandler);
+
   on('b-api',       'click', function(){ S.apiOpen=!S.apiOpen; render(); });
   on('b-dbg',       'click', function(){ S.dbgOpen=!S.dbgOpen; render(); });
   on('b-api-close', 'click', function(){ S.apiOpen=false; S.dbgOpen=false; render(); });
@@ -2441,7 +2678,11 @@ function attachEvents() {
   (function(){
     var el = document.getElementById('inp-custom-neg');
     if (!el) return;
-    el.addEventListener('input', function(){ S.customNeg = el.value; });
+    el.addEventListener('input', function(){
+      S.customNeg = el.value;
+      debouncedNeg();
+      patch('advBtn');
+    });
   }());
 
   /* ── GENRE CHIP EXPAND ── */
@@ -2462,11 +2703,17 @@ function attachEvents() {
 
   document.querySelectorAll('[data-pane]').forEach(function(el){ el.addEventListener('click', function(){ S.mobilePane=el.dataset.pane; render(); }); });
   document.querySelectorAll('[data-mode]').forEach(function(el){ el.addEventListener('click', function(){
-    S.mode=el.dataset.mode; S.result=null; S.error=''; render();
+    var newMode = el.dataset.mode;
+    if (newMode === 'enhance' && !S.existing.trim() && S.result) {
+      S.existing = S.result.positive;
+    }
+    S.mode = newMode;
+    S.error = '';
+    render();
   }); });
-  document.querySelectorAll('[data-scene]').forEach(function(el){ el.addEventListener('click', function(){ S.scene=el.dataset.scene; render(); }); });
-  document.querySelectorAll('[data-style]').forEach(function(el){ el.addEventListener('click', function(){ S.style=el.dataset.style; render(); }); });
-  document.querySelectorAll('[data-subtype]').forEach(function(el){ el.addEventListener('click', function(){ S.subjectType=el.dataset.subtype; render(); }); });
+  document.querySelectorAll('[data-scene]').forEach(function(el){ el.addEventListener('click', function(){ S.scene=el.dataset.scene; saveState(); render(); }); });
+  document.querySelectorAll('[data-style]').forEach(function(el){ el.addEventListener('click', function(){ S.style=el.dataset.style; saveState(); render(); }); });
+  document.querySelectorAll('[data-subtype]').forEach(function(el){ el.addEventListener('click', function(){ S.subjectType=el.dataset.subtype; saveState(); render(); }); });
 
   document.querySelectorAll('[data-hist]').forEach(function(el){
     el.addEventListener('click', function(){
@@ -2484,18 +2731,15 @@ function attachEvents() {
   live('inp-sub','subject');
 
   /* ── live preview update — no full re-render ── */
-  function updatePreview() {
-    var wrap = document.getElementById('preview-card-wrap');
-    if (!wrap) return;
-    wrap.innerHTML = buildPreviewCard() || '';
-  }
+  function updatePreview() { patch('preview'); }
   (function(){
     var ta = document.getElementById('inp-sub');
     if (!ta) return;
     ['input','paste','change'].forEach(function(ev){
       ta.addEventListener(ev, function(){
         S.subject = ta.value;
-        updatePreview();
+        debouncedPreview();
+        autoResize(ta);
       });
     });
   }());
@@ -2515,19 +2759,15 @@ function attachEvents() {
       S.existing = existEl.value;
       var hint = existEl.closest('.field').querySelector('.hint span');
       if (hint) { var n=existEl.value.length; hint.textContent=n+'/1500'; hint.style.color=n>1400?'var(--red)':n>1000?'var(--amber)':'var(--t4)'; }
-      /* update disabled state on gen button without full re-render */
-      var gb = document.getElementById('b-gen');
-      if (gb) {
-        var dis = !S.existing.trim();
-        gb.disabled = dis;
-        gb.classList.toggle('btn-secondary', dis);
-      }
+      patch('genBtn');
     });
   }
   live('inp-steps','steps'); live('inp-cfg','cfg'); live('inp-seed','seed');
 
-  function lsel(id,key){ var el=document.getElementById(id); if(el) el.addEventListener('change',function(){S[key]=el.value; render();}); }
-  lsel('sel-light','lighting'); lsel('sel-mood','mood'); lsel('sel-genre','genre');
+  function lsel(id,key){ var el=document.getElementById(id); if(el) el.addEventListener('change',function(){ S[key]=el.value; saveState(); render(); }); }
+  /* lighting/mood/genre → only preview needs update, no structural change */
+  function lselPatch(id,key){ var el=document.getElementById(id); if(el) el.addEventListener('change',function(){ S[key]=el.value; saveState(); patch('preview'); }); }
+  lselPatch('sel-light','lighting'); lselPatch('sel-mood','mood'); lselPatch('sel-genre','genre');
   lsel('sel-res','resolution'); lsel('sel-samp','sampler'); lsel('sel-sch','scheduler');
 
   document.querySelectorAll('[data-ln]').forEach(function(el){ el.addEventListener('input',function(){S.loras[+el.dataset.ln].name=el.value;}); });
@@ -2554,6 +2794,17 @@ function attachEvents() {
 
   on('b-gen','click',generate);
   on('b-regen','click',generate);
+  on('b-improve-this', 'click', function() {
+    if (!S.result) return;
+    S.existing = S.result.positive;
+    S.mode = 'enhance';
+    S.error = '';
+    render();
+    requestAnimationFrame(function() {
+      var ta = document.getElementById('inp-exist');
+      if (ta) { ta.focus(); ta.setSelectionRange(0, 0); }
+    });
+  });
 
   /* ── RANDOM BUTTON ── */
   var rndBtn = document.getElementById('b-random');
@@ -2587,6 +2838,7 @@ function attachEvents() {
     });
   }
 
+  on('b-cp-sub','click',function(e){ if(S.subject.trim()) copyText(S.subject, e.currentTarget); });
   on('b-cp-pos','click',function(e){ if(S.result) copyText(S.result.positive, e.currentTarget); });
   on('b-cp-neg','click',function(e){ if(S.result) copyText(S.result.negative, e.currentTarget); });
   on('b-cp-all','click',function(e){
@@ -2595,16 +2847,64 @@ function attachEvents() {
     copyText('Positive: '+S.result.positive+'\nNegative: '+S.result.negative+'\n\nSteps: '+p.steps+' | CFG: '+p.cfg+' | Sampler: '+p.sampler+' | Scheduler: '+p.scheduler+'\nResolution: '+p.resolution+' | Seed: '+p.seed, e.currentTarget);
   });
   on('b-cp-log','click',function(){ var btn=document.getElementById('b-cp-log'); if(S.dbgLog&&btn) copyText(JSON.stringify(S.dbgLog,null,2), btn); });
+
+  /* ── auto-resize textarea on every render ── */
+  requestAnimationFrame(function(){
+    var ta = document.getElementById('inp-sub');
+    if (ta) autoResize(ta);
+  });
+
+  /* ── swipe between panels on mobile ── */
+  attachSwipe();
+}
+
+function attachSwipe() {
+  if (window.innerWidth > 680) return;
+  var body = document.querySelector('.body-grid');
+  if (!body) return;
+  var x0 = null;
+  body.addEventListener('touchstart', function(e) {
+    x0 = e.touches[0].clientX;
+  }, { passive: true });
+  body.addEventListener('touchend', function(e) {
+    if (x0 === null) return;
+    var dx = e.changedTouches[0].clientX - x0;
+    x0 = null;
+    if (Math.abs(dx) < 50) return;
+    S.mobilePane = dx < 0 ? 'output' : 'params';
+    render();
+  }, { passive: true });
 }
 
 /* ═══════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════ */
 loadKey();
+loadState();
 try { var _sl = localStorage.getItem('zit_lang'); if (_sl === 'ua' || _sl === 'en') S.lang = _sl; } catch(e) {}
 render();
 var _rt;
 window.addEventListener('resize', function(){ clearTimeout(_rt); _rt=setTimeout(render,150); });
+
+/* ── KEYBOARD SHORTCUTS ── */
+function _kbHandler(e) {
+  /* Ctrl+Enter або Cmd+Enter → generate */
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    if (!S.loading) generate();
+    return;
+  }
+  /* Escape → закрити будь-яку відкриту панель */
+  if (e.key === 'Escape') {
+    if (S.advOpen || S.apiOpen || S.dbgOpen) {
+      S.advOpen = false;
+      S.apiOpen = false;
+      S.dbgOpen = false;
+      render();
+    }
+    return;
+  }
+}
 </script>
 </body>
 </html>
