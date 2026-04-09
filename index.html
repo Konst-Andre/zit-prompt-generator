@@ -2215,13 +2215,13 @@ function patch(target) {
    9. Error / Neg preview
    10. GENERATE row
 ═══════════════════════════════════════════════════ */
-function buildHTML() {
-  var mob   = window.innerWidth <= 680;
-  var keyOk = !!S.apiKey.trim();
+/* ═══════════════════════════════════════════════════
+   BUILD HTML — orchestrator + sub-functions
+═══════════════════════════════════════════════════ */
 
-  /* HEADER */
+function buildHeader(mob, keyOk) {
   var langLabel = S.lang === 'ua' ? '🌐 EN' : '🌐 UA';
-  var h = '<div class="hdr">' +
+  return '<div class="hdr">' +
     '<div class="hdr-brand">' +
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
@@ -2235,65 +2235,64 @@ function buildHTML() {
       '<div class="pill btn' + (S.dbgOpen?' p-active':'') + '" id="b-dbg">🔬 Debug' + (S.dbgLog?(S.dbgLog.httpOk?' ✓':' ✗'):'') + '</div>' +
     '</div>' +
   '</div>';
+}
 
-  /* API PANEL */
-  if (S.apiOpen) {
-    var mOpts = GROQ_MODELS.map(function(m){
-      return '<label class="model-card' + (S.model===m.id?' active':'') + '" data-model="' + esc(m.id) + '">' +
-        '<div class="model-radio"></div>' +
-        '<div class="model-info"><div class="model-name">' + esc(m.name) + '</div><div class="model-note">' + esc(m.note) + '</div></div>' +
-        '<div class="model-id">' + esc(m.id) + '</div>' +
-        '<input type="radio" name="mdl" value="' + esc(m.id) + '"' + (S.model===m.id?' checked':'') + '>' +
-      '</label>';
-    }).join('');
-    h += '<div class="slide-panel api-bg">' +
-      '<div class="sp-hdr"><div class="sp-title green">GROQ API SETTINGS</div>' +
-      '<button class="btn-ghost" id="b-api-close" style="padding:3px 8px">✕</button></div>' +
-      '<p style="font-size:11px;color:var(--t4);margin-bottom:12px">Free key: <a href="https://console.groq.com/keys" target="_blank" style="color:var(--acc-txt)">console.groq.com/keys</a></p>' +
-      '<div class="field"><div class="f-hdr"><label class="lbl">API Key</label></div>' +
-        '<div class="row"><input type="password" id="inp-key" value="'+esc(S.apiKey)+'" placeholder="gsk_..." style="flex:1;font-family:\'JetBrains Mono\',monospace;font-size:13px">' +
-        (S.apiKey?'<button class="btn-ghost" id="b-key-clr" style="color:var(--red)">✕</button>':'') +
-        '</div>' +
-        '<div class="chk-row"><input type="checkbox" id="chk-rem"'+(S.rememberKey?' checked':'')+'><label for="chk-rem">Remember key (localStorage)</label></div>' +
+function buildApiPanel() {
+  if (!S.apiOpen) return '';
+  var mOpts = GROQ_MODELS.map(function(m){
+    return '<label class="model-card' + (S.model===m.id?' active':'') + '" data-model="' + esc(m.id) + '">' +
+      '<div class="model-radio"></div>' +
+      '<div class="model-info"><div class="model-name">' + esc(m.name) + '</div><div class="model-note">' + esc(m.note) + '</div></div>' +
+      '<div class="model-id">' + esc(m.id) + '</div>' +
+      '<input type="radio" name="mdl" value="' + esc(m.id) + '"' + (S.model===m.id?' checked':'') + '>' +
+    '</label>';
+  }).join('');
+  return '<div class="slide-panel api-bg">' +
+    '<div class="sp-hdr"><div class="sp-title green">GROQ API SETTINGS</div>' +
+    '<button class="btn-ghost" id="b-api-close" style="padding:3px 8px">✕</button></div>' +
+    '<p style="font-size:11px;color:var(--t4);margin-bottom:12px">Free key: <a href="https://console.groq.com/keys" target="_blank" style="color:var(--acc-txt)">console.groq.com/keys</a></p>' +
+    '<div class="field"><div class="f-hdr"><label class="lbl">API Key</label></div>' +
+      '<div class="row"><input type="password" id="inp-key" value="'+esc(S.apiKey)+'" placeholder="gsk_..." style="flex:1;font-family:\'JetBrains Mono\',monospace;font-size:13px">' +
+      (S.apiKey?'<button class="btn-ghost" id="b-key-clr" style="color:var(--red)">✕</button>':'') +
       '</div>' +
-      '<div class="field" style="margin-bottom:0"><div class="f-hdr"><label class="lbl">Model</label></div>' + mOpts + '</div>' +
-    '</div>';
+      '<div class="chk-row"><input type="checkbox" id="chk-rem"'+(S.rememberKey?' checked':'')+'><label for="chk-rem">Remember key (localStorage)</label></div>' +
+    '</div>' +
+    '<div class="field" style="margin-bottom:0"><div class="f-hdr"><label class="lbl">Model</label></div>' + mOpts + '</div>' +
+  '</div>';
+}
+
+function buildDebugPanel() {
+  if (!S.dbgOpen) return '';
+  var lg = S.dbgLog, dbInner;
+  if (!lg) {
+    dbInner = '<p style="color:var(--t4);font-size:12px;margin:0">Press Generate — API request/response will appear here.</p>';
+  } else {
+    var badges = '';
+    if (lg.httpStatus!=null) badges += '<span class="dbadge" style="background:'+(lg.httpOk?'var(--green-bg)':'var(--red-bg)')+';color:'+(lg.httpOk?'var(--green-txt)':'var(--red-txt)')+';border:1px solid '+(lg.httpOk?'var(--green-bdr)':'var(--red-bdr)')+'">HTTP '+lg.httpStatus+' '+(lg.httpOk?'✓':'✗')+'</span>';
+    if (lg.model) badges += '<span class="dbadge" style="background:var(--acc-bg);color:var(--acc-txt);border:1px solid var(--acc)">'+esc(lg.model.split('/').pop())+'</span>';
+    if (lg.responseMs) badges += '<span class="dbadge" style="background:var(--amber-bg);color:var(--amber-txt);border:1px solid var(--amber-bdr)">'+lg.responseMs+'ms</span>';
+    badges += '<button class="btn-ghost" id="b-cp-log" style="font-size:10px;padding:3px 8px">Copy log</button>';
+    dbInner = '<div class="dbg-badges" style="margin-bottom:12px">'+badges+'</div>' +
+      '<div class="dbg-sec"><div class="dbg-lbl">Stripped content (think removed)</div>' +
+      '<pre class="dbg-pre '+(lg.strippedText?'ok':'err')+'">'+esc(lg.strippedText||'⚠ EMPTY — this is the problem')+'</pre></div>' +
+      (lg.sentUser ? '<details><summary>Sent to API — user message</summary><pre class="dbg-pre">'+esc(lg.sentUser.slice(0,1500))+'</pre></details>' : '') +
+      '<details><summary>Full raw HTTP response</summary><pre class="dbg-pre">'+esc(lg.rawText?lg.rawText.slice(0,2000):'empty')+'</pre></details>';
   }
+  return '<div class="slide-panel debug-bg"><div class="sp-hdr"><div class="sp-title muted">DEBUG LOG</div>' +
+    '<button class="btn-ghost" id="b-api-close" style="padding:3px 8px">✕</button></div>'+dbInner+'</div>';
+}
 
-  /* DEBUG PANEL */
-  if (S.dbgOpen) {
-    var lg = S.dbgLog, dbInner;
-    if (!lg) {
-      dbInner = '<p style="color:var(--t4);font-size:12px;margin:0">Press Generate — API request/response will appear here.</p>';
-    } else {
-      var badges = '';
-      if (lg.httpStatus!=null) badges += '<span class="dbadge" style="background:'+(lg.httpOk?'var(--green-bg)':'var(--red-bg)')+';color:'+(lg.httpOk?'var(--green-txt)':'var(--red-txt)')+';border:1px solid '+(lg.httpOk?'var(--green-bdr)':'var(--red-bdr)')+'">HTTP '+lg.httpStatus+' '+(lg.httpOk?'✓':'✗')+'</span>';
-      if (lg.model) badges += '<span class="dbadge" style="background:var(--acc-bg);color:var(--acc-txt);border:1px solid var(--acc)">'+esc(lg.model.split('/').pop())+'</span>';
-      if (lg.responseMs) badges += '<span class="dbadge" style="background:var(--amber-bg);color:var(--amber-txt);border:1px solid var(--amber-bdr)">'+lg.responseMs+'ms</span>';
-      badges += '<button class="btn-ghost" id="b-cp-log" style="font-size:10px;padding:3px 8px">Copy log</button>';
-      dbInner = '<div class="dbg-badges" style="margin-bottom:12px">'+badges+'</div>' +
-        '<div class="dbg-sec"><div class="dbg-lbl">Stripped content (think removed)</div>' +
-        '<pre class="dbg-pre '+(lg.strippedText?'ok':'err')+'">'+esc(lg.strippedText||'⚠ EMPTY — this is the problem')+'</pre></div>' +
-        (lg.sentUser ? '<details><summary>Sent to API — user message</summary><pre class="dbg-pre">'+esc(lg.sentUser.slice(0,1500))+'</pre></details>' : '') +
-        '<details><summary>Full raw HTTP response</summary><pre class="dbg-pre">'+esc(lg.rawText?lg.rawText.slice(0,2000):'empty')+'</pre></details>';
-    }
-    h += '<div class="slide-panel debug-bg"><div class="sp-hdr"><div class="sp-title muted">DEBUG LOG</div>' +
-      '<button class="btn-ghost" id="b-api-close" style="padding:3px 8px">✕</button></div>'+dbInner+'</div>';
-  }
+function buildTabBar(mob) {
+  if (mob) return '';
+  return '<div class="tab-bar">' +
+    '<button class="tab-btn'+(S.mode==='generate'?' active':'')+'" data-mode="generate">'+t('tabGenerate')+'</button>' +
+    '<button class="tab-btn'+(S.mode==='enhance'?' active':'')+'" data-mode="enhance">'+t('tabOptimize')+' <span style="font-size:10px;font-weight:400;opacity:.55;letter-spacing:.01em">'+t('tabOptimizeNote')+'</span></button>' +
+  '</div>';
+}
 
-  /* TABS */
-  if (!mob) {
-    h += '<div class="tab-bar">' +
-      '<button class="tab-btn'+(S.mode==='generate'?' active':'')+'" data-mode="generate">'+t('tabGenerate')+'</button>' +
-      '<button class="tab-btn'+(S.mode==='enhance'?' active':'')+'" data-mode="enhance">'+t('tabOptimize')+' <span style="font-size:10px;font-weight:400;opacity:.55;letter-spacing:.01em">'+t('tabOptimizeNote')+'</span></button>' +
-    '</div>';
-  }
-
-  h += '<div class="body-grid">';
-
-  /* ── LEFT COLUMN ── */
+function buildLeftCol(mob) {
   var pHide = mob && S.mobilePane !== 'params';
-  h += '<div class="col col-l'+(pHide?' pane-hidden':'')+ '">';
+  var h = '<div class="col col-l'+(pHide?' pane-hidden':'')+'">';
 
   if (mob) {
     h += '<div class="mob-mode-sw" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--s2);margin-bottom:16px">' +
@@ -2302,12 +2301,8 @@ function buildHTML() {
     '</div>';
   }
 
-  /* ══════════════════════════════════════
-     GENERATE MODE — v2.0 block order
-  ══════════════════════════════════════ */
   if (S.mode === 'generate') {
-
-    /* ── STEP 1: SUBJECT (first, most prominent) ── */
+    /* SUBJECT */
     var stNow = STYLES.find(function(x){return x.id===S.style;}) || {};
     var stPh  = stNow.example || 'красива жінка під дощем у Токіо';
     var histHtml = '';
@@ -2317,7 +2312,6 @@ function buildHTML() {
           return '<span class="subj-hist-item" data-hist="'+i+'" title="'+esc(s)+'">'+esc(s.length>28?s.slice(0,26)+'…':s)+'</span>';
         }).join('') + '</div>';
     }
-
     h += '<div class="prompt-main">' +
       '<div class="field">' +
         '<div class="f-hdr">' +
@@ -2332,37 +2326,32 @@ function buildHTML() {
       '</div>' +
     '</div>';
 
-    /* ── STEP 2a: SCENE — grouped ── */
+    /* SCENE */
     var SCENE_GROUPS = [
-      { label: sl('scene',0), ids: ['portrait','half_body','full_body','landscape'],  icons: true },
-      { label: sl('scene',1), ids: ['urban','interior','architecture'],               icons: true },
-      { label: sl('scene',2), ids: ['macro','animal','product'],                      icons: false },
-      { label: sl('scene',3), ids: ['concept','manual'],                              icons: false },
+      { label: sl('scene',0), ids: ['portrait','half_body','full_body','landscape'], icons: true },
+      { label: sl('scene',1), ids: ['urban','interior','architecture'],              icons: true },
+      { label: sl('scene',2), ids: ['macro','animal','product'],                     icons: false },
+      { label: sl('scene',3), ids: ['concept','manual'],                             icons: false },
     ];
     var sceneHtml = SCENE_GROUPS.map(function(grp) {
       var btns = grp.ids.map(function(id) {
         var sc = SCENES.find(function(x){ return x.id === id; });
         if (!sc) return '';
-        var iconHtml = (grp.icons && sc.icon)
-          ? '<span class="btn-icon">'+sc.icon+'</span>'
-          : '';
+        var iconHtml = (grp.icons && sc.icon) ? '<span class="btn-icon">'+sc.icon+'</span>' : '';
         return '<button class="sel-btn'+(S.scene===id?' active':'')+'" data-scene="'+id+'" title="'+esc(sc.label)+'">'+iconHtml+esc(sc.label)+'</button>';
       }).join('');
-      return '<div class="sel-group">' +
-        '<span class="cat-label">'+esc(grp.label)+'</span>' +
-        '<div class="sel-row">'+btns+'</div>' +
-      '</div>';
+      return '<div class="sel-group"><span class="cat-label">'+esc(grp.label)+'</span><div class="sel-row">'+btns+'</div></div>';
     }).join('');
     h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">'+t('lScene')+'</label></div>'+sceneHtml+'</div>';
 
-    /* ── STEP 2b: SUBJECT TYPE (compact, below scene) ── */
+    /* SUBJECT TYPE */
     var subjPills = SUBJECTS.map(function(s){
       return '<div class="st-pill'+(S.subjectType===s.id?' active':'')+'" data-subtype="'+s.id+'"'+(s.tip?' title="'+esc(s.tip)+'"':'')+'>'+
         '<span class="st-icon">'+esc(s.icon)+'</span> '+esc(s.label)+'</div>';
     }).join('');
     h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">'+t('lSubjectType')+'</label><span class="hint">'+t('lSubjectHint')+'</span></div><div class="pill-row" style="margin-bottom:0">'+subjPills+'</div></div>';
 
-    /* ── STEP 3: STYLE — grouped ── */
+    /* STYLE */
     var STYLE_GROUPS = [
       { label: sl('style',0), icon: '◉', ids: ['photorealistic','cinematic','documentary','fashion','analog'] },
       { label: sl('style',1), icon: '◈', ids: ['digital_art','concept_art','illustration','oil_painting','watercolor','pencil_sketch','impressionism'] },
@@ -2375,31 +2364,21 @@ function buildHTML() {
         if (!st) return '';
         return '<button class="sel-btn'+(S.style===id?' active':'')+'" data-style="'+id+'"'+(st.detail?' title="'+esc(st.detail)+'"':'')+'>'+esc(st.label)+'</button>';
       }).join('');
-      return '<div class="sel-group">' +
-        '<span class="cat-label"><span class="cat-icon">'+grp.icon+'</span>'+esc(grp.label)+'</span>' +
-        '<div class="sel-row">'+btns+'</div>' +
-      '</div>';
+      return '<div class="sel-group"><span class="cat-label"><span class="cat-icon">'+grp.icon+'</span>'+esc(grp.label)+'</span><div class="sel-row">'+btns+'</div></div>';
     }).join('');
     h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">'+t('lStyle')+'</label><span class="hint">'+t('lStyleHint')+'</span></div>'+styleHtml+'</div>';
 
-    /* ── STEP 3 secondary: Lighting | Mood | Genre (dimmer 3-col) ── */
-    h += '<div class="secondary-section">' +
-      '<div class="sec-block">' +
-        '<div class="three-col" style="grid-template-columns:1fr 1fr 1fr">' +
-          /* Lighting */
-          '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lLighting')+'</label></div>' +
-          '<select id="sel-light">'+LIGHTINGS.map(function(l){return '<option value="'+esc(l.label)+'"'+(S.lighting===l.label?' selected':'')+'>'+esc(l.label)+'</option>';}).join('')+'</select></div>' +
-          /* Mood */
-          '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lMood')+'</label></div>' +
-          '<select id="sel-mood">'+MOODS.map(function(m){return '<option value="'+esc(m.label)+'"'+(S.mood===m.label?' selected':'')+'>'+(m.label||t('noneOpt'))+'</option>';}).join('')+'</select></div>' +
-          /* Genre */
-          '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lGenre')+'</label></div>' +
-          '<select id="sel-genre">'+GENRES.map(function(g){return '<option value="'+esc(g.label)+'"'+(S.genre===g.label?' selected':'')+'>'+(g.label||t('noneOpt'))+'</option>';}).join('')+'</select></div>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
-
-  } /* end generate mode blocks */
+    /* ATMOSPHERE */
+    h += '<div class="secondary-section"><div class="sec-block">' +
+      '<div class="three-col" style="grid-template-columns:1fr 1fr 1fr">' +
+        '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lLighting')+'</label></div>' +
+        '<select id="sel-light">'+LIGHTINGS.map(function(l){return '<option value="'+esc(l.label)+'"'+(S.lighting===l.label?' selected':'')+'>'+esc(l.label)+'</option>';}).join('')+'</select></div>' +
+        '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lMood')+'</label></div>' +
+        '<select id="sel-mood">'+MOODS.map(function(m){return '<option value="'+esc(m.label)+'"'+(S.mood===m.label?' selected':'')+'>'+(m.label||t('noneOpt'))+'</option>';}).join('')+'</select></div>' +
+        '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lGenre')+'</label></div>' +
+        '<select id="sel-genre">'+GENRES.map(function(g){return '<option value="'+esc(g.label)+'"'+(S.genre===g.label?' selected':'')+'>'+(g.label||t('noneOpt'))+'</option>';}).join('')+'</select></div>' +
+      '</div></div></div>';
+  }
 
   if (S.mode === 'enhance') {
     var ec = S.existing.length;
@@ -2410,39 +2389,37 @@ function buildHTML() {
 
   h += '<hr>';
 
-  /* ── STEP 4: PREVIEW CARD (before generate) ── */
+  /* PREVIEW CARD */
   if (S.mode === 'generate') {
     var pvCard = buildPreviewCard();
-    if (pvCard) h += '<div id="preview-card-wrap">' + pvCard + '</div>';
-    else h += '<div id="preview-card-wrap"></div>';
+    h += '<div id="preview-card-wrap">' + (pvCard||'') + '</div>';
   }
 
-  /* ── Error ── */
+  /* ERROR */
   if (S.error) {
     h += '<div class="err-box"><div class="err-title">⚠ Error</div><div class="err-msg">'+esc(S.error)+'</div>' +
       (!S.dbgOpen?'<button class="btn-text" id="b-open-dbg" style="margin-top:6px;color:var(--amber-txt);font-size:12px">→ Open Debug Panel</button>':'') + '</div>';
   }
 
-  /* ── Neg preview — auto or custom indicator ── */
+  /* NEG PREVIEW */
   if (S.mode === 'generate') {
-    var negDisp = buildNegative();
+    var negDisp   = buildNegative();
     var negCustom = S.customNeg && S.customNeg.trim();
     h += '<div class="neg-preview">' +
-      '<span class="neg-preview-label">NEG' + (negCustom ? ' ✎' : '') + '</span>' +
+      '<span class="neg-preview-label">NEG' + (negCustom?' ✎':'') + '</span>' +
       '<span class="neg-preview-text">'+esc(negDisp)+'</span>' +
     '</div>';
   }
 
-  /* ── STEP 5: GENERATE ROW + ⚙ ── */
+  /* GENERATE ROW */
   var advChanged = isAdvChanged();
   if (S.mode === 'generate') {
     var badgeText = '', badgeClass = 'rnd-badge';
     if (S.rndMode === 'creative') { badgeText='Shift: creative mode'; badgeClass+=' creative'; }
     else if (S.rndMode === 'wild') { badgeText='DblClick: max wild ⚡'; badgeClass+=' wild'; }
-
     h += '<div class="gen-row">' +
       '<button class="btn-primary'+(S.loading?' loading':'')+'" id="b-gen"'+(S.loading?' disabled':'')+' ' +
-        (!mob ? 'title="Ctrl+Enter" ' : '') +
+        (!mob?'title="Ctrl+Enter" ':'')+
         (!S.loading?'style="box-shadow:0 4px 24px rgba(47,129,247,.28),0 2px 8px rgba(47,129,247,.18),inset 0 1px 0 rgba(255,255,255,.22)"':'')+
         '>' +
         (S.loading
@@ -2450,7 +2427,7 @@ function buildHTML() {
           : t('btnGenerate')) +
       '</button>' +
       '<button class="btn-random" id="b-random" title="Random subject — Shift: creative — DblClick: wild" style="min-width:48px">🔀</button>' +
-      '<button class="btn-adv'+(advChanged?' is-changed':'')+'" id="b-adv" title="'+t('advTooltip')+'">⚙' + (advChanged?'<span class="adv-dot"></span>':'') + '</button>' +
+      '<button class="btn-adv'+(advChanged?' is-changed':'')+'" id="b-adv" title="'+t('advTooltip')+'">⚙'+(advChanged?'<span class="adv-dot"></span>':'')+'</button>' +
     '</div>' +
     '<div class="'+badgeClass+'" id="rnd-badge">'+badgeText+'</div>';
   } else {
@@ -2463,10 +2440,12 @@ function buildHTML() {
   }
 
   h += '</div>'; /* col-l */
+  return h;
+}
 
-  /* ── RIGHT COLUMN ── */
+function buildRightCol(mob, keyOk) {
   var oHide = mob && S.mobilePane !== 'output';
-  h += '<div class="col'+(oHide?' pane-hidden':'')+ '">';
+  var h = '<div class="col'+(oHide?' pane-hidden':'')+'">';
 
   if (mob) {
     h += '<div class="two-col" style="display:grid;margin-bottom:16px">' +
@@ -2496,10 +2475,6 @@ function buildHTML() {
       '<div class="ph-sub">'+esc((GROQ_MODELS.find(function(m){return m.id===S.model;})||{name:S.model}).name)+'</div></div>';
   }
 
-  /* ═══════════════════════════════════════
-     OUTPUT — v2.0: Regenerate is primary action
-     RESULT → READ → REGENERATE (primary) | Copy (secondary) → LOOP
-  ═══════════════════════════════════════ */
   if (S.result) {
     var r = S.result;
     h += '<div class="output-main is-active">';
@@ -2513,7 +2488,6 @@ function buildHTML() {
       '<div class="out-hdr"><span class="lbl">'+t('outNegative')+'</span><button class="btn-copy" id="b-cp-neg">⎘ Copy</button></div>' +
       '<div class="out-txt" id="out-neg">'+esc(r.negative)+'</div></div>';
 
-    /* ── output-actions v2.0: Regenerate primary (blue), Copy secondary ── */
     h += '<div class="output-actions">' +
       '<button class="btn-ghost btn-regen" id="b-regen"><span class="act-icon">↺</span> '+t('btnRegenerate')+'</button>' +
       '<button class="btn-ghost btn-act-copy" id="b-cp-all"><span class="act-icon">⧉</span> '+t('btnCopy')+'</button>' +
@@ -2537,112 +2511,92 @@ function buildHTML() {
   }
 
   h += '</div>'; /* col-r */
-  h += '</div>'; /* body-grid */
-
-  /* ═══════════════════════════════════════
-     ADVANCED PANEL OVERLAY
-  ═══════════════════════════════════════ */
-  if (S.advOpen) {
-    var SAMP_SHORT2 = { 'euler_ancestral':'euler_a', 'euler':'euler', 'dpm_2':'dpm_2', 'heun':'heun', 'dpm_2_ancestral':'dpm2_a' };
-    var RES_LABEL2  = {
-      '896x1152':  '896×1152 · portrait ★',
-      '768x1024':  '768×1024 · portrait',
-      '1024x1024': '1024×1024 · square',
-      '1152x896':  '1152×896 · landscape',
-      '1280x768':  '1280×768 · wide',
-      '1024x1536': '1024×1536 · tall',
-    };
-    var loraChipsAdv = S.loras.map(function(l, i) {
-      return '<span class="tc-chip">' +
-        '<input type="text" data-ln="'+i+'" value="'+esc(l.name)+'" class="tc-inp-lname" placeholder="lora_name">' +
-        '<input type="text" data-lw="'+i+'" value="'+esc(l.weight)+'" class="tc-inp-lw">' +
-        '<button class="tc-lora-rm" data-lr="'+i+'" title="Remove LoRA">×</button>' +
-      '</span>';
-    }).join('');
-    var skAdv = S.sampler + '+' + S.scheduler;
-    var shAdv = SAMPLER_HINTS[skAdv] || { text:'Custom combination', c:'#6E7681' };
-
-    h += '<div class="adv-overlay" id="adv-overlay"></div>' +
-    '<div class="adv-sheet" id="adv-sheet">' +
-      '<div class="adv-handle"></div>' +
-      '<div class="adv-hdr">' +
-        '<span class="adv-title">' + t('advTitle') + '</span>' +
-        '<button class="btn-ghost" id="b-adv-close" style="padding:3px 8px">✕</button>' +
-      '</div>' +
-      '<div class="adv-body">' +
-
-        /* ─── COMFYUI CONFIG ─── */
-        '<div class="adv-section-title">COMFYUI CONFIG</div>' +
-        '<span class="tech-label">ComfyUI Params</span>' +
-        '<div class="tech-bar">' +
-          /* Resolution */
-          '<span class="tc-chip" title="Resolution">' +
-            '<select id="sel-res">' +
-              RESOLUTIONS.map(function(r){
-                return '<option value="'+esc(r.value)+'"'+(S.resolution===r.value?' selected':'')+'>'+(RES_LABEL2[r.value]||r.value)+'</option>';
-              }).join('') +
-            '</select>' +
-          '</span>' +
-          /* Sampler / Scheduler */
-          '<span class="tc-chip">' +
-            '<span class="tc-label">smp</span>' +
-            '<select id="sel-samp">' +
-              SAMPLERS.map(function(s){
-                return '<option value="'+esc(s)+'"'+(S.sampler===s?' selected':'')+'>'+(SAMP_SHORT2[s]||s)+'</option>';
-              }).join('') +
-            '</select>' +
-            '<span class="tc-sep" style="margin:0 2px">·</span>' +
-            '<span class="tc-label">sch</span>' +
-            '<select id="sel-sch">' +
-              SCHEDULERS.map(function(s){
-                var SCH_SHORT = { 'FlowMatchEulerDiscrete':'FlowMatch', 'sgm_uniform':'sgm_unif' };
-                return '<option value="'+esc(s)+'"'+(S.scheduler===s?' selected':'')+'>'+(SCH_SHORT[s]||s)+'</option>';
-              }).join('') +
-            '</select>' +
-          '</span>' +
-          /* Steps */
-          '<span class="tc-chip">' +
-            '<span class="tc-label">steps</span>' +
-            '<input type="text" id="inp-steps" class="tc-inp-steps" value="'+esc(S.steps)+'">' +
-          '</span>' +
-          /* CFG */
-          '<span class="tc-chip">' +
-            '<span class="tc-label">cfg</span>' +
-            '<input type="text" id="inp-cfg" class="tc-inp-cfg" value="'+esc(S.cfg)+'">' +
-          '</span>' +
-          /* Seed */
-          '<span class="tc-chip">' +
-            '<span class="tc-label">seed</span>' +
-            '<span id="tc-seed-val" style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--t1);width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle">' + (S.seed ? esc(S.seed) : '<span style="color:var(--t4)">rand</span>') + '</span>' +
-            '<button id="b-seed" title="Random seed" style="background:transparent;border:none;color:var(--t2);cursor:pointer;padding:0;font-size:13px;line-height:1">🎲</button>' +
-          '</span>' +
-          (shAdv.text ? '<span class="tc-hint" style="color:'+shAdv.c+'">'+shAdv.text+'</span>' : '') +
-          /* LoRA */
-          (S.loras.length > 0
-            ? loraChipsAdv + '<button class="btn-text" id="b-add-lora" style="font-size:11px;color:var(--t4);padding:5px 8px">+ LoRA</button>'
-            : '<button class="tc-chip" id="b-add-lora" style="cursor:pointer;border-style:dashed;color:var(--t3);background:transparent">LoRA +</button>') +
-        '</div>' +
-
-        /* ─── NEGATIVE PROMPT ─── */
-        '<div class="adv-section-title" style="margin-top:18px">NEGATIVE PROMPT</div>' +
-        '<div class="field" style="margin-bottom:0">' +
-          '<div class="f-hdr" style="margin-bottom:6px">' +
-            '<label class="lbl" style="font-size:11px">' + t('advNegLabel') + '</label>' +
-            (S.customNeg ? '<button class="btn-text" id="b-adv-neg-clr" style="font-size:11px;color:var(--red-txt)">✕ Reset to auto</button>' : '') +
-          '</div>' +
-          '<textarea id="inp-custom-neg" rows="3" style="font-size:12px;font-family:\'JetBrains Mono\',monospace;min-height:72px" placeholder="' + t('advNegPlaceholder') + '">' + esc(S.customNeg) + '</textarea>' +
-          '<p style="font-size:10px;color:var(--t4);margin-top:4px">Auto: <em style="color:var(--t3)">' + esc((function(){ var tmp=S.customNeg; S.customNeg=''; var r=buildNegative(); S.customNeg=tmp; return r; })()) + '</em></p>' +
-        '</div>' +
-
-      '</div>' + /* adv-body */
-      '<div class="adv-actions">' +
-        '<button class="btn-primary btn-secondary" id="b-adv-reset" style="margin-top:0;font-size:13px;padding:10px 16px;width:auto">'+t('advReset')+'</button>' +
-        '<button class="btn-primary" id="b-adv-apply" style="margin-top:0;font-size:13px;padding:10px 16px;flex:1">'+t('advApply')+'</button>' +
-      '</div>' +
-    '</div>';
-  }
-
   return h;
+}
+
+function buildAdvPanel() {
+  if (!S.advOpen) return '';
+  var SAMP_SHORT2 = { 'euler_ancestral':'euler_a', 'euler':'euler', 'dpm_2':'dpm_2', 'heun':'heun', 'dpm_2_ancestral':'dpm2_a' };
+  var RES_LABEL2  = {
+    '896x1152':'896×1152 · portrait ★', '768x1024':'768×1024 · portrait',
+    '1024x1024':'1024×1024 · square',   '1152x896':'1152×896 · landscape',
+    '1280x768':'1280×768 · wide',       '1024x1536':'1024×1536 · tall',
+  };
+  var loraChipsAdv = S.loras.map(function(l, i) {
+    return '<span class="tc-chip">' +
+      '<input type="text" data-ln="'+i+'" value="'+esc(l.name)+'" class="tc-inp-lname" placeholder="lora_name">' +
+      '<input type="text" data-lw="'+i+'" value="'+esc(l.weight)+'" class="tc-inp-lw">' +
+      '<button class="tc-lora-rm" data-lr="'+i+'" title="Remove LoRA">×</button>' +
+    '</span>';
+  }).join('');
+  var skAdv = S.sampler + '+' + S.scheduler;
+  var shAdv = SAMPLER_HINTS[skAdv] || { text:'Custom combination', c:'#6E7681' };
+
+  return '<div class="adv-overlay" id="adv-overlay"></div>' +
+  '<div class="adv-sheet" id="adv-sheet">' +
+    '<div class="adv-handle"></div>' +
+    '<div class="adv-hdr">' +
+      '<span class="adv-title">' + t('advTitle') + '</span>' +
+      '<button class="btn-ghost" id="b-adv-close" style="padding:3px 8px">✕</button>' +
+    '</div>' +
+    '<div class="adv-body">' +
+      '<div class="adv-section-title">COMFYUI CONFIG</div>' +
+      '<span class="tech-label">ComfyUI Params</span>' +
+      '<div class="tech-bar">' +
+        '<span class="tc-chip" title="Resolution"><select id="sel-res">' +
+          RESOLUTIONS.map(function(r){ return '<option value="'+esc(r.value)+'"'+(S.resolution===r.value?' selected':'')+'>'+(RES_LABEL2[r.value]||r.value)+'</option>'; }).join('') +
+        '</select></span>' +
+        '<span class="tc-chip">' +
+          '<span class="tc-label">smp</span><select id="sel-samp">' +
+            SAMPLERS.map(function(s){ return '<option value="'+esc(s)+'"'+(S.sampler===s?' selected':'')+'>'+(SAMP_SHORT2[s]||s)+'</option>'; }).join('') +
+          '</select>' +
+          '<span class="tc-sep" style="margin:0 2px">·</span>' +
+          '<span class="tc-label">sch</span><select id="sel-sch">' +
+            SCHEDULERS.map(function(s){ var SCH_SHORT={'FlowMatchEulerDiscrete':'FlowMatch','sgm_uniform':'sgm_unif'}; return '<option value="'+esc(s)+'"'+(S.scheduler===s?' selected':'')+'>'+(SCH_SHORT[s]||s)+'</option>'; }).join('') +
+          '</select>' +
+        '</span>' +
+        '<span class="tc-chip"><span class="tc-label">steps</span><input type="text" id="inp-steps" class="tc-inp-steps" value="'+esc(S.steps)+'"></span>' +
+        '<span class="tc-chip"><span class="tc-label">cfg</span><input type="text" id="inp-cfg" class="tc-inp-cfg" value="'+esc(S.cfg)+'"></span>' +
+        '<span class="tc-chip"><span class="tc-label">seed</span>' +
+          '<span id="tc-seed-val" style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--t1);width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle">'+(S.seed?esc(S.seed):'<span style="color:var(--t4)">rand</span>')+'</span>' +
+          '<button id="b-seed" title="Random seed" style="background:transparent;border:none;color:var(--t2);cursor:pointer;padding:0;font-size:13px;line-height:1">🎲</button>' +
+        '</span>' +
+        (shAdv.text?'<span class="tc-hint" style="color:'+shAdv.c+'">'+shAdv.text+'</span>':'') +
+        (S.loras.length>0
+          ? loraChipsAdv+'<button class="btn-text" id="b-add-lora" style="font-size:11px;color:var(--t4);padding:5px 8px">+ LoRA</button>'
+          : '<button class="tc-chip" id="b-add-lora" style="cursor:pointer;border-style:dashed;color:var(--t3);background:transparent">LoRA +</button>') +
+      '</div>' +
+      '<div class="adv-section-title" style="margin-top:18px">NEGATIVE PROMPT</div>' +
+      '<div class="field" style="margin-bottom:0">' +
+        '<div class="f-hdr" style="margin-bottom:6px">' +
+          '<label class="lbl" style="font-size:11px">'+t('advNegLabel')+'</label>' +
+          (S.customNeg?'<button class="btn-text" id="b-adv-neg-clr" style="font-size:11px;color:var(--red-txt)">✕ Reset to auto</button>':'') +
+        '</div>' +
+        '<textarea id="inp-custom-neg" rows="3" style="font-size:12px;font-family:\'JetBrains Mono\',monospace;min-height:72px" placeholder="'+t('advNegPlaceholder')+'">'+esc(S.customNeg)+'</textarea>' +
+        '<p style="font-size:10px;color:var(--t4);margin-top:4px">Auto: <em style="color:var(--t3)">'+esc((function(){ var tmp=S.customNeg; S.customNeg=''; var r=buildNegative(); S.customNeg=tmp; return r; })())+'</em></p>' +
+      '</div>' +
+    '</div>' +
+    '<div class="adv-actions">' +
+      '<button class="btn-primary btn-secondary" id="b-adv-reset" style="margin-top:0;font-size:13px;padding:10px 16px;width:auto">'+t('advReset')+'</button>' +
+      '<button class="btn-primary" id="b-adv-apply" style="margin-top:0;font-size:13px;padding:10px 16px;flex:1">'+t('advApply')+'</button>' +
+    '</div>' +
+  '</div>';
+}
+
+function buildHTML() {
+  var mob   = window.innerWidth <= 680;
+  var keyOk = !!S.apiKey.trim();
+  return [
+    buildHeader(mob, keyOk),
+    buildApiPanel(),
+    buildDebugPanel(),
+    buildTabBar(mob),
+    '<div class="body-grid">',
+      buildLeftCol(mob),
+      buildRightCol(mob, keyOk),
+    '</div>',
+    buildAdvPanel(),
+  ].join('');
 }
 
 /* ═══════════════════════════════════════════════════
