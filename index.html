@@ -1194,46 +1194,46 @@ function getSceneCamera(sc) {
 }
 
 const LIGHTINGS = [
-  { label:'Cinematic',       value:'cinematic dramatic lighting, high contrast shadows' },
-  { label:'Soft Natural',    value:'soft diffused natural daylight, even illumination' },
-  { label:'Golden Hour',     value:'warm golden hour sunlight, long soft shadows' },
-  { label:'Blue Hour',       value:'cool blue hour light, twilight tones' },
-  { label:'Overcast',        value:'overcast sky, soft shadowless light' },
-  { label:'Rim Light',       value:'strong rim lighting, edge highlights, dark background' },
-  { label:'Neon / LED',      value:'neon lighting, colored LED glow, reflections' },
-  { label:'Volumetric Rays', value:'volumetric light beams, atmospheric light shafts, diffused rays' },
-  { label:'Studio Softbox',  value:'studio softbox lighting, controlled highlights, soft shadows' },
-  { label:'Candlelight',     value:'warm candlelight, flickering shadows, low light' },
-  { label:'Moonlight',       value:'cold moonlight, blue tones, night atmosphere' },
-  { label:'Harsh Midday',    value:'harsh midday sunlight, strong shadows, high contrast' },
+  { label:'Cinematic',       labelUa:'Кінематографічне',   value:'cinematic dramatic lighting, high contrast shadows' },
+  { label:'Soft Natural',    labelUa:'М\'яке природне',     value:'soft diffused natural daylight, even illumination' },
+  { label:'Golden Hour',     labelUa:'Золота година',       value:'warm golden hour sunlight, long soft shadows' },
+  { label:'Blue Hour',       labelUa:'Синя година',         value:'cool blue hour light, twilight tones' },
+  { label:'Overcast',        labelUa:'Похмуре небо',        value:'overcast sky, soft shadowless light' },
+  { label:'Rim Light',       labelUa:'Контурне світло',     value:'strong rim lighting, edge highlights, dark background' },
+  { label:'Neon / LED',      labelUa:'Неон / LED',          value:'neon lighting, colored LED glow, reflections' },
+  { label:'Volumetric Rays', labelUa:'Об\'ємні промені',    value:'volumetric light beams, atmospheric light shafts, diffused rays' },
+  { label:'Studio Softbox',  labelUa:'Студійний софтбокс',  value:'studio softbox lighting, controlled highlights, soft shadows' },
+  { label:'Candlelight',     labelUa:'Свічкове світло',     value:'warm candlelight, flickering shadows, low light' },
+  { label:'Moonlight',       labelUa:'Місячне світло',      value:'cold moonlight, blue tones, night atmosphere' },
+  { label:'Harsh Midday',    labelUa:'Жорстке полудення',   value:'harsh midday sunlight, strong shadows, high contrast' },
 ];
 const GENRES = [
-  { label:'',                 value:'' },
-  { label:'Cyberpunk',        value:'cyberpunk aesthetic, neon lights, futuristic city' },
-  { label:'Fantasy',          value:'fantasy world, magical elements' },
-  { label:'Dark Fantasy',     value:'dark fantasy, gothic elements, ominous tone' },
-  { label:'Sci-Fi',           value:'science fiction, futuristic technology' },
-  { label:'Solarpunk',        value:'solarpunk, eco-futurism, greenery' },
-  { label:'Noir',             value:'film noir, high contrast shadows, 1940s style' },
-  { label:'Post-Apocalyptic', value:'post-apocalyptic ruins, decay, survival' },
-  { label:'Historical',       value:'historical setting, period accurate' },
-  { label:'Mythological',     value:'mythological theme, ancient gods' },
-  { label:'Surreal',          value:'surreal imagery, dream logic' },
-  { label:'Horror',           value:'horror atmosphere, unsettling mood' },
-  { label:'Contemporary',     value:'modern contemporary setting' },
-  { label:'Futuristic',       value:'futuristic design, advanced technology' },
+  { label:'',                 labelUa:'',                   value:'' },
+  { label:'Cyberpunk',        labelUa:'Кіберпанк',          value:'cyberpunk aesthetic, neon lights, futuristic city' },
+  { label:'Fantasy',          labelUa:'Фентезі',            value:'fantasy world, magical elements' },
+  { label:'Dark Fantasy',     labelUa:'Темне фентезі',      value:'dark fantasy, gothic elements, ominous tone' },
+  { label:'Sci-Fi',           labelUa:'Наукова фантастика', value:'science fiction, futuristic technology' },
+  { label:'Solarpunk',        labelUa:'Соларпанк',          value:'solarpunk, eco-futurism, greenery' },
+  { label:'Noir',             labelUa:'Нуар',               value:'film noir, high contrast shadows, 1940s style' },
+  { label:'Post-Apocalyptic', labelUa:'Постапокаліпсис',    value:'post-apocalyptic ruins, decay, survival' },
+  { label:'Historical',       labelUa:'Історичний',         value:'historical setting, period accurate' },
+  { label:'Mythological',     labelUa:'Міфологічний',       value:'mythological theme, ancient gods' },
+  { label:'Surreal',          labelUa:'Сюрреалізм',         value:'surreal imagery, dream logic' },
+  { label:'Horror',           labelUa:'Хоррор',             value:'horror atmosphere, unsettling mood' },
+  { label:'Contemporary',     labelUa:'Сучасний',           value:'modern contemporary setting' },
+  { label:'Futuristic',       labelUa:'Футуристичний',      value:'futuristic design, advanced technology' },
 ];
 const MOODS = [
-  { label:'',                   value:'' },
-  { label:'Moody & atmospheric', value:'moody atmosphere, soft shadows, cinematic tone' },
-  { label:'Ethereal & dreamy',   value:'ethereal soft glow, dreamlike haze' },
-  { label:'Tense & dramatic',    value:'tense dramatic mood, strong contrast' },
-  { label:'Serene & peaceful',   value:'calm peaceful mood, soft light' },
-  { label:'Mysterious',          value:'mysterious atmosphere, obscured details' },
-  { label:'Epic & grand',        value:'epic dramatic atmosphere, grand composition' },
-  { label:'Melancholic',         value:'melancholic tone, muted colors' },
-  { label:'Joyful & vibrant',    value:'vibrant colors, lively atmosphere' },
-  { label:'Gritty & raw',        value:'gritty raw texture, harsh realism' },
+  { label:'',                   labelUa:'',                        value:'' },
+  { label:'Moody & atmospheric', labelUa:'Похмурий і атмосферний', value:'moody atmosphere, soft shadows, cinematic tone' },
+  { label:'Ethereal & dreamy',   labelUa:'Ефемерний і мрійливий',  value:'ethereal soft glow, dreamlike haze' },
+  { label:'Tense & dramatic',    labelUa:'Напружений і драматичний',value:'tense dramatic mood, strong contrast' },
+  { label:'Serene & peaceful',   labelUa:'Спокійний і мирний',     value:'calm peaceful mood, soft light' },
+  { label:'Mysterious',          labelUa:'Загадковий',             value:'mysterious atmosphere, obscured details' },
+  { label:'Epic & grand',        labelUa:'Епічний і величний',     value:'epic dramatic atmosphere, grand composition' },
+  { label:'Melancholic',         labelUa:'Меланхолійний',          value:'melancholic tone, muted colors' },
+  { label:'Joyful & vibrant',    labelUa:'Радісний і яскравий',    value:'vibrant colors, lively atmosphere' },
+  { label:'Gritty & raw',        labelUa:'Суворий і сирий',        value:'gritty raw texture, harsh realism' },
 ];
 
 const RESOLUTIONS = [
@@ -2368,11 +2368,11 @@ function buildLeftCol(mob) {
     h += '<div class="secondary-section"><div class="sec-block">' +
       '<div class="three-col" style="grid-template-columns:1fr 1fr 1fr">' +
         '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lLighting')+'</label></div>' +
-        '<select id="sel-light">'+LIGHTINGS.map(function(l){return '<option value="'+esc(l.label)+'"'+(S.lighting===l.label?' selected':'')+'>'+esc(l.label)+'</option>';}).join('')+'</select></div>' +
+        '<select id="sel-light">'+LIGHTINGS.map(function(l){return '<option value="'+esc(l.label)+'"'+(S.lighting===l.label?' selected':'')+'>'+esc(S.lang==='ua'?l.labelUa:l.label)+'</option>';}).join('')+'</select></div>' +
         '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lMood')+'</label></div>' +
-        '<select id="sel-mood">'+MOODS.map(function(m){return '<option value="'+esc(m.label)+'"'+(S.mood===m.label?' selected':'')+'>'+(m.label||t('noneOpt'))+'</option>';}).join('')+'</select></div>' +
+        '<select id="sel-mood">'+MOODS.map(function(m){return '<option value="'+esc(m.label)+'"'+(S.mood===m.label?' selected':'')+'>'+(m.label?(S.lang==='ua'?esc(m.labelUa):esc(m.label)):t('noneOpt'))+'</option>';}).join('')+'</select></div>' +
         '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lGenre')+'</label></div>' +
-        '<select id="sel-genre">'+GENRES.map(function(g){return '<option value="'+esc(g.label)+'"'+(S.genre===g.label?' selected':'')+'>'+(g.label||t('noneOpt'))+'</option>';}).join('')+'</select></div>' +
+        '<select id="sel-genre">'+GENRES.map(function(g){return '<option value="'+esc(g.label)+'"'+(S.genre===g.label?' selected':'')+'>'+(g.label?(S.lang==='ua'?esc(g.labelUa):esc(g.label)):t('noneOpt'))+'</option>';}).join('')+'</select></div>' +
       '</div></div></div>';
   }
 
@@ -2748,11 +2748,16 @@ function attachEvents() {
     if (!S.result) return;
     S.existing = S.result.positive;
     S.mode = 'enhance';
+    S.mobilePane = 'params'; /* на mobile — показати ліву колонку з textarea */
     S.error = '';
     render();
     requestAnimationFrame(function() {
       var ta = document.getElementById('inp-exist');
-      if (ta) { ta.focus(); ta.setSelectionRange(0, 0); }
+      if (ta) {
+        ta.focus();
+        ta.setSelectionRange(0, 0);
+        ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     });
   });
 
