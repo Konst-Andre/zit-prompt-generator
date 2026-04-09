@@ -1597,6 +1597,9 @@ const I18N = {
     advTooltip: 'Advanced Settings — ComfyUI config & Negative Prompt',
     btnImproveThis: '↑ Improve this prompt',
     btnCopySubject: '⎘ Copy',
+    pvPrompt: 'PROMPT', pvScene: 'Scene', pvDetail: 'Detail',
+    pvStyle: 'Style', pvAtmos: 'Atmos', pvGenre: 'Genre',
+    pvNeg: 'NEG',
   },
   ua: {
     tabGenerate: 'Створити', tabOptimize: 'Покращити',
@@ -1627,6 +1630,9 @@ const I18N = {
     advTooltip: 'Розширені — конфіг ComfyUI та негативний промпт',
     btnImproveThis: '↑ Покращити цей промпт',
     btnCopySubject: '⎘ Copy',
+    pvPrompt: 'ПРОМПТ', pvScene: 'Сцена', pvDetail: 'Деталь',
+    pvStyle: 'Стиль', pvAtmos: 'Атмос', pvGenre: 'Жанр',
+    pvNeg: 'НЕГ',
   }
 };
 function t(key) {
@@ -2061,28 +2067,28 @@ function computePromptTokens() {
   var totalCount = 0;
 
   if (promptVal) {
-    rows.push({ key: 'PROMPT', tokens: [promptVal], cls: 'subject-tok', rowCls: '' });
+    rows.push({ key: t('pvPrompt'), tokens: [promptVal], cls: 'subject-tok', rowCls: '' });
     totalCount++;
   }
   if (sc.label && sc.id !== 'manual' && sc.detail) {
     var sceneToks = dedupArr(sc.detail.split(',').slice(0,2).map(function(t){ return t.trim(); }));
-    if (sceneToks.length) { rows.push({ key: 'Scene', tokens: sceneToks, cls: '', rowCls: '' }); totalCount += sceneToks.length; }
+    if (sceneToks.length) { rows.push({ key: t('pvScene'), tokens: sceneToks, cls: '', rowCls: '' }); totalCount += sceneToks.length; }
   }
   if (subjTok) {
     var detailToks = dedupArr(subjTok.split(',').slice(0,2).map(function(t){ return t.trim(); }));
-    if (detailToks.length) { rows.push({ key: 'Detail', tokens: detailToks, cls: '', rowCls: '' }); totalCount += detailToks.length; }
+    if (detailToks.length) { rows.push({ key: t('pvDetail'), tokens: detailToks, cls: '', rowCls: '' }); totalCount += detailToks.length; }
   }
   if (styleTok) {
     var styleToks = dedupArr(styleTok.split(',').slice(0,3).map(function(t){ return t.trim(); }));
-    if (styleToks.length) { rows.push({ key: 'Style', tokens: styleToks, cls: '', rowCls: '' }); totalCount += styleToks.length; }
+    if (styleToks.length) { rows.push({ key: t('pvStyle'), tokens: styleToks, cls: '', rowCls: '' }); totalCount += styleToks.length; }
   }
   var atmoRaw = [];
   if (lit && lit.value) atmoRaw.push(S.lighting);
   if (mo  && mo.value)  atmoRaw.push(S.mood);
   if (ge  && ge.value)  atmoRaw.push(S.genre);
   var atmoToks = dedupArr(atmoRaw);
-  if (atmoToks.length) { rows.push({ key: 'Atmos', tokens: atmoToks, cls: 'atmos', rowCls: '' }); totalCount += atmoToks.length; }
-  if (genreMod) { rows.push({ key: 'Genre', tokens: [genreMod], cls: 'atmos genre-tok', rowCls: 'is-genre' }); totalCount++; }
+  if (atmoToks.length) { rows.push({ key: t('pvAtmos'), tokens: atmoToks, cls: 'atmos', rowCls: '' }); totalCount += atmoToks.length; }
+  if (genreMod) { rows.push({ key: t('pvGenre'), tokens: [genreMod], cls: 'atmos genre-tok', rowCls: 'is-genre' }); totalCount++; }
 
   return { rows: rows, totalCount: totalCount };
 }
@@ -2155,7 +2161,7 @@ function buildNegPreviewHTML() {
   var negDisp = buildNegative();
   var negCustom = S.customNeg && S.customNeg.trim();
   return '<div class="neg-preview">' +
-    '<span class="neg-preview-label">NEG' + (negCustom ? ' ✎' : '') + '</span>' +
+    '<span class="neg-preview-label">' + t('pvNeg') + (negCustom ? ' ✎' : '') + '</span>' +
     '<span class="neg-preview-text">' + esc(negDisp) + '</span>' +
   '</div>';
 }
@@ -2402,7 +2408,7 @@ function buildLeftCol(mob) {
     var negDisp   = buildNegative();
     var negCustom = S.customNeg && S.customNeg.trim();
     h += '<div class="neg-preview">' +
-      '<span class="neg-preview-label">NEG' + (negCustom?' ✎':'') + '</span>' +
+      '<span class="neg-preview-label">' + t('pvNeg') + (negCustom?' ✎':'') + '</span>' +
       '<span class="neg-preview-text">'+esc(negDisp)+'</span>' +
     '</div>';
   }
