@@ -2137,16 +2137,6 @@ function debounce(fn, ms) {
   };
 }
 
-var debouncedPreview = debounce(function() {
-  var wrap = document.getElementById('preview-card-wrap');
-  if (wrap) wrap.innerHTML = buildPreviewCard() || '';
-}, 200);
-
-var debouncedNeg = debounce(function() {
-  var el = document.querySelector('.neg-preview-text');
-  if (el) el.textContent = buildNegative();
-}, 200);
-
 function render() {
   document.getElementById('app').innerHTML = buildHTML();
   attachEvents();
@@ -2181,23 +2171,29 @@ var PATCH_TARGETS = {
   advBtn:  '#b-adv',
 };
 
-function patch(target) {
-  var el = document.querySelector(PATCH_TARGETS[target]);
-  if (!el) return;
-  switch (target) {
-    case 'preview':
-      el.innerHTML = buildPreviewCard() || '';
-      break;
-    case 'neg':
-      el.outerHTML = buildNegPreviewHTML();
-      break;
-    case 'genBtn':
-      el.disabled = !canGenerate();
-      break;
-    case 'advBtn':
-      el.className = buildAdvBtnClass();
-      break;
-  }
+/* debounce таймери всередині patch — єдиний канал оновлення */
+var _patchTimers = {};
+function patch(target, immediate) {
+  var delay = immediate ? 0 : 200;
+  clearTimeout(_patchTimers[target]);
+  _patchTimers[target] = setTimeout(function() {
+    var el = document.querySelector(PATCH_TARGETS[target]);
+    if (!el) return;
+    switch (target) {
+      case 'preview':
+        el.innerHTML = buildPreviewCard() || '';
+        break;
+      case 'neg':
+        el.outerHTML = buildNegPreviewHTML();
+        break;
+      case 'genBtn':
+        el.disabled = !canGenerate();
+        break;
+      case 'advBtn':
+        el.className = buildAdvBtnClass();
+        break;
+    }
+  }, delay);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -2634,7 +2630,7 @@ function attachEvents() {
     if (!el) return;
     el.addEventListener('input', function(){
       S.customNeg = el.value;
-      debouncedNeg();
+      patch('neg');
       patch('advBtn');
     });
   }());
@@ -2692,7 +2688,7 @@ function attachEvents() {
     ['input','paste','change'].forEach(function(ev){
       ta.addEventListener(ev, function(){
         S.subject = ta.value;
-        debouncedPreview();
+        patch('preview');
         autoResize(ta);
       });
     });
