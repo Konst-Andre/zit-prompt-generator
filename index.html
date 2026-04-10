@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v3.2.0</title>
+  <title>ZIT Prompt Generator v3.3.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -1642,7 +1642,7 @@ const I18N = {
     errNoExisting: 'Paste a prompt to improve',
     errRateLimit:  'Rate limit — retry {n}/2 in {s}s…',
     histTitle: 'Prompt History', histEmpty: 'No history yet — generate a prompt first',
-    histClear: 'Clear', histUse: 'Use this prompt',
+    histClear: 'Clear', histUse: 'Use this prompt', histInsert: 'Insert',
   },
   ua: {
     tabGenerate: 'Створити', tabOptimize: 'Покращити',
@@ -1681,7 +1681,7 @@ const I18N = {
     errNoExisting: 'Вставте промпт для покращення',
     errRateLimit:  'Ліміт запитів — повтор {n}/2 через {s}с…',
     histTitle: 'Історія промптів', histEmpty: 'Історія порожня — спочатку згенеруйте промпт',
-    histClear: 'Очистити', histUse: 'Використати',
+    histClear: 'Очистити', histUse: 'Використати', histInsert: 'Вставити',
   }
 };
 function t(key) {
@@ -2263,13 +2263,12 @@ function buildHeader(mob, keyOk) {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v3.2.0</span>' +
+        '<span class="title-version">v3.3.0</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
       '<div class="pill btn ' + (keyOk?'p-ok':'p-miss') + '" id="b-api"><span class="dot"></span>' + (keyOk?'Groq ✓':'API Key?') + '</div>' +
       '<div class="pill btn" id="b-lang" title="Switch UI language">' + langLabel + '</div>' +
-      '<div class="pill btn' + (S.histOpen?' p-active':'') + '" id="b-hist">📋' + (loadHistory().length ? ' '+loadHistory().length : '') + '</div>' +
       '<div class="pill btn' + (S.dbgOpen?' p-active':'') + '" id="b-dbg">🔬 Debug' + (S.dbgLog?(S.dbgLog.httpOk?' ✓':' ✗'):'') + '</div>' +
     '</div>' +
   '</div>';
@@ -2358,6 +2357,7 @@ function buildLeftCol(mob) {
             '<span class="hint">'+t('lPromptHint')+'</span>' +
             '<button class="btn-copy" id="b-cp-sub" style="opacity:.6">'+t('btnCopySubject')+'</button>' +
             (S.subject.trim() ? '<button class="btn-copy" id="b-clr-sub" style="opacity:.5;color:var(--red-txt);border-color:var(--red-bdr)" title="Clear">✕</button>' : '') +
+            (loadHistory().length ? '<button class="btn-copy" id="b-hist-subj" style="opacity:.55;font-size:13px;padding:1px 5px;border:none;background:none" title="Prompt History">🕐</button>' : '') +
           '</div>' +
         '</div>' +
         '<textarea id="inp-sub" rows="3" placeholder="e.g: '+esc(stPh)+'&#10;• your own idea here">'+esc(S.subject)+'</textarea>' +
@@ -2533,6 +2533,7 @@ function buildRightCol(mob, keyOk) {
     h += '<div class="output-actions">' +
       '<button class="btn-ghost btn-regen" id="b-regen"><span class="act-icon">↺</span> '+t('btnRegenerate')+'</button>' +
       '<button class="btn-ghost btn-act-copy" id="b-cp-all"><span class="act-icon">⧉</span> '+t('btnCopy')+'</button>' +
+      '<button class="btn-ghost" id="b-hist" style="font-size:12px;padding:5px 10px"><span class="act-icon">🕐</span> ' + (loadHistory().length || '') + '</button>' +
     '</div>';
 
     h += '<button class="btn-ghost" id="b-improve-this" style="' +
@@ -2645,6 +2646,10 @@ function buildHistPanel() {
         '</div>' +
         '<div class="hist-subject">'+subjectDisp+'</div>' +
         '<div class="hist-positive">'+esc(h.positive.slice(0,120))+'</div>' +
+        '<div style="display:flex;gap:6px;margin-top:7px">' +
+          '<button class="btn-ghost" data-hist-insert="'+i+'" style="font-size:11px;padding:3px 8px">'+t('histInsert')+'</button>' +
+          '<button class="btn-ghost" data-hist-use="'+i+'" style="font-size:11px;padding:3px 8px;color:var(--acc-txt);border-color:rgba(47,129,247,.3)">'+t('histUse')+'</button>' +
+        '</div>' +
       '</div>';
     }).join('');
   }
@@ -2708,9 +2713,11 @@ function attachEvents() {
     if (ov) ov.addEventListener('click', function(){ S.histOpen=false; render(); });
   }());
 
-  document.querySelectorAll('[data-hist-i]').forEach(function(el){
-    el.addEventListener('click', function(){
-      var i = +el.dataset.histI;
+  /* History — Use this (closes panel, switches to Improve mode) */
+  document.querySelectorAll('[data-hist-use]').forEach(function(el){
+    el.addEventListener('click', function(e){
+      e.stopPropagation();
+      var i = +el.dataset.histUse;
       var hist = loadHistory();
       var entry = hist[i];
       if (!entry) return;
@@ -2726,6 +2733,28 @@ function attachEvents() {
       });
     });
   });
+
+  /* History — Insert (вставляє в existing, панель лишається відкритою) */
+  document.querySelectorAll('[data-hist-insert]').forEach(function(el){
+    el.addEventListener('click', function(e){
+      e.stopPropagation();
+      var i = +el.dataset.histInsert;
+      var hist = loadHistory();
+      var entry = hist[i];
+      if (!entry) return;
+      S.existing = entry.positive;
+      S.mode = 'enhance';
+      S.mobilePane = 'params';
+      S.error = '';
+      render();
+      requestAnimationFrame(function(){
+        var ta = document.getElementById('inp-exist');
+        if (ta) { ta.focus(); ta.scrollIntoView({ behavior:'smooth', block:'center' }); }
+      });
+    });
+  });
+
+  on('b-hist-subj', 'click', function(){ S.histOpen=true; render(); });
   on('b-adv-close', 'click', function(){ S.advOpen=false; render(); });
   on('b-adv-apply', 'click', function(){ S.advOpen=false; render(); });
   on('b-adv-reset', 'click', function(){ resetAdv(); render(); });
