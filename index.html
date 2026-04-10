@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v3.3.0</title>
+  <title>ZIT Prompt Generator v3.4.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -1642,7 +1642,7 @@ const I18N = {
     errNoExisting: 'Paste a prompt to improve',
     errRateLimit:  'Rate limit — retry {n}/2 in {s}s…',
     histTitle: 'Prompt History', histEmpty: 'No history yet — generate a prompt first',
-    histClear: 'Clear', histUse: 'Use this prompt', histInsert: 'Insert',
+    histClear: 'Clear', histUse: 'Use this prompt', histInsert: 'Insert', histBtnTitle: 'Prompt History',
   },
   ua: {
     tabGenerate: 'Створити', tabOptimize: 'Покращити',
@@ -1681,7 +1681,7 @@ const I18N = {
     errNoExisting: 'Вставте промпт для покращення',
     errRateLimit:  'Ліміт запитів — повтор {n}/2 через {s}с…',
     histTitle: 'Історія промптів', histEmpty: 'Історія порожня — спочатку згенеруйте промпт',
-    histClear: 'Очистити', histUse: 'Використати', histInsert: 'Вставити',
+    histClear: 'Очистити', histUse: 'Використати', histInsert: 'Вставити', histBtnTitle: 'Історія промптів',
   }
 };
 function t(key) {
@@ -2263,7 +2263,7 @@ function buildHeader(mob, keyOk) {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v3.3.0</span>' +
+        '<span class="title-version">v3.4.0</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
@@ -2357,7 +2357,7 @@ function buildLeftCol(mob) {
             '<span class="hint">'+t('lPromptHint')+'</span>' +
             '<button class="btn-copy" id="b-cp-sub" style="opacity:.6">'+t('btnCopySubject')+'</button>' +
             (S.subject.trim() ? '<button class="btn-copy" id="b-clr-sub" style="opacity:.5;color:var(--red-txt);border-color:var(--red-bdr)" title="Clear">✕</button>' : '') +
-            (loadHistory().length ? '<button class="btn-copy" id="b-hist-subj" style="opacity:.55;font-size:13px;padding:1px 5px;border:none;background:none" title="Prompt History">🕐</button>' : '') +
+            (loadHistory().length ? '<button class="btn-copy" id="b-hist-subj" style="opacity:.7;font-size:13px;padding:1px 6px" title="'+t('histBtnTitle')+'">📜</button>' : '') +
           '</div>' +
         '</div>' +
         '<textarea id="inp-sub" rows="3" placeholder="e.g: '+esc(stPh)+'&#10;• your own idea here">'+esc(S.subject)+'</textarea>' +
@@ -2533,7 +2533,7 @@ function buildRightCol(mob, keyOk) {
     h += '<div class="output-actions">' +
       '<button class="btn-ghost btn-regen" id="b-regen"><span class="act-icon">↺</span> '+t('btnRegenerate')+'</button>' +
       '<button class="btn-ghost btn-act-copy" id="b-cp-all"><span class="act-icon">⧉</span> '+t('btnCopy')+'</button>' +
-      '<button class="btn-ghost" id="b-hist" style="font-size:12px;padding:5px 10px"><span class="act-icon">🕐</span> ' + (loadHistory().length || '') + '</button>' +
+      '<button class="btn-ghost" id="b-hist" title="'+t('histBtnTitle')+'" style="font-size:12px;padding:5px 10px"><span class="act-icon">📜</span> ' + (loadHistory().length || '') + '</button>' +
     '</div>';
 
     h += '<button class="btn-ghost" id="b-improve-this" style="' +
