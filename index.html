@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v3.1.0</title>
+  <title>ZIT Prompt Generator v3.2.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -875,6 +875,43 @@
       border-top: 1px solid var(--bdr); flex-shrink: 0;
       background: var(--bg2);
     }
+
+    /* ═══ HISTORY PANEL ═══ */
+    .hist-item {
+      padding: var(--s3) var(--s4);
+      border: 1px solid var(--bdr);
+      border-radius: var(--r-md);
+      background: var(--bg3);
+      margin-bottom: var(--s2);
+      cursor: pointer;
+      transition: border-color var(--tr), background var(--tr);
+    }
+    .hist-item:hover { border-color: var(--acc); background: var(--acc-bg); }
+    .hist-item:active { transform: scale(0.99); }
+    .hist-meta {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 5px;
+    }
+    .hist-scene-style {
+      font-size: 10px; font-weight: 600; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--acc-txt); opacity: .8;
+    }
+    .hist-time { font-size: 10px; color: var(--t4); font-family: 'JetBrains Mono', monospace; }
+    .hist-subject {
+      font-size: 11px; color: var(--t2); line-height: 1.45;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+    .hist-positive {
+      font-size: 11px; color: var(--t3); line-height: 1.5;
+      display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .hist-empty {
+      text-align: center; padding: 32px 16px;
+      color: var(--t4); font-size: 13px;
+    }
     .p-card { display: flex; justify-content: space-between; align-items: center; padding: var(--s2) var(--s3); background: var(--bg3); border: 1px solid var(--bdr); border-radius: var(--r-sm); gap: var(--s2); min-width: 0; }
     .p-key { font-size: 10px; color: var(--t3); letter-spacing: .05em; text-transform: uppercase; flex-shrink: 0; }
     .p-val { font-size: 12px; color: #A0CFFF; font-weight: 700; font-family: 'JetBrains Mono', monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1600,6 +1637,12 @@ const I18N = {
     pvPrompt: 'PROMPT', pvScene: 'Scene', pvDetail: 'Detail',
     pvStyle: 'Style', pvAtmos: 'Atmos', pvGenre: 'Genre',
     pvNeg: 'NEG',
+    errNoKey:      'Enter Groq API key — press ⚙ API',
+    errNoSubject:  'Enter a subject',
+    errNoExisting: 'Paste a prompt to improve',
+    errRateLimit:  'Rate limit — retry {n}/2 in {s}s…',
+    histTitle: 'Prompt History', histEmpty: 'No history yet — generate a prompt first',
+    histClear: 'Clear', histUse: 'Use this prompt',
   },
   ua: {
     tabGenerate: 'Створити', tabOptimize: 'Покращити',
@@ -1633,6 +1676,12 @@ const I18N = {
     pvPrompt: 'ПРОМПТ', pvScene: 'Сцена', pvDetail: 'Деталь',
     pvStyle: 'Стиль', pvAtmos: 'Атмос', pvGenre: 'Жанр',
     pvNeg: 'НЕГ',
+    errNoKey:      'Введіть Groq API ключ — натисніть ⚙ API',
+    errNoSubject:  'Введіть тему',
+    errNoExisting: 'Вставте промпт для покращення',
+    errRateLimit:  'Ліміт запитів — повтор {n}/2 через {s}с…',
+    histTitle: 'Історія промптів', histEmpty: 'Історія порожня — спочатку згенеруйте промпт',
+    histClear: 'Очистити', histUse: 'Використати',
   }
 };
 function t(key) {
@@ -1646,7 +1695,7 @@ function t(key) {
 var S = {
   apiKey:'', rememberKey:false, model:'qwen/qwen3-32b',
   apiOpen:false, dbgOpen:false, mobilePane:'params',
-  advOpen:false,
+  advOpen:false, histOpen:false,
   mode:'generate', lang:'en',
   scene:'portrait', style:'photorealistic', subject:'', subjectType:'none',
   lighting:'Cinematic', mood:'', genre:'', resolution:'896x1152',
@@ -1704,7 +1753,7 @@ var PERSIST_KEYS = [
   'scene','style','subjectType',
   'lighting','mood','genre','resolution',
   'sampler','scheduler','steps','cfg',
-  'lang','model','customNeg','loras'
+  'model','customNeg','loras'
 ];
 
 function saveState() {
@@ -1718,11 +1767,15 @@ function saveState() {
 function loadState() {
   try {
     var raw = localStorage.getItem('zit_state');
-    if (!raw) return;
-    var snap = JSON.parse(raw);
-    PERSIST_KEYS.forEach(function(k){
-      if (snap[k] !== undefined) S[k] = snap[k];
-    });
+    if (raw) {
+      var snap = JSON.parse(raw);
+      PERSIST_KEYS.forEach(function(k){
+        if (snap[k] !== undefined) S[k] = snap[k];
+      });
+    }
+    /* lang — окремий ключ для сумісності */
+    var sl = localStorage.getItem('zit_lang');
+    if (sl === 'ua' || sl === 'en') S.lang = sl;
   } catch(e) {}
 }
 function saveKey(key, remember) {
@@ -1736,6 +1789,36 @@ function saveKey(key, remember) {
 function clearKey() {
   S.apiKey = ''; S.rememberKey = false;
   try { sessionStorage.removeItem('zit_key'); localStorage.removeItem('zit_key'); localStorage.removeItem('zit_remember'); } catch(e) {}
+}
+
+/* ═══════════════════════════════════════════════════
+   PROMPT HISTORY
+═══════════════════════════════════════════════════ */
+function saveToHistory(result) {
+  try {
+    var h = JSON.parse(localStorage.getItem('zit_history') || '[]');
+    h.unshift({
+      positive: result.positive,
+      negative: result.negative,
+      params:   result.params,
+      scene:    S.scene,
+      style:    S.style,
+      subject:  S.subject,
+      ts:       Date.now()
+    });
+    if (h.length > 10) h.length = 10;
+    localStorage.setItem('zit_history', JSON.stringify(h));
+  } catch(e) {}
+}
+
+function loadHistory() {
+  try {
+    return JSON.parse(localStorage.getItem('zit_history') || '[]');
+  } catch(e) { return []; }
+}
+
+function clearHistory() {
+  try { localStorage.removeItem('zit_history'); } catch(e) {}
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1961,9 +2044,9 @@ async function callGroqOnce(signal) {
 }
 
 async function generate() {
-  if (!S.apiKey.trim()) { S.error='Введіть Groq API ключ — натисніть ⚙ API'; S.apiOpen=true; render(); forceRepaint(); return; }
-  if (S.mode==='generate' && !S.subject.trim()) { S.error='Введіть Subject'; render(); forceRepaint(); return; }
-  if (S.mode==='enhance'  && !S.existing.trim()) { S.error='Вставте промпт для оптимізації'; render(); forceRepaint(); return; }
+  if (!S.apiKey.trim()) { S.error=t('errNoKey'); S.apiOpen=true; render(); forceRepaint(); return; }
+  if (S.mode==='generate' && !S.subject.trim()) { S.error=t('errNoSubject'); render(); forceRepaint(); return; }
+  if (S.mode==='enhance'  && !S.existing.trim()) { S.error=t('errNoExisting'); render(); forceRepaint(); return; }
   if (_busy) { if (_ac) _ac.abort(); _busy=false; }
   _ac=new AbortController(); _busy=true;
   S.loading=true; S.error='';
@@ -1978,13 +2061,16 @@ async function generate() {
       S.dbgLog = out.log;
       var loraStr = S.loras.filter(function(l){return l.name.trim();}).map(function(l){return '<lora:'+l.name.trim()+':'+l.weight+'>';}).join(' ');
       S.result = { positive: loraStr ? out.positive+' '+loraStr : out.positive, negative:out.negative, notes:out.notes, changes:out.changes, via:out.via, params:{steps:S.steps,cfg:S.cfg,sampler:S.sampler,scheduler:S.scheduler,resolution:S.resolution,seed:S.seed||String(Math.floor(Math.random()*1e9))} };
+      saveToHistory(S.result);
       break;
     } catch(e) {
       S.dbgLog=e.log||null;
       if (e.aborted) break;
       if (e.code===429 && attempts<=2) {
         if (_ac&&_ac.signal.aborted) break;
-        var delay=3000*attempts; S.error='Rate limit — retry '+attempts+'/2 in '+(delay/1000)+'s...'; render();
+        var delay=3000*attempts;
+        S.error = t('errRateLimit').replace('{n}', attempts).replace('{s}', delay/1000);
+        render();
         await sleep(delay);
         if (_ac&&_ac.signal.aborted) break;
         S.error=''; continue;
@@ -2013,31 +2099,6 @@ function esc(s) {
 
 /* ═══════════════════════════════════════════════════
    PROMPT PREVIEW INLINE (inside subject block)
-═══════════════════════════════════════════════════ */
-function buildPromptPreview() {
-  var st  = STYLES.find(function(x){ return x.id === S.style; });
-  var lit = LIGHTINGS.find(function(x){ return x.label === S.lighting; });
-  var mo  = MOODS.find(function(x){ return x.label === S.mood; });
-  var ge  = GENRES.find(function(x){ return x.label === S.genre; });
-  var styleTok = buildStyleTokens(st);
-  var parts = [
-    buildSubjectTokens(S.subjectType, styleTok) || null,
-    styleTok              || null,
-    lit && lit.value ? lit.value      : null,
-    mo  && mo.value  ? mo.value       : null,
-    ge  && ge.value  ? ge.value       : null,
-  ].filter(Boolean);
-  if (!parts.length) return '';
-  return '<div class="prompt-preview" title="' + esc(parts.join(' • ')) + '">' +
-    '<span class="pp-label">Adds:</span>' +
-    '<span class="pp-items">' + esc(parts.join(' • ')) + '</span>' +
-    '</div>';
-}
-
-/* ═══════════════════════════════════════════════════
-   PREVIEW CARD — v2.1.2
-   No summary. PROMPT = first row, no dedup/limit.
-   Other rows: scene/detail/style/atmos with proper dedup.
 ═══════════════════════════════════════════════════ */
 /* ═══════════════════════════════════════════════════
    COMPUTE PROMPT TOKENS — pure logic, no HTML
@@ -2132,17 +2193,6 @@ function autoResize(el) {
   el.style.height = el.scrollHeight + 'px';
 }
 
-/* ═══════════════════════════════════════════════════
-   DEBOUNCE
-═══════════════════════════════════════════════════ */
-function debounce(fn, ms) {
-  var timer;
-  return function() {
-    clearTimeout(timer);
-    timer = setTimeout(fn, ms);
-  };
-}
-
 function render() {
   document.getElementById('app').innerHTML = buildHTML();
   attachEvents();
@@ -2203,21 +2253,6 @@ function patch(target, immediate) {
 }
 
 /* ═══════════════════════════════════════════════════
-   BUILD HTML — v2.0 RESTRUCTURED
-   New left-column order (generate mode):
-   1. SUBJECT (prompt-main) — first, most prominent
-   2. SCENE grid
-   3. SUBJECT TYPE pills (compact, inside scene context)
-   4. STYLE pills (primary)
-   5. SECONDARY: Lighting | Mood | Genre (dimmer 3-col)
-   6. Resolution (compact)
-   — hr —
-   7. LoRA, Sampler
-   8. PREVIEW CARD (new, before Generate)
-   9. Error / Neg preview
-   10. GENERATE row
-═══════════════════════════════════════════════════ */
-/* ═══════════════════════════════════════════════════
    BUILD HTML — orchestrator + sub-functions
 ═══════════════════════════════════════════════════ */
 
@@ -2228,12 +2263,13 @@ function buildHeader(mob, keyOk) {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v3.1.0</span>' +
+        '<span class="title-version">v3.2.0</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
       '<div class="pill btn ' + (keyOk?'p-ok':'p-miss') + '" id="b-api"><span class="dot"></span>' + (keyOk?'Groq ✓':'API Key?') + '</div>' +
       '<div class="pill btn" id="b-lang" title="Switch UI language">' + langLabel + '</div>' +
+      '<div class="pill btn' + (S.histOpen?' p-active':'') + '" id="b-hist">📋' + (loadHistory().length ? ' '+loadHistory().length : '') + '</div>' +
       '<div class="pill btn' + (S.dbgOpen?' p-active':'') + '" id="b-dbg">🔬 Debug' + (S.dbgLog?(S.dbgLog.httpOk?' ✓':' ✗'):'') + '</div>' +
     '</div>' +
   '</div>';
@@ -2321,10 +2357,14 @@ function buildLeftCol(mob) {
           '<div style="display:flex;align-items:center;gap:6px">' +
             '<span class="hint">'+t('lPromptHint')+'</span>' +
             '<button class="btn-copy" id="b-cp-sub" style="opacity:.6">'+t('btnCopySubject')+'</button>' +
+            (S.subject.trim() ? '<button class="btn-copy" id="b-clr-sub" style="opacity:.5;color:var(--red-txt);border-color:var(--red-bdr)" title="Clear">✕</button>' : '') +
           '</div>' +
         '</div>' +
         '<textarea id="inp-sub" rows="3" placeholder="e.g: '+esc(stPh)+'&#10;• your own idea here">'+esc(S.subject)+'</textarea>' +
         histHtml +
+        '<div style="text-align:right;font-size:10px;margin-top:3px">' +
+          '<span id="sub-count" style="color:' + (S.subject.length > 300 ? 'var(--amber)' : 'var(--t4)') + '">' + S.subject.length + '</span>' +
+        '</div>' +
       '</div>' +
     '</div>';
 
@@ -2585,6 +2625,43 @@ function buildAdvPanel() {
   '</div>';
 }
 
+function buildHistPanel() {
+  if (!S.histOpen) return '';
+  var hist = loadHistory();
+  var items = '';
+  if (!hist.length) {
+    items = '<div class="hist-empty">' + t('histEmpty') + '</div>';
+  } else {
+    items = hist.map(function(h, i) {
+      var d = new Date(h.ts);
+      var timeStr = d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0') + ' · ' +
+                    d.getDate() + '.' + String(d.getMonth()+1).padStart(2,'0');
+      var sceneStyle = esc((h.scene||'') + ' / ' + (h.style||''));
+      var subjectDisp = h.subject ? esc(h.subject.slice(0,80)) : esc(h.positive.slice(0,80));
+      return '<div class="hist-item" data-hist-i="'+i+'">' +
+        '<div class="hist-meta">' +
+          '<span class="hist-scene-style">'+sceneStyle+'</span>' +
+          '<span class="hist-time">'+timeStr+'</span>' +
+        '</div>' +
+        '<div class="hist-subject">'+subjectDisp+'</div>' +
+        '<div class="hist-positive">'+esc(h.positive.slice(0,120))+'</div>' +
+      '</div>';
+    }).join('');
+  }
+  return '<div class="adv-overlay" id="hist-overlay"></div>' +
+  '<div class="adv-sheet" id="hist-sheet">' +
+    '<div class="adv-handle"></div>' +
+    '<div class="adv-hdr">' +
+      '<span class="adv-title">' + t('histTitle') + '</span>' +
+      '<div style="display:flex;gap:8px;align-items:center">' +
+        (hist.length ? '<button class="btn-ghost" id="b-hist-clr" style="font-size:11px;padding:3px 8px;color:var(--red-txt)">'+t('histClear')+'</button>' : '') +
+        '<button class="btn-ghost" id="b-hist-close" style="padding:3px 8px">✕</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="adv-body">' + items + '</div>' +
+  '</div>';
+}
+
 function buildHTML() {
   var mob   = window.innerWidth <= 680;
   var keyOk = !!S.apiKey.trim();
@@ -2598,6 +2675,7 @@ function buildHTML() {
       buildRightCol(mob, keyOk),
     '</div>',
     buildAdvPanel(),
+    buildHistPanel(),
   ].join('');
 }
 
@@ -2619,6 +2697,35 @@ function attachEvents() {
 
   /* ── ADVANCED PANEL ── */
   on('b-adv', 'click', function(){ S.advOpen=true; render(); });
+
+  /* ── HISTORY PANEL ── */
+  on('b-hist',       'click', function(){ S.histOpen=true; render(); });
+  on('b-hist-close', 'click', function(){ S.histOpen=false; render(); });
+  on('b-hist-clr',   'click', function(){ clearHistory(); S.histOpen=false; render(); });
+
+  (function(){
+    var ov = document.getElementById('hist-overlay');
+    if (ov) ov.addEventListener('click', function(){ S.histOpen=false; render(); });
+  }());
+
+  document.querySelectorAll('[data-hist-i]').forEach(function(el){
+    el.addEventListener('click', function(){
+      var i = +el.dataset.histI;
+      var hist = loadHistory();
+      var entry = hist[i];
+      if (!entry) return;
+      S.existing = entry.positive;
+      S.mode = 'enhance';
+      S.mobilePane = 'params';
+      S.histOpen = false;
+      S.error = '';
+      render();
+      requestAnimationFrame(function(){
+        var ta = document.getElementById('inp-exist');
+        if (ta) { ta.focus(); ta.scrollIntoView({ behavior:'smooth', block:'center' }); }
+      });
+    });
+  });
   on('b-adv-close', 'click', function(){ S.advOpen=false; render(); });
   on('b-adv-apply', 'click', function(){ S.advOpen=false; render(); });
   on('b-adv-reset', 'click', function(){ resetAdv(); render(); });
@@ -2649,6 +2756,7 @@ function attachEvents() {
     var btn = document.getElementById('b-lang');
     S.lang = S.lang === 'en' ? 'ua' : 'en';
     try { localStorage.setItem('zit_lang', S.lang); } catch(e) {}
+    saveState();
     if (btn) {
       btn.classList.remove('pill-lang-fired'); void btn.offsetWidth; btn.classList.add('pill-lang-fired');
       setTimeout(render, 380);
@@ -2686,8 +2794,8 @@ function attachEvents() {
   function live(id, key){ var el=document.getElementById(id); if(el) el.addEventListener('input',function(){S[key]=el.value;}); }
   live('inp-sub','subject');
 
-  /* ── live preview update — no full re-render ── */
-  function updatePreview() { patch('preview'); }
+  function liveAndSave(id, key){ var el=document.getElementById(id); if(el) el.addEventListener('input',function(){ S[key]=el.value; saveState(); }); }
+  liveAndSave('inp-steps','steps'); liveAndSave('inp-cfg','cfg'); liveAndSave('inp-seed','seed');
   (function(){
     var ta = document.getElementById('inp-sub');
     if (!ta) return;
@@ -2696,6 +2804,11 @@ function attachEvents() {
         S.subject = ta.value;
         patch('preview');
         autoResize(ta);
+        var cnt = document.getElementById('sub-count');
+        if (cnt) {
+          cnt.textContent = ta.value.length;
+          cnt.style.color = ta.value.length > 300 ? 'var(--amber)' : 'var(--t4)';
+        }
       });
     });
   }());
@@ -2718,20 +2831,18 @@ function attachEvents() {
       patch('genBtn');
     });
   }
-  live('inp-steps','steps'); live('inp-cfg','cfg'); live('inp-seed','seed');
-
   function lsel(id,key){ var el=document.getElementById(id); if(el) el.addEventListener('change',function(){ S[key]=el.value; saveState(); render(); }); }
   /* lighting/mood/genre → only preview needs update, no structural change */
   function lselPatch(id,key){ var el=document.getElementById(id); if(el) el.addEventListener('change',function(){ S[key]=el.value; saveState(); patch('preview'); }); }
   lselPatch('sel-light','lighting'); lselPatch('sel-mood','mood'); lselPatch('sel-genre','genre');
   lsel('sel-res','resolution'); lsel('sel-samp','sampler'); lsel('sel-sch','scheduler');
 
-  document.querySelectorAll('[data-ln]').forEach(function(el){ el.addEventListener('input',function(){S.loras[+el.dataset.ln].name=el.value;}); });
-  document.querySelectorAll('[data-lw]').forEach(function(el){ el.addEventListener('input',function(){S.loras[+el.dataset.lw].weight=el.value;}); });
+  document.querySelectorAll('[data-ln]').forEach(function(el){ el.addEventListener('input',function(){ S.loras[+el.dataset.ln].name=el.value; saveState(); }); });
+  document.querySelectorAll('[data-lw]').forEach(function(el){ el.addEventListener('input',function(){ S.loras[+el.dataset.lw].weight=el.value; saveState(); }); });
   document.querySelectorAll('[data-lr]').forEach(function(el){
-    el.addEventListener('click',function(){ S.loras.splice(+el.dataset.lr,1); render(); });
+    el.addEventListener('click',function(){ S.loras.splice(+el.dataset.lr,1); saveState(); render(); });
   });
-  on('b-add-lora','click',function(){ S.loras.push({name:'',weight:'0.85'}); render(); });
+  on('b-add-lora','click',function(){ S.loras.push({name:'',weight:'0.85'}); saveState(); render(); });
 
   on('b-seed','click',function(){ S.seed=String(Math.floor(Math.random()*1e9)); var el=document.getElementById('inp-seed'); if(el) el.value=S.seed; var sv=document.getElementById('tc-seed-val'); if(sv) sv.textContent=S.seed; });
 
@@ -2744,7 +2855,7 @@ function attachEvents() {
   document.querySelectorAll('.model-card').forEach(function(card){
     card.addEventListener('click', function(){
       var val = card.dataset.model;
-      if (val) { S.model = val; render(); }
+      if (val) { S.model = val; saveState(); render(); }
     });
   });
 
@@ -2800,6 +2911,14 @@ function attachEvents() {
   }
 
   on('b-cp-sub','click',function(e){ if(S.subject.trim()) copyText(S.subject, e.currentTarget); });
+  on('b-clr-sub','click',function(){
+    S.subject = '';
+    render();
+    requestAnimationFrame(function(){
+      var ta = document.getElementById('inp-sub');
+      if (ta) ta.focus();
+    });
+  });
   on('b-cp-pos','click',function(e){ if(S.result) copyText(S.result.positive, e.currentTarget); });
   on('b-cp-neg','click',function(e){ if(S.result) copyText(S.result.negative, e.currentTarget); });
   on('b-cp-all','click',function(e){
@@ -2847,7 +2966,6 @@ function attachSwipe() {
 ═══════════════════════════════════════════════════ */
 loadKey();
 loadState();
-try { var _sl = localStorage.getItem('zit_lang'); if (_sl === 'ua' || _sl === 'en') S.lang = _sl; } catch(e) {}
 render();
 var _rt;
 window.addEventListener('resize', function(){ clearTimeout(_rt); _rt=setTimeout(render,150); });
@@ -2862,10 +2980,11 @@ function _kbHandler(e) {
   }
   /* Escape → закрити будь-яку відкриту панель */
   if (e.key === 'Escape') {
-    if (S.advOpen || S.apiOpen || S.dbgOpen) {
+    if (S.advOpen || S.apiOpen || S.dbgOpen || S.histOpen) {
       S.advOpen = false;
       S.apiOpen = false;
       S.dbgOpen = false;
+      S.histOpen = false;
       render();
     }
     return;
