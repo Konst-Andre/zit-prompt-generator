@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v3.5.1</title>
+  <title>ZIT Prompt Generator v3.5.2</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -173,7 +173,7 @@
       content: ""; position: absolute; left: 0; bottom: 0;
       width: 32px; height: 2px; background: var(--acc); opacity: .7; border-radius: 2px;
     }
-    .info-card .lbl::after, .out-hdr .lbl::after { display: none; }
+    .out-hdr .lbl::after { display: none; }
 
     /* Gradient labels — primary blocks only (variant C) */
     .prompt-main .lbl,
@@ -1643,6 +1643,8 @@ const I18N = {
     btnCopy: 'Copy All', btnAddLoRA: '+ Add LoRA',
     outPositive: 'Positive Prompt', outNegative: 'Negative Prompt',
     outParams: 'ComfyUI Params', outChanged: 'What changed', outTip: 'ZIT tip',
+    dbgEmpty: 'Press Generate — API request/response will appear here.',
+    dbgCopyLog: 'Copy log',
     phFill: 'Fill in parameters\nand press Create Prompt',
     phSub: '· ZIT/Lumina2',
     mobParams: 'Params', mobOutput: 'Output',
@@ -1688,6 +1690,8 @@ const I18N = {
     btnCopy: 'Копіювати все', btnAddLoRA: '+ Додати LoRA',
     outPositive: 'Позитивний промпт', outNegative: 'Негативний промпт',
     outParams: 'Параметри ComfyUI', outChanged: 'Що змінилось', outTip: 'Порада ZIT',
+    dbgEmpty: 'Натисніть Генерувати — запит/відповідь API зʼявиться тут.',
+    dbgCopyLog: 'Копіювати лог',
     phFill: 'Заповніть параметри\nта натисніть Створити',
     phSub: '· ZIT/Lumina2',
     mobParams: 'Параметри', mobOutput: 'Результат',
@@ -1710,7 +1714,7 @@ const I18N = {
     histTitle: 'Історія промптів', histEmpty: 'Історія порожня — спочатку згенеруйте промпт',
     histClear: 'Очистити', histUse: 'Використати', histInsert: 'Вставити', histBtnTitle: 'Історія промптів',
     histDelItem: 'Видалити', histCopyItem: 'Копіювати',
-    apiTitle: 'Налаштування Groq API', apiKeyLabel: 'API Ключ', apiRemember: 'Зберегти ключ (localStorage)',
+    apiTitle: 'Налаштування Groq API', apiKeyLabel: 'API Ключ', apiRemember: 'Зберегти ключ (локальне сховище)',
     apiModelLabel: 'Модель', apiFreeKey: 'Безкоштовний ключ:',
     presetFix: 'Fix SDXL tags', presetZIT: 'Rewrite for ZIT', presetEnhance: 'Enhance details',
     lImproveCtx: 'Контекст',
@@ -1945,10 +1949,11 @@ var SYSTEM_PROMPT = [
   '  product / macro → distortion, reflection artifacts, uneven lighting',
   '  concept / animal → anatomy, deformed, extra limbs',
   '',
-  '=== LANGUAGE RULE ===',
+  '=== LANGUAGE RULE — CRITICAL ===',
   'Always translate non-English subject input to English.',
-  'All prompt output (positive, negative) must be English only.',
-  'Exception: <notes> and <changes> must be written in the UI language specified in the user message.',
+  'All prompt output (positive, negative) MUST be English only.',
+  'IMPORTANT: <notes> and <changes> MUST be written in the UI language specified in the user message.',
+  'If UI language is Ukrainian — write <notes> and <changes> in Ukrainian. This is mandatory.',
   '',
   '=== OUTPUT STRUCTURE — NON-NEGOTIABLE XML CONTRACT ===',
   'Output ONLY the XML tags below — no other text before, between, or after them.',
@@ -2317,7 +2322,7 @@ function buildHeader(mob, keyOk) {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v3.5.1</span>' +
+        '<span class="title-version">v3.5.2</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
@@ -2356,13 +2361,13 @@ function buildDebugPanel() {
   if (!S.dbgOpen) return '';
   var lg = S.dbgLog, dbInner;
   if (!lg) {
-    dbInner = '<p style="color:var(--t4);font-size:12px;margin:0">Press Generate — API request/response will appear here.</p>';
+    dbInner = '<p style="color:var(--t4);font-size:12px;margin:0">'+t('dbgEmpty')+'</p>';
   } else {
     var badges = '';
     if (lg.httpStatus!=null) badges += '<span class="dbadge" style="background:'+(lg.httpOk?'var(--green-bg)':'var(--red-bg)')+';color:'+(lg.httpOk?'var(--green-txt)':'var(--red-txt)')+';border:1px solid '+(lg.httpOk?'var(--green-bdr)':'var(--red-bdr)')+'">HTTP '+lg.httpStatus+' '+(lg.httpOk?'✓':'✗')+'</span>';
     if (lg.model) badges += '<span class="dbadge" style="background:var(--acc-bg);color:var(--acc-txt);border:1px solid var(--acc)">'+esc(lg.model.split('/').pop())+'</span>';
     if (lg.responseMs) badges += '<span class="dbadge" style="background:var(--amber-bg);color:var(--amber-txt);border:1px solid var(--amber-bdr)">'+lg.responseMs+'ms</span>';
-    badges += '<button class="btn-ghost" id="b-cp-log" style="font-size:10px;padding:3px 8px">Copy log</button>';
+    badges += '<button class="btn-ghost" id="b-cp-log" style="font-size:10px;padding:3px 8px">'+t('dbgCopyLog')+'</button>';
     dbInner = '<div class="dbg-badges" style="margin-bottom:12px">'+badges+'</div>' +
       '<div class="dbg-sec"><div class="dbg-lbl">Stripped content (think removed)</div>' +
       '<pre class="dbg-pre '+(lg.strippedText?'ok':'err')+'">'+esc(lg.strippedText||'⚠ EMPTY — this is the problem')+'</pre></div>' +
@@ -2484,7 +2489,7 @@ function buildLeftCol(mob) {
     var sceneOpts = SCENES.map(function(sc){ return '<option value="'+esc(sc.id)+'"'+(S.scene===sc.id?' selected':'')+'>'+esc(sc.label)+'</option>'; }).join('');
     var styleOpts = STYLES.map(function(st){ return '<option value="'+esc(st.id)+'"'+(S.style===st.id?' selected':'')+'>'+esc(st.label)+'</option>'; }).join('');
     h += '<div class="secondary-section"><div class="sec-block">' +
-      '<div class="f-hdr" style="margin-bottom:8px"><span class="grp-lbl">'+t('lImproveCtx')+'</span></div>' +
+      '<div class="f-hdr" style="margin-bottom:4px"><span class="grp-lbl" style="margin-top:0">'+t('lImproveCtx')+'</span></div>' +
       '<div class="three-col" style="grid-template-columns:1fr 1fr">' +
         '<div class="field"><div class="f-hdr"><label class="lbl" style="font-size:10px">'+t('lScene')+'</label></div>' +
         '<select id="sel-enh-scene">'+sceneOpts+'</select></div>' +
@@ -2510,7 +2515,9 @@ function buildLeftCol(mob) {
         (S.existing.trim() ? '<button class="btn-clr" id="b-clr-exist" title="'+t('btnClearTitle')+'">✕</button>' : '') +
       '</div>' +
     '</div>' +
-      '<textarea id="inp-exist" rows="6" style="min-height:130px" maxlength="1500" placeholder="e.g: beautiful girl, best quality, masterpiece...&#10;&#10;or: дівчина-кіборг у нічному місті">'+esc(S.existing)+'</textarea></div>';
+    '<div class="prompt-main" id="pm-exist">' +
+      '<textarea id="inp-exist" rows="4" style="min-height:100px" maxlength="1500" placeholder="e.g: beautiful girl, best quality, masterpiece...&#10;&#10;or: дівчина-кіборг у нічному місті">'+esc(S.existing)+'</textarea>' +
+    '</div></div>';
   }
 
   h += '<hr>';
@@ -2562,10 +2569,10 @@ function buildLeftCol(mob) {
     var scNow = SCENES.find(function(x){return x.id===S.scene;})||{};
     var stNow2 = STYLES.find(function(x){return x.id===S.style;})||{};
     var presetLabel = S.improvePreset==='fix'?t('presetFix'):S.improvePreset==='zit'?t('presetZIT'):S.improvePreset==='enhance'?t('presetEnhance'):'—';
-    h += '<div style="font-size:10px;color:var(--t3);letter-spacing:.04em;margin-bottom:8px;padding:6px 10px;background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r);line-height:1.7">' +
-      '<span style="color:var(--t4)">Scene</span> <span style="color:var(--t2)">'+(scNow.label||'—')+'</span>' +
-      ' &nbsp;·&nbsp; <span style="color:var(--t4)">Style</span> <span style="color:var(--t2)">'+(stNow2.label||'—')+'</span>' +
-      (S.improvePreset ? ' &nbsp;·&nbsp; <span style="color:var(--t4)">Preset</span> <span style="color:var(--acc-txt)">'+presetLabel+'</span>' : '') +
+    h += '<div style="font-size:10px;color:var(--t3);letter-spacing:.04em;margin-top:12px;margin-bottom:12px;padding:6px 10px;background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r);line-height:1.7">' +
+      '<span style="color:var(--t3)">Scene</span> <span style="color:var(--t1)">'+(scNow.label||'—')+'</span>' +
+      ' &nbsp;·&nbsp; <span style="color:var(--t3)">Style</span> <span style="color:var(--t1)">'+(stNow2.label||'—')+'</span>' +
+      (S.improvePreset ? ' &nbsp;·&nbsp; <span style="color:var(--t3)">Preset</span> <span style="color:var(--acc-txt)">'+presetLabel+'</span>' : '') +
     '</div>';
     h += '<button class="btn-primary'+(S.loading?' loading':'')+(improveDisabled&&!S.loading?' btn-secondary':'')+'" id="b-gen"'+(improveDisabled?' disabled':'')+'>' +
       (S.loading
@@ -2677,7 +2684,7 @@ function buildAdvPanel() {
     '</div>' +
     '<div class="adv-body">' +
       '<div class="adv-section-title">COMFYUI CONFIG</div>' +
-      '<span class="tech-label">ComfyUI Params</span>' +
+      '<span class="tech-label">'+t('outParams')+'</span>' +
       '<div class="tech-bar">' +
         '<span class="tc-chip" title="Resolution"><select id="sel-res">' +
           RESOLUTIONS.map(function(r){ return '<option value="'+esc(r.value)+'"'+(S.resolution===r.value?' selected':'')+'>'+(RES_LABEL2[r.value]||r.value)+'</option>'; }).join('') +
@@ -2970,6 +2977,12 @@ function attachEvents() {
 
   var existEl = document.getElementById('inp-exist');
   if (existEl) {
+    var pmExist = document.getElementById('pm-exist');
+    if (pmExist) {
+      existEl.addEventListener('focus', function(){ pmExist.classList.add('is-focus'); });
+      existEl.addEventListener('blur',  function(){ pmExist.classList.remove('is-focus','is-typing'); });
+      existEl.addEventListener('input', function(){ pmExist.classList.add('is-typing'); });
+    }
     existEl.addEventListener('input', function(){
       S.existing = existEl.value;
       var hint = existEl.closest('.field').querySelector('.hint span');
