@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v3.5.4-diag</title>
+  <title>ZIT Prompt Generator v3.5.5</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -1119,8 +1119,6 @@
       margin-bottom: 2px;
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-  <script>eruda.init();</script>
 </head>
 <body>
 <div id="app"></div>
@@ -1875,7 +1873,7 @@ function doRandom(mode) {
   S.subjectHistory = S.subjectHistory.filter(function(h){ return h !== subject; });
   S.subjectHistory.unshift(subject);
   if (S.subjectHistory.length > 5) S.subjectHistory.length = 5;
-  render("L1878");
+  render();
   requestAnimationFrame(function() {
     var ta = document.getElementById('inp-sub');
     if (!ta) return;
@@ -2107,15 +2105,15 @@ async function callGroqOnce(signal) {
 }
 
 async function generate() {
-  if (!S.apiKey.trim()) { S.error=t('errNoKey'); S.apiOpen=true; render('L-nokey'); forceRepaint(); return; }
-  if (S.mode==='generate' && !S.subject.trim()) { S.error=t('errNoSubject'); render('L-nosubj'); forceRepaint(); return; }
-  if (S.mode==='enhance'  && !S.existing.trim()) { S.error=t('errNoExisting'); render('L-noexist'); forceRepaint(); return; }
+  if (!S.apiKey.trim()) { S.error=t('errNoKey'); S.apiOpen=true; render(); forceRepaint(); return; }
+  if (S.mode==='generate' && !S.subject.trim()) { S.error=t('errNoSubject'); render(); forceRepaint(); return; }
+  if (S.mode==='enhance'  && !S.existing.trim()) { S.error=t('errNoExisting'); render(); forceRepaint(); return; }
   if (_busy) { if (_ac) _ac.abort(); _busy=false; }
   _ac=new AbortController(); _busy=true;
   S.loading=true; S.error='';
   S.result=null; S.dbgLog=null;
   if (window.innerWidth<=680) S.mobilePane='output';
-  render("L2118");
+  render();
   var attempts=0;
   while (attempts<=2) {
     attempts++;
@@ -2133,7 +2131,7 @@ async function generate() {
         if (_ac&&_ac.signal.aborted) break;
         var delay=3000*attempts;
         S.error = t('errRateLimit').replace('{n}', attempts).replace('{s}', delay/1000);
-        render("L2136");
+        render();
         await sleep(delay);
         if (_ac&&_ac.signal.aborted) break;
         S.error=''; continue;
@@ -2142,7 +2140,7 @@ async function generate() {
       break;
     }
   }
-  _busy=false; S.loading=false; render("L2145-done"); forceRepaint();
+  _busy=false; S.loading=false; render(); forceRepaint();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -2256,11 +2254,17 @@ function autoResize(el) {
   el.style.height = el.scrollHeight + 'px';
 }
 
-function render(diagLabel) {
+function render() {
   var active = document.activeElement;
   var activeTag = active ? active.tagName : '';
   if (activeTag === 'TEXTAREA' || activeTag === 'INPUT') {
-    console.warn('[ZIT diag] render(' + (diagLabel||'?') + ') while ' + activeTag + '#' + (active.id||'?') + ' focused');
+    /* defer render until blur — prevents Android keyboard dismiss */
+    active.addEventListener('blur', function onBlur() {
+      active.removeEventListener('blur', onBlur);
+      document.getElementById('app').innerHTML = buildHTML();
+      attachEvents();
+    }, { once: true });
+    return;
   }
   document.getElementById('app').innerHTML = buildHTML();
   attachEvents();
@@ -2331,7 +2335,7 @@ function buildHeader(mob, keyOk) {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v3.5.4-diag</span>' +
+        '<span class="title-version">v3.5.5</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
@@ -2806,23 +2810,23 @@ function attachEvents() {
   document.removeEventListener('keydown', _kbHandler);
   document.addEventListener('keydown', _kbHandler);
 
-  on('b-api',       'click', function(){ S.apiOpen=!S.apiOpen; render("L2809"); });
-  on('b-dbg',       'click', function(){ S.dbgOpen=!S.dbgOpen; render("L2810"); });
-  on('b-api-close', 'click', function(){ S.apiOpen=false; S.dbgOpen=false; render("L2811"); });
-  on('b-open-api',  'click', function(){ S.apiOpen=true; render("L2812"); });
-  on('b-open-dbg',  'click', function(){ S.dbgOpen=true; render("L2813"); });
+  on('b-api',       'click', function(){ S.apiOpen=!S.apiOpen; render(); });
+  on('b-dbg',       'click', function(){ S.dbgOpen=!S.dbgOpen; render(); });
+  on('b-api-close', 'click', function(){ S.apiOpen=false; S.dbgOpen=false; render(); });
+  on('b-open-api',  'click', function(){ S.apiOpen=true; render(); });
+  on('b-open-dbg',  'click', function(){ S.dbgOpen=true; render(); });
 
   /* ── ADVANCED PANEL ── */
-  on('b-adv', 'click', function(){ S.advOpen=true; render("L2816"); });
+  on('b-adv', 'click', function(){ S.advOpen=true; render(); });
 
   /* ── HISTORY PANEL ── */
-  on('b-hist',       'click', function(){ S.histOpen=true; render("L2819"); });
-  on('b-hist-close', 'click', function(){ S.histOpen=false; render("L2820"); });
-  on('b-hist-clr',   'click', function(){ clearHistory(); S.histOpen=false; render("L2821"); });
+  on('b-hist',       'click', function(){ S.histOpen=true; render(); });
+  on('b-hist-close', 'click', function(){ S.histOpen=false; render(); });
+  on('b-hist-clr',   'click', function(){ clearHistory(); S.histOpen=false; render(); });
 
   (function(){
     var ov = document.getElementById('hist-overlay');
-    if (ov) ov.addEventListener('click', function(){ S.histOpen=false; render("L2825"); });
+    if (ov) ov.addEventListener('click', function(){ S.histOpen=false; render(); });
   }());
 
   /* History — Use this (closes panel, switches to Improve mode) */
@@ -2838,7 +2842,7 @@ function attachEvents() {
       S.mobilePane = 'params';
       S.histOpen = false;
       S.error = '';
-      render("L2841");
+      render();
       requestAnimationFrame(function(){
         var ta = document.getElementById('inp-exist');
         if (ta) { ta.focus(); ta.scrollIntoView({ behavior:'smooth', block:'center' }); }
@@ -2858,7 +2862,7 @@ function attachEvents() {
       S.mode = 'enhance';
       S.mobilePane = 'params';
       S.error = '';
-      render("L2861");
+      render();
       requestAnimationFrame(function(){
         var ta = document.getElementById('inp-exist');
         if (ta) { ta.focus(); ta.scrollIntoView({ behavior:'smooth', block:'center' }); }
@@ -2866,7 +2870,7 @@ function attachEvents() {
     });
   });
 
-  on('b-hist-subj', 'click', function(){ S.histOpen=true; render("L2869"); });
+  on('b-hist-subj', 'click', function(){ S.histOpen=true; render(); });
 
   /* History — Copy item (копіює positive, панель лишається відкритою) */
   document.querySelectorAll('[data-hist-copy]').forEach(function(el){
@@ -2886,18 +2890,18 @@ function attachEvents() {
       e.stopPropagation();
       var i = +el.dataset.histDel;
       deleteHistoryItem(i);
-      render("L2889");
+      render();
     });
   });
-  on('b-adv-close', 'click', function(){ S.advOpen=false; render("L2892"); });
-  on('b-adv-apply', 'click', function(){ S.advOpen=false; render("L2893"); });
-  on('b-adv-reset', 'click', function(){ resetAdv(); render("L2894"); });
-  on('b-adv-neg-clr', 'click', function(){ S.customNeg=''; render("L2895"); });
+  on('b-adv-close', 'click', function(){ S.advOpen=false; render(); });
+  on('b-adv-apply', 'click', function(){ S.advOpen=false; render(); });
+  on('b-adv-reset', 'click', function(){ resetAdv(); render(); });
+  on('b-adv-neg-clr', 'click', function(){ S.customNeg=''; render(); });
 
   /* tap overlay to close */
   (function(){
     var ov = document.getElementById('adv-overlay');
-    if (ov) ov.addEventListener('click', function(){ S.advOpen=false; render("L2900"); });
+    if (ov) ov.addEventListener('click', function(){ S.advOpen=false; render(); });
   }());
 
   /* custom neg live */
@@ -2924,11 +2928,11 @@ function attachEvents() {
       btn.classList.remove('pill-lang-fired'); void btn.offsetWidth; btn.classList.add('pill-lang-fired');
       setTimeout(render, 380);
     } else {
-      render("L2927");
+      render();
     }
   });
 
-  document.querySelectorAll('[data-pane]').forEach(function(el){ el.addEventListener('click', function(){ S.mobilePane=el.dataset.pane; render("L2931"); }); });
+  document.querySelectorAll('[data-pane]').forEach(function(el){ el.addEventListener('click', function(){ S.mobilePane=el.dataset.pane; render(); }); });
   document.querySelectorAll('[data-mode]').forEach(function(el){ el.addEventListener('click', function(){
     var newMode = el.dataset.mode;
     if (newMode === 'enhance' && !S.existing.trim() && S.result) {
@@ -2936,17 +2940,17 @@ function attachEvents() {
     }
     S.mode = newMode;
     S.error = '';
-    render("L2939");
+    render();
   }); });
-  document.querySelectorAll('[data-scene]').forEach(function(el){ el.addEventListener('click', function(){ S.scene=el.dataset.scene; saveState(); render("L2941"); }); });
-  document.querySelectorAll('[data-style]').forEach(function(el){ el.addEventListener('click', function(){ S.style=el.dataset.style; saveState(); render("L2942"); }); });
-  document.querySelectorAll('[data-subtype]').forEach(function(el){ el.addEventListener('click', function(){ S.subjectType=el.dataset.subtype; saveState(); render("L2943"); }); });
+  document.querySelectorAll('[data-scene]').forEach(function(el){ el.addEventListener('click', function(){ S.scene=el.dataset.scene; saveState(); render(); }); });
+  document.querySelectorAll('[data-style]').forEach(function(el){ el.addEventListener('click', function(){ S.style=el.dataset.style; saveState(); render(); }); });
+  document.querySelectorAll('[data-subtype]').forEach(function(el){ el.addEventListener('click', function(){ S.subjectType=el.dataset.subtype; saveState(); render(); }); });
 
   document.querySelectorAll('[data-hist]').forEach(function(el){
     el.addEventListener('click', function(){
       var i = +el.dataset.hist;
       S.subject = S.subjectHistory[i] || S.subject;
-      render("L2949");
+      render();
       requestAnimationFrame(function(){
         var ta = document.getElementById('inp-sub');
         if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
@@ -3013,7 +3017,7 @@ function attachEvents() {
       patch('genBtn');
     });
   }
-  function lsel(id,key){ var el=document.getElementById(id); if(el) el.addEventListener('change',function(){ S[key]=el.value; saveState(); render("L3016"); }); }
+  function lsel(id,key){ var el=document.getElementById(id); if(el) el.addEventListener('change',function(){ S[key]=el.value; saveState(); render(); }); }
   /* lighting/mood/genre → only preview needs update, no structural change */
   function lselPatch(id,key){ var el=document.getElementById(id); if(el) el.addEventListener('change',function(){ S[key]=el.value; saveState(); patch('preview'); }); }
   lselPatch('sel-light','lighting'); lselPatch('sel-mood','mood'); lselPatch('sel-genre','genre');
@@ -3023,16 +3027,16 @@ function attachEvents() {
   document.querySelectorAll('[data-preset]').forEach(function(el){
     el.addEventListener('click', function(){
       S.improvePreset = (S.improvePreset === el.dataset.preset) ? '' : el.dataset.preset;
-      render("L3026");
+      render();
     });
   });
 
   document.querySelectorAll('[data-ln]').forEach(function(el){ el.addEventListener('input',function(){ S.loras[+el.dataset.ln].name=el.value; saveState(); }); });
   document.querySelectorAll('[data-lw]').forEach(function(el){ el.addEventListener('input',function(){ S.loras[+el.dataset.lw].weight=el.value; saveState(); }); });
   document.querySelectorAll('[data-lr]').forEach(function(el){
-    el.addEventListener('click',function(){ S.loras.splice(+el.dataset.lr,1); saveState(); render("L3033"); });
+    el.addEventListener('click',function(){ S.loras.splice(+el.dataset.lr,1); saveState(); render(); });
   });
-  on('b-add-lora','click',function(){ S.loras.push({name:'',weight:'0.85'}); saveState(); render("L3035"); });
+  on('b-add-lora','click',function(){ S.loras.push({name:'',weight:'0.85'}); saveState(); render(); });
 
   on('b-seed','click',function(){ S.seed=String(Math.floor(Math.random()*1e9)); var el=document.getElementById('inp-seed'); if(el) el.value=S.seed; var sv=document.getElementById('tc-seed-val'); if(sv) sv.textContent=S.seed; });
 
@@ -3040,12 +3044,12 @@ function attachEvents() {
   if(ki) ki.addEventListener('input',function(){ var chk=document.getElementById('chk-rem'); saveKey(ki.value, chk?chk.checked:false); });
   var cr=document.getElementById('chk-rem');
   if(cr) cr.addEventListener('change',function(){ var k=document.getElementById('inp-key'); saveKey(k?k.value:S.apiKey, cr.checked); });
-  on('b-key-clr','click',function(){ clearKey(); render("L3043"); });
+  on('b-key-clr','click',function(){ clearKey(); render(); });
 
   document.querySelectorAll('.model-card').forEach(function(card){
     card.addEventListener('click', function(){
       var val = card.dataset.model;
-      if (val) { S.model = val; saveState(); render("L3048"); }
+      if (val) { S.model = val; saveState(); render(); }
     });
   });
 
@@ -3057,7 +3061,7 @@ function attachEvents() {
     S.mode = 'enhance';
     S.mobilePane = 'params'; /* на mobile — показати ліву колонку з textarea */
     S.error = '';
-    render("L3060");
+    render();
     requestAnimationFrame(function() {
       var ta = document.getElementById('inp-exist');
       if (ta) {
@@ -3107,7 +3111,7 @@ function attachEvents() {
     if (btn) { btn.classList.add('cleared'); btn.textContent = '✓'; }
     setTimeout(function(){
       S.existing = '';
-      render("L3110");
+      render();
       requestAnimationFrame(function(){
         var ta = document.getElementById('inp-exist');
         if (ta) ta.focus();
@@ -3119,7 +3123,7 @@ function attachEvents() {
     if (btn) { btn.classList.add('cleared'); btn.textContent = '✓'; }
     setTimeout(function(){
       S.subject = '';
-      render("L3122");
+      render();
       requestAnimationFrame(function(){
         var ta = document.getElementById('inp-sub');
         if (ta) ta.focus();
@@ -3166,7 +3170,7 @@ function attachSwipe() {
     /* мінімальний поріг 80px щоб уникнути випадкових дотиків */
     if (Math.abs(dx) < 80) return;
     S.mobilePane = dx < 0 ? 'output' : 'params';
-    render("L3169");
+    render();
   }, { passive: true });
 }
 
@@ -3175,7 +3179,7 @@ function attachSwipe() {
 ═══════════════════════════════════════════════════ */
 loadKey();
 loadState();
-render("L3178");
+render();
 var _rt;
 window.addEventListener('resize', function(){ clearTimeout(_rt); _rt=setTimeout(render,150); });
 
@@ -3194,7 +3198,7 @@ function _kbHandler(e) {
       S.apiOpen = false;
       S.dbgOpen = false;
       S.histOpen = false;
-      render("L3197");
+      render();
     }
     return;
   }
