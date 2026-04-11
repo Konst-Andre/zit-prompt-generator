@@ -2260,8 +2260,8 @@ function render() {
   var active = document.activeElement;
   var activeTag = active ? active.tagName : '';
   if (activeTag === 'TEXTAREA' || activeTag === 'INPUT') {
-    console.warn('[ZIT diag] render() called while ' + activeTag + '#' + (active.id||'?') + ' is focused');
-    console.trace();
+    var stack = new Error().stack || 'no stack';
+    console.warn('[ZIT diag] render() while ' + activeTag + '#' + (active.id||'?') + ' focused\n' + stack);
   }
   document.getElementById('app').innerHTML = buildHTML();
   attachEvents();
