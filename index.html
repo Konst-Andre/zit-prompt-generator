@@ -1875,7 +1875,7 @@ function doRandom(mode) {
   S.subjectHistory = S.subjectHistory.filter(function(h){ return h !== subject; });
   S.subjectHistory.unshift(subject);
   if (S.subjectHistory.length > 5) S.subjectHistory.length = 5;
-  render();
+  render("L1878");
   requestAnimationFrame(function() {
     var ta = document.getElementById('inp-sub');
     if (!ta) return;
@@ -2115,7 +2115,7 @@ async function generate() {
   S.loading=true; S.error='';
   S.result=null; S.dbgLog=null;
   if (window.innerWidth<=680) S.mobilePane='output';
-  render();
+  render("L2118");
   var attempts=0;
   while (attempts<=2) {
     attempts++;
@@ -2133,7 +2133,7 @@ async function generate() {
         if (_ac&&_ac.signal.aborted) break;
         var delay=3000*attempts;
         S.error = t('errRateLimit').replace('{n}', attempts).replace('{s}', delay/1000);
-        render();
+        render("L2136");
         await sleep(delay);
         if (_ac&&_ac.signal.aborted) break;
         S.error=''; continue;
@@ -2256,12 +2256,11 @@ function autoResize(el) {
   el.style.height = el.scrollHeight + 'px';
 }
 
-function render() {
+function render(diagLabel) {
   var active = document.activeElement;
   var activeTag = active ? active.tagName : '';
   if (activeTag === 'TEXTAREA' || activeTag === 'INPUT') {
-    var stack = new Error().stack || 'no stack';
-    console.warn('[ZIT diag] render() while ' + activeTag + '#' + (active.id||'?') + ' focused\n' + stack);
+    console.warn('[ZIT diag] render(' + (diagLabel||'?') + ') while ' + activeTag + '#' + (active.id||'?') + ' focused');
   }
   document.getElementById('app').innerHTML = buildHTML();
   attachEvents();
@@ -2807,23 +2806,23 @@ function attachEvents() {
   document.removeEventListener('keydown', _kbHandler);
   document.addEventListener('keydown', _kbHandler);
 
-  on('b-api',       'click', function(){ S.apiOpen=!S.apiOpen; render(); });
-  on('b-dbg',       'click', function(){ S.dbgOpen=!S.dbgOpen; render(); });
-  on('b-api-close', 'click', function(){ S.apiOpen=false; S.dbgOpen=false; render(); });
-  on('b-open-api',  'click', function(){ S.apiOpen=true; render(); });
-  on('b-open-dbg',  'click', function(){ S.dbgOpen=true; render(); });
+  on('b-api',       'click', function(){ S.apiOpen=!S.apiOpen; render("L2809"); });
+  on('b-dbg',       'click', function(){ S.dbgOpen=!S.dbgOpen; render("L2810"); });
+  on('b-api-close', 'click', function(){ S.apiOpen=false; S.dbgOpen=false; render("L2811"); });
+  on('b-open-api',  'click', function(){ S.apiOpen=true; render("L2812"); });
+  on('b-open-dbg',  'click', function(){ S.dbgOpen=true; render("L2813"); });
 
   /* ── ADVANCED PANEL ── */
-  on('b-adv', 'click', function(){ S.advOpen=true; render(); });
+  on('b-adv', 'click', function(){ S.advOpen=true; render("L2816"); });
 
   /* ── HISTORY PANEL ── */
-  on('b-hist',       'click', function(){ S.histOpen=true; render(); });
-  on('b-hist-close', 'click', function(){ S.histOpen=false; render(); });
-  on('b-hist-clr',   'click', function(){ clearHistory(); S.histOpen=false; render(); });
+  on('b-hist',       'click', function(){ S.histOpen=true; render("L2819"); });
+  on('b-hist-close', 'click', function(){ S.histOpen=false; render("L2820"); });
+  on('b-hist-clr',   'click', function(){ clearHistory(); S.histOpen=false; render("L2821"); });
 
   (function(){
     var ov = document.getElementById('hist-overlay');
-    if (ov) ov.addEventListener('click', function(){ S.histOpen=false; render(); });
+    if (ov) ov.addEventListener('click', function(){ S.histOpen=false; render("L2825"); });
   }());
 
   /* History — Use this (closes panel, switches to Improve mode) */
@@ -2839,7 +2838,7 @@ function attachEvents() {
       S.mobilePane = 'params';
       S.histOpen = false;
       S.error = '';
-      render();
+      render("L2841");
       requestAnimationFrame(function(){
         var ta = document.getElementById('inp-exist');
         if (ta) { ta.focus(); ta.scrollIntoView({ behavior:'smooth', block:'center' }); }
@@ -2859,7 +2858,7 @@ function attachEvents() {
       S.mode = 'enhance';
       S.mobilePane = 'params';
       S.error = '';
-      render();
+      render("L2861");
       requestAnimationFrame(function(){
         var ta = document.getElementById('inp-exist');
         if (ta) { ta.focus(); ta.scrollIntoView({ behavior:'smooth', block:'center' }); }
@@ -2867,7 +2866,7 @@ function attachEvents() {
     });
   });
 
-  on('b-hist-subj', 'click', function(){ S.histOpen=true; render(); });
+  on('b-hist-subj', 'click', function(){ S.histOpen=true; render("L2869"); });
 
   /* History — Copy item (копіює positive, панель лишається відкритою) */
   document.querySelectorAll('[data-hist-copy]').forEach(function(el){
@@ -2887,18 +2886,18 @@ function attachEvents() {
       e.stopPropagation();
       var i = +el.dataset.histDel;
       deleteHistoryItem(i);
-      render();
+      render("L2889");
     });
   });
-  on('b-adv-close', 'click', function(){ S.advOpen=false; render(); });
-  on('b-adv-apply', 'click', function(){ S.advOpen=false; render(); });
-  on('b-adv-reset', 'click', function(){ resetAdv(); render(); });
-  on('b-adv-neg-clr', 'click', function(){ S.customNeg=''; render(); });
+  on('b-adv-close', 'click', function(){ S.advOpen=false; render("L2892"); });
+  on('b-adv-apply', 'click', function(){ S.advOpen=false; render("L2893"); });
+  on('b-adv-reset', 'click', function(){ resetAdv(); render("L2894"); });
+  on('b-adv-neg-clr', 'click', function(){ S.customNeg=''; render("L2895"); });
 
   /* tap overlay to close */
   (function(){
     var ov = document.getElementById('adv-overlay');
-    if (ov) ov.addEventListener('click', function(){ S.advOpen=false; render(); });
+    if (ov) ov.addEventListener('click', function(){ S.advOpen=false; render("L2900"); });
   }());
 
   /* custom neg live */
@@ -2925,11 +2924,11 @@ function attachEvents() {
       btn.classList.remove('pill-lang-fired'); void btn.offsetWidth; btn.classList.add('pill-lang-fired');
       setTimeout(render, 380);
     } else {
-      render();
+      render("L2927");
     }
   });
 
-  document.querySelectorAll('[data-pane]').forEach(function(el){ el.addEventListener('click', function(){ S.mobilePane=el.dataset.pane; render(); }); });
+  document.querySelectorAll('[data-pane]').forEach(function(el){ el.addEventListener('click', function(){ S.mobilePane=el.dataset.pane; render("L2931"); }); });
   document.querySelectorAll('[data-mode]').forEach(function(el){ el.addEventListener('click', function(){
     var newMode = el.dataset.mode;
     if (newMode === 'enhance' && !S.existing.trim() && S.result) {
@@ -2937,17 +2936,17 @@ function attachEvents() {
     }
     S.mode = newMode;
     S.error = '';
-    render();
+    render("L2939");
   }); });
-  document.querySelectorAll('[data-scene]').forEach(function(el){ el.addEventListener('click', function(){ S.scene=el.dataset.scene; saveState(); render(); }); });
-  document.querySelectorAll('[data-style]').forEach(function(el){ el.addEventListener('click', function(){ S.style=el.dataset.style; saveState(); render(); }); });
-  document.querySelectorAll('[data-subtype]').forEach(function(el){ el.addEventListener('click', function(){ S.subjectType=el.dataset.subtype; saveState(); render(); }); });
+  document.querySelectorAll('[data-scene]').forEach(function(el){ el.addEventListener('click', function(){ S.scene=el.dataset.scene; saveState(); render("L2941"); }); });
+  document.querySelectorAll('[data-style]').forEach(function(el){ el.addEventListener('click', function(){ S.style=el.dataset.style; saveState(); render("L2942"); }); });
+  document.querySelectorAll('[data-subtype]').forEach(function(el){ el.addEventListener('click', function(){ S.subjectType=el.dataset.subtype; saveState(); render("L2943"); }); });
 
   document.querySelectorAll('[data-hist]').forEach(function(el){
     el.addEventListener('click', function(){
       var i = +el.dataset.hist;
       S.subject = S.subjectHistory[i] || S.subject;
-      render();
+      render("L2949");
       requestAnimationFrame(function(){
         var ta = document.getElementById('inp-sub');
         if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
@@ -3014,7 +3013,7 @@ function attachEvents() {
       patch('genBtn');
     });
   }
-  function lsel(id,key){ var el=document.getElementById(id); if(el) el.addEventListener('change',function(){ S[key]=el.value; saveState(); render(); }); }
+  function lsel(id,key){ var el=document.getElementById(id); if(el) el.addEventListener('change',function(){ S[key]=el.value; saveState(); render("L3016"); }); }
   /* lighting/mood/genre → only preview needs update, no structural change */
   function lselPatch(id,key){ var el=document.getElementById(id); if(el) el.addEventListener('change',function(){ S[key]=el.value; saveState(); patch('preview'); }); }
   lselPatch('sel-light','lighting'); lselPatch('sel-mood','mood'); lselPatch('sel-genre','genre');
@@ -3024,16 +3023,16 @@ function attachEvents() {
   document.querySelectorAll('[data-preset]').forEach(function(el){
     el.addEventListener('click', function(){
       S.improvePreset = (S.improvePreset === el.dataset.preset) ? '' : el.dataset.preset;
-      render();
+      render("L3026");
     });
   });
 
   document.querySelectorAll('[data-ln]').forEach(function(el){ el.addEventListener('input',function(){ S.loras[+el.dataset.ln].name=el.value; saveState(); }); });
   document.querySelectorAll('[data-lw]').forEach(function(el){ el.addEventListener('input',function(){ S.loras[+el.dataset.lw].weight=el.value; saveState(); }); });
   document.querySelectorAll('[data-lr]').forEach(function(el){
-    el.addEventListener('click',function(){ S.loras.splice(+el.dataset.lr,1); saveState(); render(); });
+    el.addEventListener('click',function(){ S.loras.splice(+el.dataset.lr,1); saveState(); render("L3033"); });
   });
-  on('b-add-lora','click',function(){ S.loras.push({name:'',weight:'0.85'}); saveState(); render(); });
+  on('b-add-lora','click',function(){ S.loras.push({name:'',weight:'0.85'}); saveState(); render("L3035"); });
 
   on('b-seed','click',function(){ S.seed=String(Math.floor(Math.random()*1e9)); var el=document.getElementById('inp-seed'); if(el) el.value=S.seed; var sv=document.getElementById('tc-seed-val'); if(sv) sv.textContent=S.seed; });
 
@@ -3041,12 +3040,12 @@ function attachEvents() {
   if(ki) ki.addEventListener('input',function(){ var chk=document.getElementById('chk-rem'); saveKey(ki.value, chk?chk.checked:false); });
   var cr=document.getElementById('chk-rem');
   if(cr) cr.addEventListener('change',function(){ var k=document.getElementById('inp-key'); saveKey(k?k.value:S.apiKey, cr.checked); });
-  on('b-key-clr','click',function(){ clearKey(); render(); });
+  on('b-key-clr','click',function(){ clearKey(); render("L3043"); });
 
   document.querySelectorAll('.model-card').forEach(function(card){
     card.addEventListener('click', function(){
       var val = card.dataset.model;
-      if (val) { S.model = val; saveState(); render(); }
+      if (val) { S.model = val; saveState(); render("L3048"); }
     });
   });
 
@@ -3058,7 +3057,7 @@ function attachEvents() {
     S.mode = 'enhance';
     S.mobilePane = 'params'; /* на mobile — показати ліву колонку з textarea */
     S.error = '';
-    render();
+    render("L3060");
     requestAnimationFrame(function() {
       var ta = document.getElementById('inp-exist');
       if (ta) {
@@ -3108,7 +3107,7 @@ function attachEvents() {
     if (btn) { btn.classList.add('cleared'); btn.textContent = '✓'; }
     setTimeout(function(){
       S.existing = '';
-      render();
+      render("L3110");
       requestAnimationFrame(function(){
         var ta = document.getElementById('inp-exist');
         if (ta) ta.focus();
@@ -3120,7 +3119,7 @@ function attachEvents() {
     if (btn) { btn.classList.add('cleared'); btn.textContent = '✓'; }
     setTimeout(function(){
       S.subject = '';
-      render();
+      render("L3122");
       requestAnimationFrame(function(){
         var ta = document.getElementById('inp-sub');
         if (ta) ta.focus();
@@ -3167,7 +3166,7 @@ function attachSwipe() {
     /* мінімальний поріг 80px щоб уникнути випадкових дотиків */
     if (Math.abs(dx) < 80) return;
     S.mobilePane = dx < 0 ? 'output' : 'params';
-    render();
+    render("L3169");
   }, { passive: true });
 }
 
@@ -3176,7 +3175,7 @@ function attachSwipe() {
 ═══════════════════════════════════════════════════ */
 loadKey();
 loadState();
-render();
+render("L3178");
 var _rt;
 window.addEventListener('resize', function(){ clearTimeout(_rt); _rt=setTimeout(render,150); });
 
@@ -3195,7 +3194,7 @@ function _kbHandler(e) {
       S.apiOpen = false;
       S.dbgOpen = false;
       S.histOpen = false;
-      render();
+      render("L3197");
     }
     return;
   }
