@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v3.5.2</title>
+  <title>ZIT Prompt Generator v3.5.3</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -2324,7 +2324,7 @@ function buildHeader(mob, keyOk) {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v3.5.2</span>' +
+        '<span class="title-version">v3.5.3</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
@@ -2418,7 +2418,7 @@ function buildLeftCol(mob) {
             '<span class="hint">'+t('lPromptHint')+'</span>' +
             '<button class="btn-copy" id="b-cp-sub" style="opacity:.6">'+t('btnCopySubject')+'</button>' +
             (S.subject.trim() ? '<button class="btn-clr" id="b-clr-sub" title="'+t('btnClearTitle')+'">✕</button>' : '') +
-            (loadHistory().length ? '<button class="btn-copy" id="b-hist-subj" style="opacity:.7;font-size:13px;padding:1px 6px" title="'+t('histBtnTitle')+'">📜</button>' : '') +
+            (loadHistory().length ? '<button class="btn-copy" id="b-hist-subj" style="opacity:.7;font-size:13px" title="'+t('histBtnTitle')+'">📜</button>' : '') +
           '</div>' +
         '</div>' +
         '<textarea id="inp-sub" rows="3" placeholder="e.g: '+esc(stPh)+'&#10;• your own idea here">'+esc(S.subject)+'</textarea>' +
@@ -2947,7 +2947,12 @@ function attachEvents() {
     });
   });
 
-  function live(id, key){ var el=document.getElementById(id); if(el) el.addEventListener('input',function(){S[key]=el.value;}); }
+  function live(id, key){ var el=document.getElementById(id); if(el) el.addEventListener('input',function(){
+    var wasEmpty = !S[key].trim();
+    S[key]=el.value;
+    var isEmpty = !S[key].trim();
+    if (wasEmpty !== isEmpty) render();
+  }); }
   live('inp-sub','subject');
 
   function liveAndSave(id, key){ var el=document.getElementById(id); if(el) el.addEventListener('input',function(){ S[key]=el.value; saveState(); }); }
@@ -2987,10 +2992,11 @@ function attachEvents() {
       existEl.addEventListener('input', function(){ pmExist.classList.add('is-typing'); });
     }
     existEl.addEventListener('input', function(){
+      var wasEmpty = !S.existing.trim();
       S.existing = existEl.value;
       var hint = existEl.closest('.field').querySelector('.hint span');
       if (hint) { var n=existEl.value.length; hint.textContent=n+'/1500'; hint.style.color=n>1400?'var(--red)':n>1000?'var(--amber)':'var(--t4)'; }
-      patch('genBtn');
+      if (wasEmpty !== !S.existing.trim()) render(); else patch('genBtn');
     });
   }
   function lsel(id,key){ var el=document.getElementById(id); if(el) el.addEventListener('change',function(){ S[key]=el.value; saveState(); render(); }); }
