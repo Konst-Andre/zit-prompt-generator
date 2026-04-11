@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v3.5.3</title>
+  <title>ZIT Prompt Generator v3.5.4</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -2324,7 +2324,7 @@ function buildHeader(mob, keyOk) {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v3.5.3</span>' +
+        '<span class="title-version">v3.5.4</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
@@ -2416,9 +2416,9 @@ function buildLeftCol(mob) {
           '<label class="lbl">'+t('lPrompt')+'</label>' +
           '<div style="display:flex;align-items:center;gap:6px">' +
             '<span class="hint">'+t('lPromptHint')+'</span>' +
-            '<button class="btn-copy" id="b-cp-sub" style="opacity:.6">'+t('btnCopySubject')+'</button>' +
-            (S.subject.trim() ? '<button class="btn-clr" id="b-clr-sub" title="'+t('btnClearTitle')+'">✕</button>' : '') +
-            (loadHistory().length ? '<button class="btn-copy" id="b-hist-subj" style="opacity:.7;font-size:13px" title="'+t('histBtnTitle')+'">📜</button>' : '') +
+            '<button class="btn-copy" id="b-cp-sub" style="opacity:.6'+(S.subject.trim()?'':';display:none')+'">'+t('btnCopySubject')+'</button>' +
+            '<button class="btn-clr" id="b-clr-sub" title="'+t('btnClearTitle')+'"'+(S.subject.trim()?'':' style="display:none"')+'>✕</button>' +
+            (loadHistory().length ? '<button class="btn-copy" id="b-hist-subj" style="opacity:.7;font-size:12px" title="'+t('histBtnTitle')+'">📜</button>' : '') +
           '</div>' +
         '</div>' +
         '<textarea id="inp-sub" rows="3" placeholder="e.g: '+esc(stPh)+'&#10;• your own idea here">'+esc(S.subject)+'</textarea>' +
@@ -2515,11 +2515,11 @@ function buildLeftCol(mob) {
         '<label class="enhance-lbl lbl">'+t('lExisting')+'</label>' +
         '<div style="display:flex;align-items:center;gap:6px">' +
           '<span class="hint">'+t('lExistingHint')+' &nbsp;·&nbsp; <span style="color:'+ecColor+'">'+ec+'/1500</span></span>' +
-          (S.existing.trim() ? '<button class="btn-copy" id="b-cp-exist" style="opacity:.6">'+t('btnCopySubject')+'</button>' : '') +
-          (S.existing.trim() ? '<button class="btn-clr" id="b-clr-exist" title="'+t('btnClearTitle')+'">✕</button>' : '') +
+          '<button class="btn-copy" id="b-cp-exist" style="opacity:.6'+(S.existing.trim()?'':';display:none')+'">'+t('btnCopySubject')+'</button>' +
+          '<button class="btn-clr" id="b-clr-exist" title="'+t('btnClearTitle')+'"'+(S.existing.trim()?'':' style="display:none"')+'>✕</button>' +
         '</div>' +
       '</div>' +
-      '<textarea id="inp-exist" rows="4" style="min-height:100px" maxlength="1500" placeholder="e.g: beautiful girl, best quality, masterpiece...&#10;&#10;or: дівчина-кіборг у нічному місті">'+esc(S.existing)+'</textarea>' +
+      '<textarea id="inp-exist" rows="4" style="min-height:80px" maxlength="1500" placeholder="e.g: beautiful girl, best quality, masterpiece...&#10;&#10;or: дівчина-кіборг у нічному місті">'+esc(S.existing)+'</textarea>' +
     '</div></div>';
   }
 
@@ -2948,10 +2948,7 @@ function attachEvents() {
   });
 
   function live(id, key){ var el=document.getElementById(id); if(el) el.addEventListener('input',function(){
-    var wasEmpty = !S[key].trim();
     S[key]=el.value;
-    var isEmpty = !S[key].trim();
-    if (wasEmpty !== isEmpty) render();
   }); }
   live('inp-sub','subject');
 
@@ -2970,6 +2967,11 @@ function attachEvents() {
           cnt.textContent = ta.value.length;
           cnt.style.color = ta.value.length > 300 ? 'var(--amber)' : 'var(--t4)';
         }
+        var hasText = !!ta.value.trim();
+        var cpBtn = document.getElementById('b-cp-sub');
+        var clBtn = document.getElementById('b-clr-sub');
+        if (cpBtn) cpBtn.style.display = hasText ? '' : 'none';
+        if (clBtn) clBtn.style.display = hasText ? '' : 'none';
       });
     });
   }());
@@ -2992,11 +2994,16 @@ function attachEvents() {
       existEl.addEventListener('input', function(){ pmExist.classList.add('is-typing'); });
     }
     existEl.addEventListener('input', function(){
-      var wasEmpty = !S.existing.trim();
       S.existing = existEl.value;
+      autoResize(existEl);
       var hint = existEl.closest('.field').querySelector('.hint span');
       if (hint) { var n=existEl.value.length; hint.textContent=n+'/1500'; hint.style.color=n>1400?'var(--red)':n>1000?'var(--amber)':'var(--t4)'; }
-      if (wasEmpty !== !S.existing.trim()) render(); else patch('genBtn');
+      var hasText = !!existEl.value.trim();
+      var cpBtn = document.getElementById('b-cp-exist');
+      var clBtn = document.getElementById('b-clr-exist');
+      if (cpBtn) cpBtn.style.display = hasText ? '' : 'none';
+      if (clBtn) clBtn.style.display = hasText ? '' : 'none';
+      patch('genBtn');
     });
   }
   function lsel(id,key){ var el=document.getElementById(id); if(el) el.addEventListener('change',function(){ S[key]=el.value; saveState(); render(); }); }
@@ -3125,6 +3132,8 @@ function attachEvents() {
   requestAnimationFrame(function(){
     var ta = document.getElementById('inp-sub');
     if (ta) autoResize(ta);
+    var te = document.getElementById('inp-exist');
+    if (te) autoResize(te);
   });
 
   /* ── swipe between panels on mobile ── */
