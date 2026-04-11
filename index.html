@@ -173,7 +173,6 @@
       content: ""; position: absolute; left: 0; bottom: 0;
       width: 32px; height: 2px; background: var(--acc); opacity: .7; border-radius: 2px;
     }
-    .out-hdr .lbl::after { display: none; }
 
     /* Gradient labels — primary blocks only (variant C) */
     .prompt-main .lbl,
@@ -1630,7 +1629,7 @@ const I18N = {
     tabGenerate: 'Create Prompt', tabOptimize: 'Improve Prompt',
     tabOptimizeNote: '· refines for ZIT engine',
     lScene: 'Scene', lSubjectType: 'Subject Type',
-    lSubjectHint: 'Adds subject detail', lSceneHint: 'scene framing',
+    lSubjectHint: 'subject detail', lSceneHint: 'scene framing',
     lStyle: 'Visual Style', lStyleHint: 'see style details',
     lPrompt: 'PROMPT', lPromptHint: 'UA or EN',
     lLighting: 'Lighting', lMood: 'Mood',
@@ -1677,7 +1676,7 @@ const I18N = {
     tabGenerate: 'Створити', tabOptimize: 'Покращити',
     tabOptimizeNote: '· адаптує для ZIT',
     lScene: 'Сцена', lSubjectType: 'Тип субʼєкта',
-    lSubjectHint: 'Додає деталі субʼєкта', lSceneHint: 'кадрування сцени',
+    lSubjectHint: 'Деталі субʼєкта', lSceneHint: 'кадрування сцени',
     lStyle: 'Візуальний стиль', lStyleHint: 'деталі стилю',
     lPrompt: 'ПРОМПТ', lPromptHint: 'UA або EN',
     lLighting: 'Освітлення', lMood: 'Настрій',
@@ -1973,6 +1972,7 @@ var SYSTEM_PROMPT = [
   '<notes>',
   'One concise ZIT-specific tip (CFG, steps, LoRA strength, sampler, or prompt structure).',
   'IMPORTANT: The tip must reference a specific element from THIS generated prompt — explain WHY this setting applies to this specific prompt, not a generic rule.',
+  'LANGUAGE: write this tip in {NOTES_LANG}.',
   '</notes>',
   '',
   'Enhance mode only — add after <notes>:',
@@ -1981,6 +1981,7 @@ var SYSTEM_PROMPT = [
   '• Start each with action verb: Removed / Rewrote / Adjusted / Harmonized / Added',
   '• Each bullet must quote or reference the specific text that was changed (e.g. Removed "masterpiece, best quality" — forbidden SDXL tokens)',
   '• Reference ZIT-specific rationale where applicable',
+  'LANGUAGE: write these bullets in {NOTES_LANG}.',
   '</changes>',
   '',
   '=== VALIDATION BEFORE OUTPUT ===',
@@ -1996,7 +1997,8 @@ var SYSTEM_PROMPT = [
 ].join('\n');
 
 function buildSystem() {
-  return SYSTEM_PROMPT;
+  var notesLang = S.lang === 'ua' ? 'Ukrainian' : 'English';
+  return SYSTEM_PROMPT.replace(/\{NOTES_LANG\}/g, notesLang);
 }
 function buildUser() {
   var sc = SCENES.find(function(x){return x.id===S.scene;}) || {};
@@ -2507,15 +2509,16 @@ function buildLeftCol(mob) {
     '</div></div>';
 
     /* Existing prompt textarea */
-    h += '<div class="field"><div class="f-hdr">' +
-      '<label class="enhance-lbl lbl">'+t('lExisting')+'</label>' +
-      '<div style="display:flex;align-items:center;gap:6px">' +
-        '<span class="hint">'+t('lExistingHint')+' &nbsp;·&nbsp; <span style="color:'+ecColor+'">'+ec+'/1500</span></span>' +
-        (S.existing.trim() ? '<button class="btn-copy" id="b-cp-exist" style="opacity:.6">'+t('btnCopySubject')+'</button>' : '') +
-        (S.existing.trim() ? '<button class="btn-clr" id="b-clr-exist" title="'+t('btnClearTitle')+'">✕</button>' : '') +
-      '</div>' +
-    '</div>' +
+    h += '<div class="field">' +
     '<div class="prompt-main" id="pm-exist">' +
+      '<div class="f-hdr">' +
+        '<label class="enhance-lbl lbl">'+t('lExisting')+'</label>' +
+        '<div style="display:flex;align-items:center;gap:6px">' +
+          '<span class="hint">'+t('lExistingHint')+' &nbsp;·&nbsp; <span style="color:'+ecColor+'">'+ec+'/1500</span></span>' +
+          (S.existing.trim() ? '<button class="btn-copy" id="b-cp-exist" style="opacity:.6">'+t('btnCopySubject')+'</button>' : '') +
+          (S.existing.trim() ? '<button class="btn-clr" id="b-clr-exist" title="'+t('btnClearTitle')+'">✕</button>' : '') +
+        '</div>' +
+      '</div>' +
       '<textarea id="inp-exist" rows="4" style="min-height:100px" maxlength="1500" placeholder="e.g: beautiful girl, best quality, masterpiece...&#10;&#10;or: дівчина-кіборг у нічному місті">'+esc(S.existing)+'</textarea>' +
     '</div></div>';
   }
@@ -2565,15 +2568,15 @@ function buildLeftCol(mob) {
     '<div class="'+badgeClass+'" id="rnd-badge">'+badgeText+'</div>';
   } else {
     var improveDisabled = (!S.existing.trim() || S.loading);
-    /* Summary bar */
-    var scNow = SCENES.find(function(x){return x.id===S.scene;})||{};
-    var stNow2 = STYLES.find(function(x){return x.id===S.style;})||{};
-    var presetLabel = S.improvePreset==='fix'?t('presetFix'):S.improvePreset==='zit'?t('presetZIT'):S.improvePreset==='enhance'?t('presetEnhance'):'—';
-    h += '<div style="font-size:10px;color:var(--t3);letter-spacing:.04em;margin-top:12px;margin-bottom:12px;padding:6px 10px;background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r);line-height:1.7">' +
-      '<span style="color:var(--t3)">Scene</span> <span style="color:var(--t1)">'+(scNow.label||'—')+'</span>' +
-      ' &nbsp;·&nbsp; <span style="color:var(--t3)">Style</span> <span style="color:var(--t1)">'+(stNow2.label||'—')+'</span>' +
-      (S.improvePreset ? ' &nbsp;·&nbsp; <span style="color:var(--t3)">Preset</span> <span style="color:var(--acc-txt)">'+presetLabel+'</span>' : '') +
-    '</div>';
+    /* Summary bar — visible only when preset is active */
+    if (S.improvePreset) {
+      var presetLabel = S.improvePreset==='fix'?t('presetFix'):S.improvePreset==='zit'?t('presetZIT'):t('presetEnhance');
+      h += '<div style="font-size:10px;color:var(--t3);letter-spacing:.04em;margin-top:6px;margin-bottom:12px;padding:5px 10px;background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r);line-height:1.7">' +
+        '<span style="color:var(--t3)">Preset</span> <span style="color:var(--acc-txt)">'+presetLabel+'</span>' +
+      '</div>';
+    } else {
+      h += '<div style="margin-bottom:12px"></div>';
+    }
     h += '<button class="btn-primary'+(S.loading?' loading':'')+(improveDisabled&&!S.loading?' btn-secondary':'')+'" id="b-gen"'+(improveDisabled?' disabled':'')+'>' +
       (S.loading
         ? '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center"><span style="display:inline-block;animation:spin .65s linear infinite;opacity:.7">⟳</span> '+t('btnGenerating')+'</span>'
