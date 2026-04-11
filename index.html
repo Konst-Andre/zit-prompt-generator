@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v3.4.0</title>
+  <title>ZIT Prompt Generator v3.5.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -178,7 +178,17 @@
     /* Gradient labels — primary blocks only (variant C) */
     .prompt-main .lbl,
     .sec-block > .f-hdr > .lbl,
-    .sec-block > div > .f-hdr > .lbl {
+    .sec-block > div > .f-hdr > .lbl,
+    .secondary-section .lbl,
+    .out-hdr .lbl,
+    .info-card .lbl,
+    .enhance-lbl {
+      background: linear-gradient(90deg, #fff 0%, #9ecbff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .adv-title {
       background: linear-gradient(90deg, #fff 0%, #9ecbff 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -300,6 +310,7 @@
     .btn-copy:hover { border-color: var(--acc); color: var(--acc-txt); background: var(--acc-bg); }
     .btn-copy:active { transform: scale(0.95); }
     .btn-copy.copied { border-color: var(--green-bdr); color: var(--green-txt); background: var(--green-bg); }
+    .btn-copy.cleared { border-color: var(--red-bdr); color: var(--red-txt); background: var(--red-bg); }
 
     /* ═══════════════════════════════════════
        OUTPUT ACTIONS — v2.0: Regenerate primary
@@ -607,7 +618,6 @@
     }
     .secondary-section .lbl {
       font-size: 10px;
-      color: var(--t2);
       letter-spacing: .14em;
       padding-bottom: 4px;
     }
@@ -858,7 +868,7 @@
     }
     .adv-title {
       font-size: 11px; font-weight: 700; letter-spacing: .16em;
-      text-transform: uppercase; color: var(--t1);
+      text-transform: uppercase;
     }
     .adv-body {
       flex: 1; overflow-y: auto; padding: 16px 20px;
@@ -1634,6 +1644,7 @@ const I18N = {
     advTooltip: 'Advanced Settings — ComfyUI config & Negative Prompt',
     btnImproveThis: '↑ Improve this prompt',
     btnCopySubject: '⎘ Copy',
+    btnClearTitle: 'Clear subject',
     pvPrompt: 'PROMPT', pvScene: 'Scene', pvDetail: 'Detail',
     pvStyle: 'Style', pvAtmos: 'Atmos', pvGenre: 'Genre',
     pvNeg: 'NEG',
@@ -1643,6 +1654,11 @@ const I18N = {
     errRateLimit:  'Rate limit — retry {n}/2 in {s}s…',
     histTitle: 'Prompt History', histEmpty: 'No history yet — generate a prompt first',
     histClear: 'Clear', histUse: 'Use this prompt', histInsert: 'Insert', histBtnTitle: 'Prompt History',
+    histDelItem: 'Delete', histCopyItem: 'Copy',
+    apiTitle: 'Groq API Settings', apiKeyLabel: 'API Key', apiRemember: 'Remember key (localStorage)',
+    apiModelLabel: 'Model', apiFreeKey: 'Free key:',
+    presetFix: 'Fix SDXL tags', presetZIT: 'Rewrite for ZIT', presetEnhance: 'Enhance details',
+    lImproveCtx: 'Context',
   },
   ua: {
     tabGenerate: 'Створити', tabOptimize: 'Покращити',
@@ -1673,6 +1689,7 @@ const I18N = {
     advTooltip: 'Розширені — конфіг ComfyUI та негативний промпт',
     btnImproveThis: '↑ Покращити цей промпт',
     btnCopySubject: '⎘ Copy',
+    btnClearTitle: 'Очистити тему',
     pvPrompt: 'ПРОМПТ', pvScene: 'Сцена', pvDetail: 'Деталь',
     pvStyle: 'Стиль', pvAtmos: 'Атмос', pvGenre: 'Жанр',
     pvNeg: 'НЕГ',
@@ -1682,6 +1699,11 @@ const I18N = {
     errRateLimit:  'Ліміт запитів — повтор {n}/2 через {s}с…',
     histTitle: 'Історія промптів', histEmpty: 'Історія порожня — спочатку згенеруйте промпт',
     histClear: 'Очистити', histUse: 'Використати', histInsert: 'Вставити', histBtnTitle: 'Історія промптів',
+    histDelItem: 'Видалити', histCopyItem: 'Копіювати',
+    apiTitle: 'Налаштування Groq API', apiKeyLabel: 'API Ключ', apiRemember: 'Зберегти ключ (localStorage)',
+    apiModelLabel: 'Модель', apiFreeKey: 'Безкоштовний ключ:',
+    presetFix: 'Fix SDXL tags', presetZIT: 'Rewrite for ZIT', presetEnhance: 'Enhance details',
+    lImproveCtx: 'Контекст',
   }
 };
 function t(key) {
@@ -1695,7 +1717,7 @@ function t(key) {
 var S = {
   apiKey:'', rememberKey:false, model:'qwen/qwen3-32b',
   apiOpen:false, dbgOpen:false, mobilePane:'params',
-  advOpen:false, histOpen:false,
+  advOpen:false, histOpen:false, improvePreset:'',
   mode:'generate', lang:'en',
   scene:'portrait', style:'photorealistic', subject:'', subjectType:'none',
   lighting:'Cinematic', mood:'', genre:'', resolution:'896x1152',
@@ -1819,6 +1841,14 @@ function loadHistory() {
 
 function clearHistory() {
   try { localStorage.removeItem('zit_history'); } catch(e) {}
+}
+
+function deleteHistoryItem(i) {
+  try {
+    var h = JSON.parse(localStorage.getItem('zit_history') || '[]');
+    h.splice(i, 1);
+    localStorage.setItem('zit_history', JSON.stringify(h));
+  } catch(e) {}
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1959,8 +1989,17 @@ function buildUser() {
   var styleTok = buildStyleTokens(st);
   if (S.mode === 'enhance') {
     var subjEnhTok = buildSubjectTokens(S.subjectType, styleTok);
-    return 'Improve this prompt for ZIT/Lumina2. Fix SDXL tags, rewrite as natural prose for Qwen3-4B.\nAfter <notes> add: <changes>bullet list of improvements</changes>\n' +
-      (subjEnhTok ? '\nSubject focus (use only if relevant to the prompt): ' + subjEnhTok : '') +
+    var presetInstr = S.improvePreset === 'fix'     ? 'Priority: remove SDXL/Pony-specific tags, fix comma-separated token lists into natural prose.\n'
+                    : S.improvePreset === 'zit'     ? 'Priority: rewrite entirely as natural English prose optimized for Qwen3-4B/Lumina2, remove all SDXL tags.\n'
+                    : S.improvePreset === 'enhance' ? 'Priority: enrich with additional lighting, texture, atmosphere and compositional details.\n'
+                    : '';
+    var sceneCtx = sc.label ? '\nTarget scene: ' + sc.label : '';
+    var styleCtx = st.label ? '\nTarget style: ' + st.label : '';
+    return 'Improve this prompt for ZIT/Lumina2. Fix SDXL tags, rewrite as natural prose for Qwen3-4B.\n' +
+      presetInstr +
+      'After <notes> add: <changes>bullet list of improvements</changes>\n' +
+      (subjEnhTok ? '\nSubject focus (use only if relevant): ' + subjEnhTok : '') +
+      sceneCtx + styleCtx +
       '\n\nPrompt: "' + S.existing.slice(0, 1500) + '"';
   }
   var subjTok  = buildSubjectTokens(S.subjectType, styleTok);
@@ -2263,7 +2302,7 @@ function buildHeader(mob, keyOk) {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v3.4.0</span>' +
+        '<span class="title-version">v3.5.0</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
@@ -2285,16 +2324,16 @@ function buildApiPanel() {
     '</label>';
   }).join('');
   return '<div class="slide-panel api-bg">' +
-    '<div class="sp-hdr"><div class="sp-title green">GROQ API SETTINGS</div>' +
+    '<div class="sp-hdr"><div class="sp-title green">'+t('apiTitle').toUpperCase()+'</div>' +
     '<button class="btn-ghost" id="b-api-close" style="padding:3px 8px">✕</button></div>' +
-    '<p style="font-size:11px;color:var(--t4);margin-bottom:12px">Free key: <a href="https://console.groq.com/keys" target="_blank" style="color:var(--acc-txt)">console.groq.com/keys</a></p>' +
-    '<div class="field"><div class="f-hdr"><label class="lbl">API Key</label></div>' +
+    '<p style="font-size:11px;color:var(--t4);margin-bottom:12px">'+t('apiFreeKey')+' <a href="https://console.groq.com/keys" target="_blank" style="color:var(--acc-txt)">console.groq.com/keys</a></p>' +
+    '<div class="field"><div class="f-hdr"><label class="lbl">'+t('apiKeyLabel')+'</label></div>' +
       '<div class="row"><input type="password" id="inp-key" value="'+esc(S.apiKey)+'" placeholder="gsk_..." style="flex:1;font-family:\'JetBrains Mono\',monospace;font-size:13px">' +
       (S.apiKey?'<button class="btn-ghost" id="b-key-clr" style="color:var(--red)">✕</button>':'') +
       '</div>' +
-      '<div class="chk-row"><input type="checkbox" id="chk-rem"'+(S.rememberKey?' checked':'')+'><label for="chk-rem">Remember key (localStorage)</label></div>' +
+      '<div class="chk-row"><input type="checkbox" id="chk-rem"'+(S.rememberKey?' checked':'')+'><label for="chk-rem">'+t('apiRemember')+'</label></div>' +
     '</div>' +
-    '<div class="field" style="margin-bottom:0"><div class="f-hdr"><label class="lbl">Model</label></div>' + mOpts + '</div>' +
+    '<div class="field" style="margin-bottom:0"><div class="f-hdr"><label class="lbl">'+t('apiModelLabel')+'</label></div>' + mOpts + '</div>' +
   '</div>';
 }
 
@@ -2356,7 +2395,7 @@ function buildLeftCol(mob) {
           '<div style="display:flex;align-items:center;gap:6px">' +
             '<span class="hint">'+t('lPromptHint')+'</span>' +
             '<button class="btn-copy" id="b-cp-sub" style="opacity:.6">'+t('btnCopySubject')+'</button>' +
-            (S.subject.trim() ? '<button class="btn-copy" id="b-clr-sub" style="opacity:.5;color:var(--red-txt);border-color:var(--red-bdr)" title="Clear">✕</button>' : '') +
+            (S.subject.trim() ? '<button class="btn-copy" id="b-clr-sub" style="opacity:.5;color:var(--red-txt);border-color:var(--red-bdr)" title="'+t('btnClearTitle')+'">✕</button>' : '') +
             (loadHistory().length ? '<button class="btn-copy" id="b-hist-subj" style="opacity:.7;font-size:13px;padding:1px 6px" title="'+t('histBtnTitle')+'">📜</button>' : '') +
           '</div>' +
         '</div>' +
@@ -2425,7 +2464,30 @@ function buildLeftCol(mob) {
   if (S.mode === 'enhance') {
     var ec = S.existing.length;
     var ecColor = ec>1400?'var(--red)':ec>1000?'var(--amber)':'var(--t4)';
-    h += '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lExisting')+'</label><span class="hint">'+t('lExistingHint')+' &nbsp;·&nbsp; <span style="color:'+ecColor+'">'+ec+'/1500</span></span></div>' +
+
+    /* Context row: Scene + Style selects */
+    var sceneOpts = SCENES.map(function(sc){ return '<option value="'+esc(sc.id)+'"'+(S.scene===sc.id?' selected':'')+'>'+esc(sc.label)+'</option>'; }).join('');
+    var styleOpts = STYLES.map(function(st){ return '<option value="'+esc(st.id)+'"'+(S.style===st.id?' selected':'')+'>'+esc(st.label)+'</option>'; }).join('');
+    h += '<div class="secondary-section"><div class="sec-block">' +
+      '<div class="f-hdr" style="margin-bottom:8px"><label class="lbl">'+t('lImproveCtx')+'</label></div>' +
+      '<div class="three-col" style="grid-template-columns:1fr 1fr">' +
+        '<div class="field"><div class="f-hdr"><label class="lbl" style="font-size:10px">'+t('lScene')+'</label></div>' +
+        '<select id="sel-enh-scene">'+sceneOpts+'</select></div>' +
+        '<div class="field"><div class="f-hdr"><label class="lbl" style="font-size:10px">'+t('lStyle')+'</label></div>' +
+        '<select id="sel-enh-style">'+styleOpts+'</select></div>' +
+      '</div>' +
+      /* Quick presets */
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">' +
+        ['fix','zit','enhance'].map(function(p){
+          var lbl = p==='fix'?t('presetFix'):p==='zit'?t('presetZIT'):t('presetEnhance');
+          var active = S.improvePreset===p;
+          return '<button class="btn-ghost'+(active?' p-active':'')+'" data-preset="'+p+'" style="font-size:11px;padding:4px 10px'+(active?';color:var(--acc-txt);border-color:var(--acc)':'')+'">' + lbl + '</button>';
+        }).join('') +
+      '</div>' +
+    '</div></div>';
+
+    /* Existing prompt textarea */
+    h += '<div class="field"><div class="f-hdr"><label class="enhance-lbl lbl">'+t('lExisting')+'</label><span class="hint">'+t('lExistingHint')+' &nbsp;·&nbsp; <span style="color:'+ecColor+'">'+ec+'/1500</span></span></div>' +
       '<textarea id="inp-exist" rows="6" style="min-height:130px" maxlength="1500" placeholder="e.g: beautiful girl, best quality, masterpiece...&#10;&#10;or: дівчина-кіборг у нічному місті">'+esc(S.existing)+'</textarea></div>';
   }
 
@@ -2649,6 +2711,8 @@ function buildHistPanel() {
         '<div style="display:flex;gap:6px;margin-top:7px">' +
           '<button class="btn-ghost" data-hist-insert="'+i+'" style="font-size:11px;padding:3px 8px">'+t('histInsert')+'</button>' +
           '<button class="btn-ghost" data-hist-use="'+i+'" style="font-size:11px;padding:3px 8px;color:var(--acc-txt);border-color:rgba(47,129,247,.3)">'+t('histUse')+'</button>' +
+          '<button class="btn-copy" data-hist-copy="'+i+'" style="font-size:11px;padding:3px 8px;margin-left:auto">⎘ '+t('histCopyItem')+'</button>' +
+          '<button class="btn-copy" data-hist-del="'+i+'" style="font-size:11px;padding:3px 8px;color:var(--red-txt);border-color:var(--red-bdr)">✕</button>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -2755,6 +2819,28 @@ function attachEvents() {
   });
 
   on('b-hist-subj', 'click', function(){ S.histOpen=true; render(); });
+
+  /* History — Copy item (копіює positive, панель лишається відкритою) */
+  document.querySelectorAll('[data-hist-copy]').forEach(function(el){
+    el.addEventListener('click', function(e){
+      e.stopPropagation();
+      var i = +el.dataset.histCopy;
+      var hist = loadHistory();
+      var entry = hist[i];
+      if (!entry) return;
+      copyText(entry.positive, el);
+    });
+  });
+
+  /* History — Delete item (видаляє один запис, панель лишається відкритою) */
+  document.querySelectorAll('[data-hist-del]').forEach(function(el){
+    el.addEventListener('click', function(e){
+      e.stopPropagation();
+      var i = +el.dataset.histDel;
+      deleteHistoryItem(i);
+      render();
+    });
+  });
   on('b-adv-close', 'click', function(){ S.advOpen=false; render(); });
   on('b-adv-apply', 'click', function(){ S.advOpen=false; render(); });
   on('b-adv-reset', 'click', function(){ resetAdv(); render(); });
@@ -2864,7 +2950,15 @@ function attachEvents() {
   /* lighting/mood/genre → only preview needs update, no structural change */
   function lselPatch(id,key){ var el=document.getElementById(id); if(el) el.addEventListener('change',function(){ S[key]=el.value; saveState(); patch('preview'); }); }
   lselPatch('sel-light','lighting'); lselPatch('sel-mood','mood'); lselPatch('sel-genre','genre');
+  lsel('sel-enh-scene','scene'); lsel('sel-enh-style','style');
   lsel('sel-res','resolution'); lsel('sel-samp','sampler'); lsel('sel-sch','scheduler');
+
+  document.querySelectorAll('[data-preset]').forEach(function(el){
+    el.addEventListener('click', function(){
+      S.improvePreset = (S.improvePreset === el.dataset.preset) ? '' : el.dataset.preset;
+      render();
+    });
+  });
 
   document.querySelectorAll('[data-ln]').forEach(function(el){ el.addEventListener('input',function(){ S.loras[+el.dataset.ln].name=el.value; saveState(); }); });
   document.querySelectorAll('[data-lw]').forEach(function(el){ el.addEventListener('input',function(){ S.loras[+el.dataset.lw].weight=el.value; saveState(); }); });
@@ -2941,12 +3035,16 @@ function attachEvents() {
 
   on('b-cp-sub','click',function(e){ if(S.subject.trim()) copyText(S.subject, e.currentTarget); });
   on('b-clr-sub','click',function(){
-    S.subject = '';
-    render();
-    requestAnimationFrame(function(){
-      var ta = document.getElementById('inp-sub');
-      if (ta) ta.focus();
-    });
+    var btn = document.getElementById('b-clr-sub');
+    if (btn) { btn.classList.add('cleared'); btn.textContent = '✓'; }
+    setTimeout(function(){
+      S.subject = '';
+      render();
+      requestAnimationFrame(function(){
+        var ta = document.getElementById('inp-sub');
+        if (ta) ta.focus();
+      });
+    }, 400);
   });
   on('b-cp-pos','click',function(e){ if(S.result) copyText(S.result.positive, e.currentTarget); });
   on('b-cp-neg','click',function(e){ if(S.result) copyText(S.result.negative, e.currentTarget); });
