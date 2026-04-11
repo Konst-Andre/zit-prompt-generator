@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v3.5.0</title>
+  <title>ZIT Prompt Generator v3.5.1</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -311,6 +311,17 @@
     .btn-copy:active { transform: scale(0.95); }
     .btn-copy.copied { border-color: var(--green-bdr); color: var(--green-txt); background: var(--green-bg); }
     .btn-copy.cleared { border-color: var(--red-bdr); color: var(--red-txt); background: var(--red-bg); }
+
+    .btn-clr {
+      padding: 4px 11px; background: transparent;
+      border: 1px solid var(--red-bdr); color: var(--red-txt);
+      border-radius: var(--r-sm); font-size: 11px;
+      font-weight: 600; letter-spacing: .04em; white-space: nowrap;
+      opacity: .6; transition: opacity .15s, background .15s, border-color .15s;
+    }
+    .btn-clr:hover { opacity: 1; background: var(--red-bg); border-color: var(--red-txt); }
+    .btn-clr:active { transform: scale(0.95); opacity: 1; }
+    .btn-clr.cleared { opacity: 1; background: var(--red-bg); border-color: var(--red-txt); }
 
     /* ═══════════════════════════════════════
        OUTPUT ACTIONS — v2.0: Regenerate primary
@@ -622,8 +633,8 @@
       padding-bottom: 4px;
     }
     .secondary-section .lbl::after {
-      width: 16px;
-      opacity: .45;
+      width: 32px;
+      opacity: .7;
     }
     .secondary-section select {
       font-size: 12px;
@@ -1619,7 +1630,7 @@ const I18N = {
     tabGenerate: 'Create Prompt', tabOptimize: 'Improve Prompt',
     tabOptimizeNote: '· refines for ZIT engine',
     lScene: 'Scene', lSubjectType: 'Subject Type',
-    lSubjectHint: 'Adds subject detail',
+    lSubjectHint: 'Adds subject detail', lSceneHint: 'scene framing',
     lStyle: 'Visual Style', lStyleHint: 'see style details',
     lPrompt: 'PROMPT', lPromptHint: 'UA or EN',
     lLighting: 'Lighting', lMood: 'Mood',
@@ -1664,7 +1675,7 @@ const I18N = {
     tabGenerate: 'Створити', tabOptimize: 'Покращити',
     tabOptimizeNote: '· адаптує для ZIT',
     lScene: 'Сцена', lSubjectType: 'Тип субʼєкта',
-    lSubjectHint: 'Додає деталі субʼєкта',
+    lSubjectHint: 'Додає деталі субʼєкта', lSceneHint: 'кадрування сцени',
     lStyle: 'Візуальний стиль', lStyleHint: 'деталі стилю',
     lPrompt: 'ПРОМПТ', lPromptHint: 'UA або EN',
     lLighting: 'Освітлення', lMood: 'Настрій',
@@ -1674,7 +1685,7 @@ const I18N = {
     lExisting: 'Вхідний промпт', lExistingHint: 'Будь-яка мова',
     btnGenerate: '✦ Створити промпт', btnOptimize: '✦ Покращити промпт',
     btnGenerating: 'Генерація…', btnRegenerate: 'Перегенерувати',
-    btnCopy: 'Copy All', btnAddLoRA: '+ Додати LoRA',
+    btnCopy: 'Копіювати все', btnAddLoRA: '+ Додати LoRA',
     outPositive: 'Позитивний промпт', outNegative: 'Негативний промпт',
     outParams: 'Параметри ComfyUI', outChanged: 'Що змінилось', outTip: 'Порада ZIT',
     phFill: 'Заповніть параметри\nта натисніть Створити',
@@ -1688,9 +1699,8 @@ const I18N = {
     advReset: 'Скинути', advApply: 'Застосувати',
     advTooltip: 'Розширені — конфіг ComfyUI та негативний промпт',
     btnImproveThis: '↑ Покращити цей промпт',
-    btnCopySubject: '⎘ Copy',
-    btnClearTitle: 'Очистити тему',
-    pvPrompt: 'ПРОМПТ', pvScene: 'Сцена', pvDetail: 'Деталь',
+    btnCopySubject: '⎘ Копіювати',
+    btnClearTitle: 'Очистити тему', pvScene: 'Сцена', pvDetail: 'Деталь',
     pvStyle: 'Стиль', pvAtmos: 'Атмос', pvGenre: 'Жанр',
     pvNeg: 'НЕГ',
     errNoKey:      'Введіть Groq API ключ — натисніть ⚙ API',
@@ -1937,7 +1947,8 @@ var SYSTEM_PROMPT = [
   '',
   '=== LANGUAGE RULE ===',
   'Always translate non-English subject input to English.',
-  'All prompt output (positive, negative, notes, changes) must be English only.',
+  'All prompt output (positive, negative) must be English only.',
+  'Exception: <notes> and <changes> must be written in the UI language specified in the user message.',
   '',
   '=== OUTPUT STRUCTURE — NON-NEGOTIABLE XML CONTRACT ===',
   'Output ONLY the XML tags below — no other text before, between, or after them.',
@@ -1956,12 +1967,14 @@ var SYSTEM_PROMPT = [
   '</negative>',
   '<notes>',
   'One concise ZIT-specific tip (CFG, steps, LoRA strength, sampler, or prompt structure).',
+  'IMPORTANT: The tip must reference a specific element from THIS generated prompt — explain WHY this setting applies to this specific prompt, not a generic rule.',
   '</notes>',
   '',
   'Enhance mode only — add after <notes>:',
   '<changes>',
   '• 3–5 bullet points of improvements made',
   '• Start each with action verb: Removed / Rewrote / Adjusted / Harmonized / Added',
+  '• Each bullet must quote or reference the specific text that was changed (e.g. Removed "masterpiece, best quality" — forbidden SDXL tokens)',
   '• Reference ZIT-specific rationale where applicable',
   '</changes>',
   '',
@@ -1996,6 +2009,7 @@ function buildUser() {
     var sceneCtx = sc.label ? '\nTarget scene: ' + sc.label : '';
     var styleCtx = st.label ? '\nTarget style: ' + st.label : '';
     return 'Improve this prompt for ZIT/Lumina2. Fix SDXL tags, rewrite as natural prose for Qwen3-4B.\n' +
+      'UI language: ' + (S.lang === 'ua' ? 'Ukrainian — write <notes> and <changes> in Ukrainian' : 'English') + '\n' +
       presetInstr +
       'After <notes> add: <changes>bullet list of improvements</changes>\n' +
       (subjEnhTok ? '\nSubject focus (use only if relevant): ' + subjEnhTok : '') +
@@ -2006,6 +2020,7 @@ function buildUser() {
   var genreVal = (GENRES.find(function(x){return x.label===S.genre;})||{value:''}).value || 'none';
   var genreMod = (S.genre && GENRE_MODS[S.genre]) ? GENRE_MODS[S.genre] : 'none';
   return 'Generate ZIT prompt:\nSubject (translate to English if needed): ' + S.subject +
+    '\nUI language: ' + (S.lang === 'ua' ? 'Ukrainian — write <notes> in Ukrainian' : 'English') +
     (subjTok  ? '\nSubject detail: ' + subjTok : '') +
     '\nScene: ' + (sc.label||S.scene) + ' | Detail: ' + (sc.detail||'high detail') +
     '\nStyle: ' + (st.label||S.style) + (styleTok?' — '+styleTok:'') +
@@ -2302,7 +2317,7 @@ function buildHeader(mob, keyOk) {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v3.5.0</span>' +
+        '<span class="title-version">v3.5.1</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
@@ -2395,7 +2410,7 @@ function buildLeftCol(mob) {
           '<div style="display:flex;align-items:center;gap:6px">' +
             '<span class="hint">'+t('lPromptHint')+'</span>' +
             '<button class="btn-copy" id="b-cp-sub" style="opacity:.6">'+t('btnCopySubject')+'</button>' +
-            (S.subject.trim() ? '<button class="btn-copy" id="b-clr-sub" style="opacity:.5;color:var(--red-txt);border-color:var(--red-bdr)" title="'+t('btnClearTitle')+'">✕</button>' : '') +
+            (S.subject.trim() ? '<button class="btn-clr" id="b-clr-sub" title="'+t('btnClearTitle')+'">✕</button>' : '') +
             (loadHistory().length ? '<button class="btn-copy" id="b-hist-subj" style="opacity:.7;font-size:13px;padding:1px 6px" title="'+t('histBtnTitle')+'">📜</button>' : '') +
           '</div>' +
         '</div>' +
@@ -2423,7 +2438,7 @@ function buildLeftCol(mob) {
       }).join('');
       return '<div class="sel-group"><span class="cat-label">'+esc(grp.label)+'</span><div class="sel-row">'+btns+'</div></div>';
     }).join('');
-    h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">'+t('lScene')+'</label></div>'+sceneHtml+'</div>';
+    h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">'+t('lScene')+'</label><span class="hint">'+t('lSceneHint')+'</span></div>'+sceneHtml+'</div>';
 
     /* SUBJECT TYPE */
     var subjPills = SUBJECTS.map(function(s){
@@ -2469,7 +2484,7 @@ function buildLeftCol(mob) {
     var sceneOpts = SCENES.map(function(sc){ return '<option value="'+esc(sc.id)+'"'+(S.scene===sc.id?' selected':'')+'>'+esc(sc.label)+'</option>'; }).join('');
     var styleOpts = STYLES.map(function(st){ return '<option value="'+esc(st.id)+'"'+(S.style===st.id?' selected':'')+'>'+esc(st.label)+'</option>'; }).join('');
     h += '<div class="secondary-section"><div class="sec-block">' +
-      '<div class="f-hdr" style="margin-bottom:8px"><label class="lbl">'+t('lImproveCtx')+'</label></div>' +
+      '<div class="f-hdr" style="margin-bottom:8px"><span class="grp-lbl">'+t('lImproveCtx')+'</span></div>' +
       '<div class="three-col" style="grid-template-columns:1fr 1fr">' +
         '<div class="field"><div class="f-hdr"><label class="lbl" style="font-size:10px">'+t('lScene')+'</label></div>' +
         '<select id="sel-enh-scene">'+sceneOpts+'</select></div>' +
@@ -2487,7 +2502,14 @@ function buildLeftCol(mob) {
     '</div></div>';
 
     /* Existing prompt textarea */
-    h += '<div class="field"><div class="f-hdr"><label class="enhance-lbl lbl">'+t('lExisting')+'</label><span class="hint">'+t('lExistingHint')+' &nbsp;·&nbsp; <span style="color:'+ecColor+'">'+ec+'/1500</span></span></div>' +
+    h += '<div class="field"><div class="f-hdr">' +
+      '<label class="enhance-lbl lbl">'+t('lExisting')+'</label>' +
+      '<div style="display:flex;align-items:center;gap:6px">' +
+        '<span class="hint">'+t('lExistingHint')+' &nbsp;·&nbsp; <span style="color:'+ecColor+'">'+ec+'/1500</span></span>' +
+        (S.existing.trim() ? '<button class="btn-copy" id="b-cp-exist" style="opacity:.6">'+t('btnCopySubject')+'</button>' : '') +
+        (S.existing.trim() ? '<button class="btn-clr" id="b-clr-exist" title="'+t('btnClearTitle')+'">✕</button>' : '') +
+      '</div>' +
+    '</div>' +
       '<textarea id="inp-exist" rows="6" style="min-height:130px" maxlength="1500" placeholder="e.g: beautiful girl, best quality, masterpiece...&#10;&#10;or: дівчина-кіборг у нічному місті">'+esc(S.existing)+'</textarea></div>';
   }
 
@@ -2536,6 +2558,15 @@ function buildLeftCol(mob) {
     '<div class="'+badgeClass+'" id="rnd-badge">'+badgeText+'</div>';
   } else {
     var improveDisabled = (!S.existing.trim() || S.loading);
+    /* Summary bar */
+    var scNow = SCENES.find(function(x){return x.id===S.scene;})||{};
+    var stNow2 = STYLES.find(function(x){return x.id===S.style;})||{};
+    var presetLabel = S.improvePreset==='fix'?t('presetFix'):S.improvePreset==='zit'?t('presetZIT'):S.improvePreset==='enhance'?t('presetEnhance'):'—';
+    h += '<div style="font-size:10px;color:var(--t3);letter-spacing:.04em;margin-bottom:8px;padding:6px 10px;background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r);line-height:1.7">' +
+      '<span style="color:var(--t4)">Scene</span> <span style="color:var(--t2)">'+(scNow.label||'—')+'</span>' +
+      ' &nbsp;·&nbsp; <span style="color:var(--t4)">Style</span> <span style="color:var(--t2)">'+(stNow2.label||'—')+'</span>' +
+      (S.improvePreset ? ' &nbsp;·&nbsp; <span style="color:var(--t4)">Preset</span> <span style="color:var(--acc-txt)">'+presetLabel+'</span>' : '') +
+    '</div>';
     h += '<button class="btn-primary'+(S.loading?' loading':'')+(improveDisabled&&!S.loading?' btn-secondary':'')+'" id="b-gen"'+(improveDisabled?' disabled':'')+'>' +
       (S.loading
         ? '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center"><span style="display:inline-block;animation:spin .65s linear infinite;opacity:.7">⟳</span> '+t('btnGenerating')+'</span>'
@@ -2585,11 +2616,11 @@ function buildRightCol(mob, keyOk) {
     if (r.via !== 'xml') h += '<div class="warn-strip">⚠ Parsed via '+esc(r.via)+' — open Debug for details</div>';
 
     h += '<div class="sec-block" style="margin-bottom:var(--s3)">' +
-      '<div class="out-hdr"><span class="lbl">'+t('outPositive')+'</span><button class="btn-copy" id="b-cp-pos">⎘ Copy</button></div>' +
+      '<div class="out-hdr"><span class="lbl">'+t('outPositive')+'</span><button class="btn-copy" id="b-cp-pos">'+t('btnCopySubject')+'</button></div>' +
       '<div class="out-txt accent" id="out-pos">'+esc(r.positive)+'</div></div>';
 
     h += '<div class="sec-block" style="margin-bottom:var(--s3)">' +
-      '<div class="out-hdr"><span class="lbl">'+t('outNegative')+'</span><button class="btn-copy" id="b-cp-neg">⎘ Copy</button></div>' +
+      '<div class="out-hdr"><span class="lbl">'+t('outNegative')+'</span><button class="btn-copy" id="b-cp-neg">'+t('btnCopySubject')+'</button></div>' +
       '<div class="out-txt" id="out-neg">'+esc(r.negative)+'</div></div>';
 
     h += '<div class="output-actions">' +
@@ -2712,7 +2743,7 @@ function buildHistPanel() {
           '<button class="btn-ghost" data-hist-insert="'+i+'" style="font-size:11px;padding:3px 8px">'+t('histInsert')+'</button>' +
           '<button class="btn-ghost" data-hist-use="'+i+'" style="font-size:11px;padding:3px 8px;color:var(--acc-txt);border-color:rgba(47,129,247,.3)">'+t('histUse')+'</button>' +
           '<button class="btn-copy" data-hist-copy="'+i+'" style="font-size:11px;padding:3px 8px;margin-left:auto">⎘ '+t('histCopyItem')+'</button>' +
-          '<button class="btn-copy" data-hist-del="'+i+'" style="font-size:11px;padding:3px 8px;color:var(--red-txt);border-color:var(--red-bdr)">✕</button>' +
+          '<button class="btn-clr" data-hist-del="'+i+'" style="font-size:11px;padding:3px 8px">✕</button>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -3034,6 +3065,19 @@ function attachEvents() {
   }
 
   on('b-cp-sub','click',function(e){ if(S.subject.trim()) copyText(S.subject, e.currentTarget); });
+  on('b-cp-exist','click',function(e){ if(S.existing.trim()) copyText(S.existing, e.currentTarget); });
+  on('b-clr-exist','click',function(){
+    var btn = document.getElementById('b-clr-exist');
+    if (btn) { btn.classList.add('cleared'); btn.textContent = '✓'; }
+    setTimeout(function(){
+      S.existing = '';
+      render();
+      requestAnimationFrame(function(){
+        var ta = document.getElementById('inp-exist');
+        if (ta) ta.focus();
+      });
+    }, 400);
+  });
   on('b-clr-sub','click',function(){
     var btn = document.getElementById('b-clr-sub');
     if (btn) { btn.classList.add('cleared'); btn.textContent = '✓'; }
