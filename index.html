@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v3.5.4</title>
+  <title>ZIT Prompt Generator v3.5.4-diag</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -2255,6 +2255,12 @@ function autoResize(el) {
 }
 
 function render() {
+  var active = document.activeElement;
+  var activeTag = active ? active.tagName : '';
+  if (activeTag === 'TEXTAREA' || activeTag === 'INPUT') {
+    console.warn('[ZIT diag] render() called while ' + activeTag + '#' + (active.id||'?') + ' is focused');
+    console.trace();
+  }
   document.getElementById('app').innerHTML = buildHTML();
   attachEvents();
 }
@@ -2324,7 +2330,7 @@ function buildHeader(mob, keyOk) {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v3.5.4</span>' +
+        '<span class="title-version">v3.5.4-diag</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
