@@ -2107,9 +2107,9 @@ async function callGroqOnce(signal) {
 }
 
 async function generate() {
-  if (!S.apiKey.trim()) { S.error=t('errNoKey'); S.apiOpen=true; render(); forceRepaint(); return; }
-  if (S.mode==='generate' && !S.subject.trim()) { S.error=t('errNoSubject'); render(); forceRepaint(); return; }
-  if (S.mode==='enhance'  && !S.existing.trim()) { S.error=t('errNoExisting'); render(); forceRepaint(); return; }
+  if (!S.apiKey.trim()) { S.error=t('errNoKey'); S.apiOpen=true; render('L-nokey'); forceRepaint(); return; }
+  if (S.mode==='generate' && !S.subject.trim()) { S.error=t('errNoSubject'); render('L-nosubj'); forceRepaint(); return; }
+  if (S.mode==='enhance'  && !S.existing.trim()) { S.error=t('errNoExisting'); render('L-noexist'); forceRepaint(); return; }
   if (_busy) { if (_ac) _ac.abort(); _busy=false; }
   _ac=new AbortController(); _busy=true;
   S.loading=true; S.error='';
@@ -2142,7 +2142,7 @@ async function generate() {
       break;
     }
   }
-  _busy=false; S.loading=false; render(); forceRepaint();
+  _busy=false; S.loading=false; render("L2145-done"); forceRepaint();
 }
 
 /* ═══════════════════════════════════════════════════
