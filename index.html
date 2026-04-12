@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v3.5.5</title>
+  <title>ZIT Prompt Generator v3.6.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -181,12 +181,7 @@
     .secondary-section .lbl,
     .out-hdr .lbl,
     .info-card .lbl,
-    .enhance-lbl {
-      background: linear-gradient(90deg, #fff 0%, #9ecbff 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
+    .enhance-lbl,
     .adv-title {
       background: linear-gradient(90deg, #fff 0%, #9ecbff 100%);
       -webkit-background-clip: text;
@@ -1017,7 +1012,6 @@
       .pp-items { white-space: normal; overflow: visible; text-overflow: unset; }
     }
     @media (min-width: 681px) { .mob-mode-sw { display: none; } }
-    .btn-ghost.copied { border-color: var(--green-bdr); color: var(--green-txt); background: var(--green-bg); }
 
     /* ═══════════════════════════════════════
        TECH BAR — v2.1.4
@@ -1123,7 +1117,7 @@
 <body>
 <div id="app"></div>
 
-<script>
+<script id="zit-data">
 'use strict';
 
 /* ═══════════════════════════════════════════════════
@@ -1573,6 +1567,24 @@ function sl(type, idx) {
   return (SECTION_LABELS[lang] && SECTION_LABELS[lang][type] && SECTION_LABELS[lang][type][idx]) || SECTION_LABELS.en[type][idx];
 }
 
+function getSceneGroups() {
+  return [
+    { label: sl('scene',0), ids: ['portrait','half_body','full_body','landscape'], icons: true },
+    { label: sl('scene',1), ids: ['urban','interior','architecture'],              icons: true },
+    { label: sl('scene',2), ids: ['macro','animal','product'],                     icons: false },
+    { label: sl('scene',3), ids: ['concept','manual'],                             icons: false },
+  ];
+}
+
+function getStyleGroups() {
+  return [
+    { label: sl('style',0), icon: '◉', ids: ['photorealistic','cinematic','documentary','fashion','analog'] },
+    { label: sl('style',1), icon: '◈', ids: ['digital_art','concept_art','illustration','oil_painting','watercolor','pencil_sketch','impressionism'] },
+    { label: sl('style',2), icon: '❋', ids: ['anime','manga','comic','ink_wash','ukiyo_e'] },
+    { label: sl('style',3), icon: '▣', ids: ['3d_render','low_poly','isometric','pixel_art','flat_design','glitch'] },
+  ];
+}
+
 function rndFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
 function smartRandom(mode) {
@@ -1724,6 +1736,11 @@ function t(key) {
   return (I18N[lang] && I18N[lang][key]) ? I18N[lang][key] : (I18N.en[key] || key);
 }
 
+</script>
+
+<script>
+'use strict';
+
 /* ═══════════════════════════════════════════════════
    STATE
 ═══════════════════════════════════════════════════ */
@@ -1788,7 +1805,7 @@ var PERSIST_KEYS = [
   'scene','style','subjectType',
   'lighting','mood','genre','resolution',
   'sampler','scheduler','steps','cfg',
-  'model','customNeg','loras'
+  'model','customNeg','loras','seed','improvePreset'
 ];
 
 function saveState() {
@@ -2105,15 +2122,15 @@ async function callGroqOnce(signal) {
 }
 
 async function generate() {
-  if (!S.apiKey.trim()) { S.error=t('errNoKey'); S.apiOpen=true; render(); forceRepaint(); return; }
-  if (S.mode==='generate' && !S.subject.trim()) { S.error=t('errNoSubject'); render(); forceRepaint(); return; }
-  if (S.mode==='enhance'  && !S.existing.trim()) { S.error=t('errNoExisting'); render(); forceRepaint(); return; }
+  if (!S.apiKey.trim()) { S.error=t('errNoKey'); S.apiOpen=true; renderImmediate(); forceRepaint(); return; }
+  if (S.mode==='generate' && !S.subject.trim()) { S.error=t('errNoSubject'); renderImmediate(); forceRepaint(); return; }
+  if (S.mode==='enhance'  && !S.existing.trim()) { S.error=t('errNoExisting'); renderImmediate(); forceRepaint(); return; }
   if (_busy) { if (_ac) _ac.abort(); _busy=false; }
   _ac=new AbortController(); _busy=true;
   S.loading=true; S.error='';
   S.result=null; S.dbgLog=null;
   if (window.innerWidth<=680) S.mobilePane='output';
-  render();
+  renderImmediate();
   var attempts=0;
   while (attempts<=2) {
     attempts++;
@@ -2131,7 +2148,7 @@ async function generate() {
         if (_ac&&_ac.signal.aborted) break;
         var delay=3000*attempts;
         S.error = t('errRateLimit').replace('{n}', attempts).replace('{s}', delay/1000);
-        render();
+        renderImmediate();
         await sleep(delay);
         if (_ac&&_ac.signal.aborted) break;
         S.error=''; continue;
@@ -2140,7 +2157,7 @@ async function generate() {
       break;
     }
   }
-  _busy=false; S.loading=false; render(); forceRepaint();
+  _busy=false; S.loading=false; renderImmediate(); forceRepaint();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -2270,6 +2287,13 @@ function render() {
   attachEvents();
 }
 
+/* renderImmediate — bypasses defer, used in generate() flow
+   where spinner/error must display regardless of focus state */
+function renderImmediate() {
+  document.getElementById('app').innerHTML = buildHTML();
+  attachEvents();
+}
+
 /* ═══════════════════════════════════════════════════
    PATCH — хірургічні DOM-оновлення без повного render
 ═══════════════════════════════════════════════════ */
@@ -2335,7 +2359,7 @@ function buildHeader(mob, keyOk) {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v3.5.5</span>' +
+        '<span class="title-version">v3.6.0</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
@@ -2441,13 +2465,7 @@ function buildLeftCol(mob) {
     '</div>';
 
     /* SCENE */
-    var SCENE_GROUPS = [
-      { label: sl('scene',0), ids: ['portrait','half_body','full_body','landscape'], icons: true },
-      { label: sl('scene',1), ids: ['urban','interior','architecture'],              icons: true },
-      { label: sl('scene',2), ids: ['macro','animal','product'],                     icons: false },
-      { label: sl('scene',3), ids: ['concept','manual'],                             icons: false },
-    ];
-    var sceneHtml = SCENE_GROUPS.map(function(grp) {
+    var sceneHtml = getSceneGroups().map(function(grp) {
       var btns = grp.ids.map(function(id) {
         var sc = SCENES.find(function(x){ return x.id === id; });
         if (!sc) return '';
@@ -2466,13 +2484,7 @@ function buildLeftCol(mob) {
     h += '<div class="sec-block"><div class="f-hdr"><label class="lbl">'+t('lSubjectType')+'</label><span class="hint">'+t('lSubjectHint')+'</span></div><div class="pill-row" style="margin-bottom:0">'+subjPills+'</div></div>';
 
     /* STYLE */
-    var STYLE_GROUPS = [
-      { label: sl('style',0), icon: '◉', ids: ['photorealistic','cinematic','documentary','fashion','analog'] },
-      { label: sl('style',1), icon: '◈', ids: ['digital_art','concept_art','illustration','oil_painting','watercolor','pencil_sketch','impressionism'] },
-      { label: sl('style',2), icon: '❋', ids: ['anime','manga','comic','ink_wash','ukiyo_e'] },
-      { label: sl('style',3), icon: '▣', ids: ['3d_render','low_poly','isometric','pixel_art','flat_design','glitch'] },
-    ];
-    var styleHtml = STYLE_GROUPS.map(function(grp) {
+    var styleHtml = getStyleGroups().map(function(grp) {
       var btns = grp.ids.map(function(id) {
         var st = STYLES.find(function(x){ return x.id === id; });
         if (!st) return '';
