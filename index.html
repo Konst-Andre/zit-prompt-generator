@@ -2158,28 +2158,71 @@ async function callGroqOnce(signal) {
    VISION — IMAGE → PROMPT
 ═══════════════════════════════════════════════════ */
 var VISION_SYSTEM = [
-  'You analyze images and extract visual parameters for the ZIT diffusion model prompt generator.',
-  'Return ONLY a valid XML block — no prose, no markdown, no explanation.',
+  'You analyze images and extract visual parameters for a diffusion model prompt generator.',
+  'Return ONLY a valid XML block — no prose, no markdown, no explanation before or after.',
   '',
-  'Respond with this exact structure:',
+  'Respond with this exact XML structure:',
   '<vision>',
   '  <scene>VALUE</scene>',
   '  <style>VALUE</style>',
+  '  <subjectType>VALUE</subjectType>',
   '  <lighting>VALUE</lighting>',
   '  <mood>VALUE</mood>',
   '  <genre>VALUE</genre>',
   '  <subject>TEXT</subject>',
   '</vision>',
   '',
-  'Allowed values:',
-  'scene (pick one id): portrait | half_body | full_body | landscape | urban | interior | architecture | macro | animal | product | concept',
-  'style (pick one id): photorealistic | cinematic | documentary | fashion | analog | digital_art | concept_art | illustration | oil_painting | watercolor | pencil_sketch | impressionism | anime | manga | comic | ink_wash | ukiyo_e | 3d_render | low_poly | isometric | pixel_art | flat_design | glitch',
-  'lighting (pick one label exactly): Cinematic | Soft Natural | Golden Hour | Blue Hour | Overcast | Rim Light | Neon / LED | Volumetric Rays | Studio Softbox | Candlelight | Moonlight | Harsh Midday',
-  'mood (pick one label exactly, or leave empty): Moody & atmospheric | Ethereal & dreamy | Tense & dramatic | Serene & peaceful | Mysterious | Epic & grand | Melancholic | Joyful & vibrant | Gritty & raw',
-  'genre (pick one label exactly, or leave empty): Cyberpunk | Fantasy | Dark Fantasy | Sci-Fi | Solarpunk | Noir | Post-Apocalyptic | Historical | Mythological | Surreal | Horror | Contemporary | Futuristic',
-  'subject: concise English description of the main subject (max 20 words). If no clear subject, describe the scene content.',
+  '=== FIELD RULES ===',
   '',
-  'Rules: use only the exact id/label values listed. If unsure about mood or genre, leave the tag empty.',
+  'scene — camera FRAMING of the main subject, NOT the background or environment.',
+  '  portrait = face/head closeup | half_body = waist up | full_body = entire body visible',
+  '  landscape = no main person, nature/scenery | urban = city street environment',
+  '  interior = indoor room/space | architecture = buildings | macro = extreme closeup object',
+  '  animal = animal subject | product = object/product | concept = abstract/fantasy',
+  '  CRITICAL: if a person is the main subject, choose portrait/half_body/full_body based on how much of their body is visible.',
+  '  Do NOT choose interior/urban/landscape when a person is the primary focus.',
+  '  Allowed: portrait | half_body | full_body | landscape | urban | interior | architecture | macro | animal | product | concept',
+  '',
+  'style — visual rendering style of the image itself.',
+  '  Allowed: photorealistic | cinematic | documentary | fashion | analog | digital_art | concept_art | illustration | oil_painting | watercolor | pencil_sketch | impressionism | anime | manga | comic | ink_wash | ukiyo_e | 3d_render | low_poly | isometric | pixel_art | flat_design | glitch',
+  '',
+  'subjectType — the category of the main subject.',
+  '  person = any human | animal = any animal | product = manufactured object | object = natural/generic object | environment = no clear subject, scene itself',
+  '  Allowed: person | animal | product | object | environment',
+  '',
+  'lighting — the dominant light source and quality visible in the image.',
+  '  Golden Hour = warm orange/yellow sun low on horizon | Blue Hour = cool blue twilight |',
+  '  Cinematic = high contrast dramatic shadows | Soft Natural = even daylight no harsh shadows |',
+  '  Rim Light = strong backlight edge glow | Neon / LED = colored artificial light |',
+  '  Volumetric Rays = visible light beams through air | Studio Softbox = controlled studio light |',
+  '  Candlelight = warm flickering low light | Moonlight = cool blue night light |',
+  '  Overcast = flat shadowless cloudy | Harsh Midday = strong overhead sun sharp shadows',
+  '  Allowed (exact label): Cinematic | Soft Natural | Golden Hour | Blue Hour | Overcast | Rim Light | Neon / LED | Volumetric Rays | Studio Softbox | Candlelight | Moonlight | Harsh Midday',
+  '',
+  'mood — emotional atmosphere. ONLY assign if clearly and strongly present. Leave empty if neutral or ambiguous.',
+  '  Moody & atmospheric = heavy shadow, tension | Ethereal & dreamy = hazy glow, weightless |',
+  '  Tense & dramatic = conflict, strong contrast | Serene & peaceful = calm, open, soft |',
+  '  Mysterious = obscured, hidden, enigmatic | Epic & grand = vast scale, heroic |',
+  '  Melancholic = sadness, muted tones | Joyful & vibrant = bright, energetic, happy |',
+  '  Gritty & raw = harsh realism, rough texture',
+  '  Allowed (exact label): Moody & atmospheric | Ethereal & dreamy | Tense & dramatic | Serene & peaceful | Mysterious | Epic & grand | Melancholic | Joyful & vibrant | Gritty & raw',
+  '',
+  'genre — stylistic/thematic genre. ONLY assign if UNMISTAKABLY present in the visual aesthetic.',
+  '  Contemporary photo of a person in nature = leave EMPTY.',
+  '  Do NOT assign Historical unless clothing/setting is clearly pre-1950s period.',
+  '  Do NOT assign Fantasy/Sci-Fi unless fantastical elements are visible.',
+  '  Allowed (exact label): Cyberpunk | Fantasy | Dark Fantasy | Sci-Fi | Solarpunk | Noir | Post-Apocalyptic | Historical | Mythological | Surreal | Horror | Contemporary | Futuristic',
+  '',
+  'subject — detailed English description of the main subject and scene. 40-50 words.',
+  '  Include: age/gender, hair (color, length, style), clothing (specific items, colors, textures),',
+  '  pose/body language, facial expression, and key background elements.',
+  '  Example: "young woman, dark hair pulled back, wearing brown cable-knit cardigan over white lace blouse',
+  '  and tweed midi skirt, hands clasped, slight smile, standing in elegant room with portraits on walls"',
+  '',
+  '=== STRICT RULES ===',
+  'Use ONLY the exact id/label values listed above.',
+  'Leave mood and genre EMPTY if not clearly present — do not guess.',
+  'scene must reflect camera framing of subject, not background type.',
 ].join('\n');
 
 async function callVisionOnce(base64, mime) {
@@ -2210,19 +2253,21 @@ function applyVisionResult(raw) {
     var m = raw.match(new RegExp('<' + name + '>([\\s\\S]*?)<\\/' + name + '>'));
     return m ? m[1].trim() : '';
   }
-  var scene   = tag('scene');
-  var style   = tag('style');
-  var lighting= tag('lighting');
-  var mood    = tag('mood');
-  var genre   = tag('genre');
-  var subject = tag('subject');
+  var scene       = tag('scene');
+  var style       = tag('style');
+  var subjectType = tag('subjectType');
+  var lighting    = tag('lighting');
+  var mood        = tag('mood');
+  var genre       = tag('genre');
+  var subject     = tag('subject');
 
-  if (scene   && SCENES.find(function(x){return x.id===scene;}))     S.scene   = scene;
-  if (style   && STYLES.find(function(x){return x.id===style;}))     S.style   = style;
-  if (lighting&& LIGHTINGS.find(function(x){return x.label===lighting;})) S.lighting = lighting;
-  if (mood    && MOODS.find(function(x){return x.label===mood;}))    S.mood    = mood;
-  if (genre   && GENRES.find(function(x){return x.label===genre;}))  S.genre   = genre;
-  if (subject) S.subject = subject;
+  if (scene       && SCENES.find(function(x){return x.id===scene;}))          S.scene       = scene;
+  if (style       && STYLES.find(function(x){return x.id===style;}))          S.style       = style;
+  if (subjectType && SUBJECTS.find(function(x){return x.id===subjectType;}))  S.subjectType = subjectType;
+  if (lighting    && LIGHTINGS.find(function(x){return x.label===lighting;})) S.lighting    = lighting;
+  if (mood        && MOODS.find(function(x){return x.label===mood;}))         S.mood        = mood;
+  if (genre       && GENRES.find(function(x){return x.label===genre;}))       S.genre       = genre;
+  if (subject)    S.subject = subject;
 }
 
 async function analyzeImage(file) {
@@ -2598,10 +2643,13 @@ function buildLeftCol(mob) {
             '<button class="btn-copy" id="b-cp-sub" style="opacity:.6'+(S.subject.trim()?'':';display:none')+'">'+t('btnCopySubject')+'</button>' +
             '<button class="btn-clr" id="b-clr-sub" title="'+t('btnClearTitle')+'"'+(S.subject.trim()?'':' style="display:none"')+'>✕</button>' +
             (loadHistory().length ? '<button class="btn-copy" id="b-hist-subj" style="opacity:.7;font-size:12px" title="'+t('histBtnTitle')+'">📜</button>' : '') +
+            '<input type="file" id="inp-vision-file" accept="image/jpeg,image/png,image/webp" style="display:none">' +
+            '<button class="btn-copy" id="b-vision" title="'+t('visionBtn')+'" style="opacity:.75'+(S.visionLoading?';pointer-events:none':'')+'">'+( S.visionLoading ? '⟳' : '📸')+'</button>' +
           '</div>' +
         '</div>' +
         '<textarea id="inp-sub" rows="3" placeholder="e.g: '+esc(stPh)+'&#10;• your own idea here">'+esc(S.subject)+'</textarea>' +
         histHtml +
+        (S.visionSuccess ? '<div style="font-size:11px;color:var(--acc-txt);margin-top:4px;opacity:.85">'+t('visionFill')+'</div>' : '') +
         '<div style="text-align:right;font-size:10px;margin-top:3px">' +
           '<span id="sub-count" style="color:' + (S.subject.length > 300 ? 'var(--amber)' : 'var(--t4)') + '">' + S.subject.length + '</span>' +
         '</div>' +
@@ -2735,13 +2783,7 @@ function buildLeftCol(mob) {
       '<button class="btn-random" id="b-random" title="Random subject — Shift: creative — DblClick: wild" style="min-width:48px">🔀</button>' +
       '<button class="btn-adv'+(advChanged?' is-changed':'')+'" id="b-adv" title="'+t('advTooltip')+'">⚙'+(advChanged?'<span class="adv-dot"></span>':'')+'</button>' +
     '</div>' +
-    '<input type="file" id="inp-vision-file" accept="image/jpeg,image/png,image/webp" style="display:none">' +
-    '<button class="btn-ghost" id="b-vision" style="width:100%;margin-top:8px;font-size:12px;padding:7px 12px;color:var(--t2);border-color:var(--bdr2)'+(S.visionLoading?';opacity:.6;pointer-events:none':'')+'">'  +
-      (S.visionLoading
-        ? '<span style="display:inline-flex;align-items:center;gap:7px"><span style="display:inline-block;animation:spin .65s linear infinite;opacity:.7">⟳</span> '+t('visionLoading')+'</span>'
-        : t('visionBtn')) +
-    '</button>' +
-    (S.visionSuccess ? '<div style="font-size:11px;color:var(--acc-txt);text-align:center;margin-top:4px;opacity:.85">'+t('visionFill')+'</div>' : '') +
+
     '<div class="'+badgeClass+'" id="rnd-badge">'+badgeText+'</div>';
   } else {
     var improveDisabled = (!S.existing.trim() || S.loading);
