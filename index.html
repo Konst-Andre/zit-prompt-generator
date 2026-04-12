@@ -696,6 +696,42 @@
     .prompt-main.is-typing { border-color: rgba(47,129,247,.48); }
     .prompt-main.is-typing textarea { border-color: rgba(47,129,247,.6); }
 
+    .vision-strip {
+      margin: 7px calc(-(var(--s4) + 2px)) 0;
+      margin-left: calc(-(var(--s4) + 8px));
+      padding: 7px calc(var(--s4) + 2px) 7px calc(var(--s4) + 8px);
+      background: rgba(4,7,11,.55);
+      border-top: 1px solid rgba(47,129,247,.14);
+      border-bottom: 1px solid rgba(47,129,247,.14);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .vision-strip .vs-btn {
+      font-size: 11px;
+      font-family: inherit;
+      background: transparent;
+      border: none;
+      color: var(--t4);
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: color .15s;
+    }
+    .vision-strip .vs-btn:hover { color: var(--acc-txt); }
+    .vision-strip .vs-btn:disabled { pointer-events: none; }
+    .vision-strip .vs-hint {
+      font-size: 11px;
+      color: var(--t4);
+      margin-left: auto;
+    }
+    .vision-strip .vs-success {
+      font-size: 11px;
+      color: var(--green-txt);
+    }
+
     /* ═══════════════════════════════════════
        OUTPUT MAIN
     ═══════════════════════════════════════ */
@@ -1680,9 +1716,10 @@ const I18N = {
     errServer:     'Server error {code} — retry {n}/1…',
     errOffline:    'No internet connection',
     btnRetry:      '↺ Retry',
-    visionBtn:     '📸 Image → Prompt',
+    visionBtn:     'Image → Prompt',
     visionLoading: 'Analyzing image…',
-    visionFill:    '✓ Image analyzed — review fields and generate',
+    visionFill:    'Image analyzed — review fields and generate',
+    visionHint:    'fills fields from photo',
     visionErrSize: 'Image too large (max 4 MB)',
     visionErrType: 'Unsupported format — use JPEG, PNG or WebP',
     visionErrParse:'Could not read image data',
@@ -1736,9 +1773,10 @@ const I18N = {
     errServer:     'Помилка сервера {code} — повтор {n}/1…',
     errOffline:    'Немає зʼєднання з інтернетом',
     btnRetry:      '↺ Повторити',
-    visionBtn:     '📸 Зображення → Промпт',
+    visionBtn:     'Зображення → Промпт',
     visionLoading: 'Аналіз зображення…',
-    visionFill:    '✓ Зображення проаналізовано — перевірте поля та генеруйте',
+    visionFill:    'Зображення проаналізовано — перевірте поля та генеруйте',
+    visionHint:    'заповнює поля з фото',
     visionErrSize: 'Зображення занадто велике (макс 4 МБ)',
     visionErrType: 'Непідтримуваний формат — JPEG, PNG або WebP',
     visionErrParse:'Не вдалось прочитати дані зображення',
@@ -2634,6 +2672,17 @@ function buildLeftCol(mob) {
           return '<span class="subj-hist-item" data-hist="'+i+'" title="'+esc(s)+'">'+esc(s.length>28?s.slice(0,26)+'…':s)+'</span>';
         }).join('') + '</div>';
     }
+    var visionStripHtml =
+      '<div class="vision-strip">' +
+        '<input type="file" id="inp-vision-file" accept="image/jpeg,image/png,image/webp" style="display:none">' +
+        ( S.visionSuccess
+          ? '<span class="vs-success">✓ '+t('visionFill')+'</span>'
+          : '<button class="vs-btn" id="b-vision"'+(S.visionLoading?' disabled':'')+'>'+
+              (S.visionLoading ? '⟳ '+t('visionLoading') : '📸 '+t('visionBtn'))+
+            '</button>' +
+            '<span class="vs-hint">'+t('visionHint')+'</span>'
+        ) +
+      '</div>';
     h += '<div class="prompt-main">' +
       '<div class="field">' +
         '<div class="f-hdr">' +
@@ -2643,13 +2692,11 @@ function buildLeftCol(mob) {
             '<button class="btn-copy" id="b-cp-sub" style="opacity:.6'+(S.subject.trim()?'':';display:none')+'">'+t('btnCopySubject')+'</button>' +
             '<button class="btn-clr" id="b-clr-sub" title="'+t('btnClearTitle')+'"'+(S.subject.trim()?'':' style="display:none"')+'>✕</button>' +
             (loadHistory().length ? '<button class="btn-copy" id="b-hist-subj" style="opacity:.7;font-size:12px" title="'+t('histBtnTitle')+'">📜</button>' : '') +
-            '<input type="file" id="inp-vision-file" accept="image/jpeg,image/png,image/webp" style="display:none">' +
-            '<button class="btn-copy" id="b-vision" title="'+t('visionBtn')+'" style="opacity:.75'+(S.visionLoading?';pointer-events:none':'')+'">'+( S.visionLoading ? '⟳' : '📸')+'</button>' +
           '</div>' +
         '</div>' +
+        visionStripHtml +
         '<textarea id="inp-sub" rows="3" placeholder="e.g: '+esc(stPh)+'&#10;• your own idea here">'+esc(S.subject)+'</textarea>' +
         histHtml +
-        (S.visionSuccess ? '<div style="font-size:11px;color:var(--acc-txt);margin-top:4px;opacity:.85">'+t('visionFill')+'</div>' : '') +
         '<div style="text-align:right;font-size:10px;margin-top:3px">' +
           '<span id="sub-count" style="color:' + (S.subject.length > 300 ? 'var(--amber)' : 'var(--t4)') + '">' + S.subject.length + '</span>' +
         '</div>' +
