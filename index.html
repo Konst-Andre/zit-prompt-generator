@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v3.6.0</title>
+  <title>ZIT Prompt Generator v3.7.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -1676,6 +1676,16 @@ const I18N = {
     errNoSubject:  'Enter a subject',
     errNoExisting: 'Paste a prompt to improve',
     errRateLimit:  'Rate limit — retry {n}/2 in {s}s…',
+    errTimeout:    'Request timeout (30s) — check connection',
+    errServer:     'Server error {code} — retry {n}/1…',
+    errOffline:    'No internet connection',
+    btnRetry:      '↺ Retry',
+    visionBtn:     '📸 Image → Prompt',
+    visionLoading: 'Analyzing image…',
+    visionFill:    '✓ Image analyzed — review fields and generate',
+    visionErrSize: 'Image too large (max 4 MB)',
+    visionErrType: 'Unsupported format — use JPEG, PNG or WebP',
+    visionErrParse:'Could not read image data',
     histTitle: 'Prompt History', histEmpty: 'No history yet — generate a prompt first',
     histClear: 'Clear', histUse: 'Use this prompt', histInsert: 'Insert', histBtnTitle: 'Prompt History',
     histDelItem: 'Delete', histCopyItem: 'Copy',
@@ -1722,6 +1732,16 @@ const I18N = {
     errNoSubject:  'Введіть тему',
     errNoExisting: 'Вставте промпт для покращення',
     errRateLimit:  'Ліміт запитів — повтор {n}/2 через {s}с…',
+    errTimeout:    'Таймаут запиту (30с) — перевірте зʼєднання',
+    errServer:     'Помилка сервера {code} — повтор {n}/1…',
+    errOffline:    'Немає зʼєднання з інтернетом',
+    btnRetry:      '↺ Повторити',
+    visionBtn:     '📸 Зображення → Промпт',
+    visionLoading: 'Аналіз зображення…',
+    visionFill:    '✓ Зображення проаналізовано — перевірте поля та генеруйте',
+    visionErrSize: 'Зображення занадто велике (макс 4 МБ)',
+    visionErrType: 'Непідтримуваний формат — JPEG, PNG або WebP',
+    visionErrParse:'Не вдалось прочитати дані зображення',
     histTitle: 'Історія промптів', histEmpty: 'Історія порожня — спочатку згенеруйте промпт',
     histClear: 'Очистити', histUse: 'Використати', histInsert: 'Вставити', histBtnTitle: 'Історія промптів',
     histDelItem: 'Видалити', histCopyItem: 'Копіювати',
@@ -1755,7 +1775,7 @@ var S = {
   loras:[],
   steps:'12', cfg:'1.5', sampler:'euler_ancestral', scheduler:'beta', seed:'',
   customNeg:'',
-  loading:false, result:null, error:'', dbgLog:null,
+  loading:false, visionLoading:false, visionSuccess:false, result:null, error:'', dbgLog:null,
   rndMode:'normal',
   subjectHistory:[],
 };
@@ -2103,22 +2123,135 @@ async function callGroqOnce(signal) {
   if (mdl && mdl.qwen) userMsg += '\n\n/no_think';
   var body = { model:S.model, max_tokens:2048, messages:[{role:'system',content:sysMsg},{role:'user',content:userMsg}] };
   var t0 = Date.now(), res;
+  var _tac = new AbortController();
+  var _tid = setTimeout(function(){ _tac.abort(); }, 30000);
+  var _combinedAc = new AbortController();
+  function _doAbortCombined(){ _combinedAc.abort(); }
+  signal.addEventListener('abort', _doAbortCombined, {once:true});
+  _tac.signal.addEventListener('abort', _doAbortCombined, {once:true});
   try {
-    res = await fetch('https://api.groq.com/openai/v1/chat/completions', { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+S.apiKey}, body:JSON.stringify(body), signal });
+    res = await fetch('https://api.groq.com/openai/v1/chat/completions', { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+S.apiKey}, body:JSON.stringify(body), signal:_combinedAc.signal });
+    clearTimeout(_tid); signal.removeEventListener('abort', _doAbortCombined);
   } catch(e) {
-    if (e.name === 'AbortError') { var ae=new Error('__aborted__'); ae.aborted=true; ae.log=log; throw ae; }
-    log.error = 'Network error: ' + e.message; var ne=new Error(log.error); ne.log=log; throw ne;
+    clearTimeout(_tid); signal.removeEventListener('abort', _doAbortCombined);
+    if (e.name === 'AbortError') {
+      if (_tac.signal.aborted) { var te=new Error(t('errTimeout')); te.code='timeout'; te.log=log; throw te; }
+      var ae=new Error('__aborted__'); ae.aborted=true; ae.log=log; throw ae;
+    }
+    var isOffline = (typeof navigator!=='undefined' && !navigator.onLine) || e.message==='Failed to fetch' || e.message==='NetworkError when attempting to fetch resource.';
+    log.error = isOffline ? t('errOffline') : ('Network error: ' + e.message);
+    var ne=new Error(log.error); ne.log=log; ne.code=isOffline?'offline':'network'; throw ne;
   }
   log.httpStatus = res.status; log.httpOk = res.ok; log.responseMs = Date.now()-t0;
   var bodyText = await res.text(); log.rawText = bodyText;
   var data; try { data = JSON.parse(bodyText); } catch(e) { log.error='Response is not JSON (HTTP '+res.status+')'; var je=new Error(log.error); je.log=log; throw je; }
   if (res.status===401) { log.error='Invalid API key (401)'; var e401=new Error('Невірний API ключ — перевірте в ⚙ API'); e401.log=log; e401.code=401; throw e401; }
   if (res.status===429) { log.error='Rate limit (429)'; var e429=new Error(log.error); e429.log=log; e429.code=429; throw e429; }
-  if (!res.ok||(data&&data.error)) { log.error=(data&&data.error&&data.error.message)||(data&&data.message)||res.statusText||'Unknown'; var eapi=new Error('API '+res.status+': '+log.error); eapi.log=log; throw eapi; }
+  if (!res.ok||(data&&data.error)) { log.error=(data&&data.error&&data.error.message)||(data&&data.message)||res.statusText||'Unknown'; var eapi=new Error('API '+res.status+': '+log.error); eapi.log=log; eapi.code=res.status; throw eapi; }
   var raw=(data&&data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||'';
   log.contentField=raw; log.strippedText=stripThink(raw);
   if (!raw) { log.error='choices[0].message.content is empty'; var ee=new Error(log.error); ee.log=log; throw ee; }
   return Object.assign({}, parseResponse(raw), {log});
+}
+
+/* ═══════════════════════════════════════════════════
+   VISION — IMAGE → PROMPT
+═══════════════════════════════════════════════════ */
+var VISION_SYSTEM = [
+  'You analyze images and extract visual parameters for the ZIT diffusion model prompt generator.',
+  'Return ONLY a valid XML block — no prose, no markdown, no explanation.',
+  '',
+  'Respond with this exact structure:',
+  '<vision>',
+  '  <scene>VALUE</scene>',
+  '  <style>VALUE</style>',
+  '  <lighting>VALUE</lighting>',
+  '  <mood>VALUE</mood>',
+  '  <genre>VALUE</genre>',
+  '  <subject>TEXT</subject>',
+  '</vision>',
+  '',
+  'Allowed values:',
+  'scene (pick one id): portrait | half_body | full_body | landscape | urban | interior | architecture | macro | animal | product | concept',
+  'style (pick one id): photorealistic | cinematic | documentary | fashion | analog | digital_art | concept_art | illustration | oil_painting | watercolor | pencil_sketch | impressionism | anime | manga | comic | ink_wash | ukiyo_e | 3d_render | low_poly | isometric | pixel_art | flat_design | glitch',
+  'lighting (pick one label exactly): Cinematic | Soft Natural | Golden Hour | Blue Hour | Overcast | Rim Light | Neon / LED | Volumetric Rays | Studio Softbox | Candlelight | Moonlight | Harsh Midday',
+  'mood (pick one label exactly, or leave empty): Moody & atmospheric | Ethereal & dreamy | Tense & dramatic | Serene & peaceful | Mysterious | Epic & grand | Melancholic | Joyful & vibrant | Gritty & raw',
+  'genre (pick one label exactly, or leave empty): Cyberpunk | Fantasy | Dark Fantasy | Sci-Fi | Solarpunk | Noir | Post-Apocalyptic | Historical | Mythological | Surreal | Horror | Contemporary | Futuristic',
+  'subject: concise English description of the main subject (max 20 words). If no clear subject, describe the scene content.',
+  '',
+  'Rules: use only the exact id/label values listed. If unsure about mood or genre, leave the tag empty.',
+].join('\n');
+
+async function callVisionOnce(base64, mime) {
+  var body = {
+    model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+    max_tokens: 512,
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'text', text: VISION_SYSTEM + '\n\nAnalyze this image:' },
+        { type: 'image_url', image_url: { url: 'data:' + mime + ';base64,' + base64 } }
+      ]
+    }]
+  };
+  var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + S.apiKey },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) { var et = await res.text(); throw new Error('Vision API ' + res.status + ': ' + et.slice(0,120)); }
+  var data = await res.json();
+  var raw = (data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+  return raw;
+}
+
+function applyVisionResult(raw) {
+  function tag(name) {
+    var m = raw.match(new RegExp('<' + name + '>([\\s\\S]*?)<\\/' + name + '>'));
+    return m ? m[1].trim() : '';
+  }
+  var scene   = tag('scene');
+  var style   = tag('style');
+  var lighting= tag('lighting');
+  var mood    = tag('mood');
+  var genre   = tag('genre');
+  var subject = tag('subject');
+
+  if (scene   && SCENES.find(function(x){return x.id===scene;}))     S.scene   = scene;
+  if (style   && STYLES.find(function(x){return x.id===style;}))     S.style   = style;
+  if (lighting&& LIGHTINGS.find(function(x){return x.label===lighting;})) S.lighting = lighting;
+  if (mood    && MOODS.find(function(x){return x.label===mood;}))    S.mood    = mood;
+  if (genre   && GENRES.find(function(x){return x.label===genre;}))  S.genre   = genre;
+  if (subject) S.subject = subject;
+}
+
+async function analyzeImage(file) {
+  if (!S.apiKey.trim()) { S.error=t('errNoKey'); S.apiOpen=true; renderImmediate(); return; }
+  var ALLOWED = ['image/jpeg','image/png','image/webp','image/gif'];
+  if (!ALLOWED.includes(file.type)) { S.error=t('visionErrType'); renderImmediate(); return; }
+  if (file.size > 4 * 1024 * 1024) { S.error=t('visionErrSize'); renderImmediate(); return; }
+
+  S.visionLoading=true; S.visionSuccess=false; S.error='';
+  renderImmediate();
+
+  try {
+    var base64 = await new Promise(function(resolve, reject) {
+      var reader = new FileReader();
+      reader.onload  = function(e) { resolve(e.target.result.split(',')[1]); };
+      reader.onerror = function()  { reject(new Error(t('visionErrParse'))); };
+      reader.readAsDataURL(file);
+    });
+    var raw = await callVisionOnce(base64, file.type);
+    applyVisionResult(raw);
+    S.visionSuccess = true;
+    S.error = '';
+    saveState();
+  } catch(e) {
+    S.error = e.message || t('visionErrParse');
+    S.visionSuccess = false;
+  }
+  S.visionLoading = false;
+  renderImmediate(); forceRepaint();
 }
 
 async function generate() {
@@ -2153,7 +2286,18 @@ async function generate() {
         if (_ac&&_ac.signal.aborted) break;
         S.error=''; continue;
       }
-      if (e.code===401) { S.error=e.message; S.apiOpen=true; } else S.error=e.message;
+      if ((e.code===500||e.code===503||e.code===502) && attempts<=1) {
+        if (_ac&&_ac.signal.aborted) break;
+        S.error = t('errServer').replace('{code}', e.code).replace('{n}', attempts);
+        renderImmediate();
+        await sleep(2000);
+        if (_ac&&_ac.signal.aborted) break;
+        S.error=''; continue;
+      }
+      if (e.code===401) { S.error=e.message; S.apiOpen=true; }
+      else if (e.code==='timeout') { S.error=t('errTimeout'); }
+      else if (e.code==='offline') { S.error=t('errOffline'); }
+      else S.error=e.message;
       break;
     }
   }
@@ -2359,7 +2503,7 @@ function buildHeader(mob, keyOk) {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v3.6.0</span>' +
+        '<span class="title-version">v3.7.0</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
@@ -2557,7 +2701,10 @@ function buildLeftCol(mob) {
   /* ERROR */
   if (S.error) {
     h += '<div class="err-box"><div class="err-title">⚠ Error</div><div class="err-msg">'+esc(S.error)+'</div>' +
-      (!S.dbgOpen?'<button class="btn-text" id="b-open-dbg" style="margin-top:6px;color:var(--amber-txt);font-size:12px">→ Open Debug Panel</button>':'') + '</div>';
+      '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">' +
+      (!S.loading?'<button class="btn-ghost" id="b-retry" style="font-size:12px;padding:5px 12px;color:var(--acc-txt);border-color:rgba(47,129,247,.35)">'+t('btnRetry')+'</button>':'') +
+      (!S.dbgOpen?'<button class="btn-text" id="b-open-dbg" style="color:var(--amber-txt);font-size:12px">→ Debug</button>':'') +
+      '</div></div>';
   }
 
   /* NEG PREVIEW */
@@ -2588,6 +2735,13 @@ function buildLeftCol(mob) {
       '<button class="btn-random" id="b-random" title="Random subject — Shift: creative — DblClick: wild" style="min-width:48px">🔀</button>' +
       '<button class="btn-adv'+(advChanged?' is-changed':'')+'" id="b-adv" title="'+t('advTooltip')+'">⚙'+(advChanged?'<span class="adv-dot"></span>':'')+'</button>' +
     '</div>' +
+    '<input type="file" id="inp-vision-file" accept="image/jpeg,image/png,image/webp" style="display:none">' +
+    '<button class="btn-ghost" id="b-vision" style="width:100%;margin-top:8px;font-size:12px;padding:7px 12px;color:var(--t2);border-color:var(--bdr2)'+(S.visionLoading?';opacity:.6;pointer-events:none':'')+'">'  +
+      (S.visionLoading
+        ? '<span style="display:inline-flex;align-items:center;gap:7px"><span style="display:inline-block;animation:spin .65s linear infinite;opacity:.7">⟳</span> '+t('visionLoading')+'</span>'
+        : t('visionBtn')) +
+    '</button>' +
+    (S.visionSuccess ? '<div style="font-size:11px;color:var(--acc-txt);text-align:center;margin-top:4px;opacity:.85">'+t('visionFill')+'</div>' : '') +
     '<div class="'+badgeClass+'" id="rnd-badge">'+badgeText+'</div>';
   } else {
     var improveDisabled = (!S.existing.trim() || S.loading);
@@ -3067,6 +3221,19 @@ function attachEvents() {
 
   on('b-gen','click',generate);
   on('b-regen','click',generate);
+  on('b-retry','click',generate);
+  on('b-vision','click',function(){
+    var fi = document.getElementById('inp-vision-file');
+    if (fi) { fi.value=''; fi.click(); }
+  });
+  (function attachVisionInput(){
+    var fi = document.getElementById('inp-vision-file');
+    if (fi) {
+      fi.addEventListener('change', function(){
+        if (fi.files && fi.files[0]) analyzeImage(fi.files[0]);
+      });
+    }
+  })();
   on('b-improve-this', 'click', function() {
     if (!S.result) return;
     S.existing = S.result.positive;
