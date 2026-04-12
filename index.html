@@ -697,12 +697,12 @@
     .prompt-main.is-typing textarea { border-color: rgba(47,129,247,.6); }
 
     .vision-strip {
-      margin: 7px calc(-(var(--s4) + 2px)) 0;
+      margin: 6px calc(-(var(--s4) + 2px)) 0;
       margin-left: calc(-(var(--s4) + 8px));
       padding: 7px calc(var(--s4) + 2px) 7px calc(var(--s4) + 8px);
       background: rgba(4,7,11,.55);
-      border-top: 1px solid rgba(47,129,247,.14);
-      border-bottom: 1px solid rgba(47,129,247,.14);
+      border-top: 1px solid rgba(47,129,247,.22);
+      border-bottom: 1px solid rgba(47,129,247,.22);
       display: flex;
       align-items: center;
       gap: 10px;
@@ -712,7 +712,7 @@
       font-family: inherit;
       background: transparent;
       border: none;
-      color: var(--t4);
+      color: var(--t3);
       cursor: pointer;
       padding: 0;
       display: flex;
@@ -721,7 +721,7 @@
       transition: color .15s;
     }
     .vision-strip .vs-btn:hover { color: var(--acc-txt); }
-    .vision-strip .vs-btn:disabled { pointer-events: none; }
+    .vision-strip .vs-btn:disabled { pointer-events: none; opacity: .5; }
     .vision-strip .vs-hint {
       font-size: 11px;
       color: var(--t4);
@@ -1723,6 +1723,7 @@ const I18N = {
     visionErrSize: 'Image too large (max 4 MB)',
     visionErrType: 'Unsupported format — use JPEG, PNG or WebP',
     visionErrParse:'Could not read image data',
+    btnCopied:     '✓ Copied',
     histTitle: 'Prompt History', histEmpty: 'No history yet — generate a prompt first',
     histClear: 'Clear', histUse: 'Use this prompt', histInsert: 'Insert', histBtnTitle: 'Prompt History',
     histDelItem: 'Delete', histCopyItem: 'Copy',
@@ -1780,6 +1781,7 @@ const I18N = {
     visionErrSize: 'Зображення занадто велике (макс 4 МБ)',
     visionErrType: 'Непідтримуваний формат — JPEG, PNG або WebP',
     visionErrParse:'Не вдалось прочитати дані зображення',
+    btnCopied:     '✓ Скопійовано',
     histTitle: 'Історія промптів', histEmpty: 'Історія порожня — спочатку згенеруйте промпт',
     histClear: 'Очистити', histUse: 'Використати', histInsert: 'Вставити', histBtnTitle: 'Історія промптів',
     histDelItem: 'Видалити', histCopyItem: 'Копіювати',
@@ -2393,7 +2395,7 @@ async function generate() {
 function copyText(text, btn) {
   navigator.clipboard.writeText(text).then(function() {
     var orig = btn.textContent;
-    btn.textContent='✓ Copied'; btn.classList.add('copied');
+    btn.textContent=t('btnCopied'); btn.classList.add('copied');
     setTimeout(function(){ btn.textContent=orig; btn.classList.remove('copied'); }, 2000);
   });
 }
@@ -2687,16 +2689,16 @@ function buildLeftCol(mob) {
       '<div class="field">' +
         '<div class="f-hdr">' +
           '<label class="lbl">'+t('lPrompt')+'</label>' +
-          '<div style="display:flex;align-items:center;gap:6px">' +
-            '<span class="hint">'+t('lPromptHint')+'</span>' +
-            '<button class="btn-copy" id="b-cp-sub" style="opacity:.6'+(S.subject.trim()?'':';display:none')+'">'+t('btnCopySubject')+'</button>' +
-            '<button class="btn-clr" id="b-clr-sub" title="'+t('btnClearTitle')+'"'+(S.subject.trim()?'':' style="display:none"')+'>✕</button>' +
-            (loadHistory().length ? '<button class="btn-copy" id="b-hist-subj" style="opacity:.7;font-size:12px" title="'+t('histBtnTitle')+'">📜</button>' : '') +
+          '<div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow:hidden">' +
+            '<span class="hint" style="flex-shrink:0">'+t('lPromptHint')+'</span>' +
+            '<button class="btn-copy" id="b-cp-sub" style="flex-shrink:0;opacity:.6'+(S.subject.trim()?'':';display:none')+'">'+t('btnCopySubject')+'</button>' +
+            '<button class="btn-clr" id="b-clr-sub" style="flex-shrink:0" title="'+t('btnClearTitle')+'"'+(S.subject.trim()?'':' style="display:none"')+'>✕</button>' +
+            (loadHistory().length ? '<button class="btn-copy" id="b-hist-subj" style="flex-shrink:0;opacity:.7;font-size:12px" title="'+t('histBtnTitle')+'">📜</button>' : '') +
           '</div>' +
         '</div>' +
-        visionStripHtml +
         '<textarea id="inp-sub" rows="3" placeholder="e.g: '+esc(stPh)+'&#10;• your own idea here">'+esc(S.subject)+'</textarea>' +
         histHtml +
+        visionStripHtml +
         '<div style="text-align:right;font-size:10px;margin-top:3px">' +
           '<span id="sub-count" style="color:' + (S.subject.length > 300 ? 'var(--amber)' : 'var(--t4)') + '">' + S.subject.length + '</span>' +
         '</div>' +
