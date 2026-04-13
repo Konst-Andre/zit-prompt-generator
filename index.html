@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1117">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>ZIT Prompt Generator v3.7.3</title>
+  <title>ZIT Prompt Generator v3.8.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -1185,114 +1185,108 @@
    DATA
 ═══════════════════════════════════════════════════ */
 const SCENES = [
-  { id:'portrait',     label:'Portrait',    icon:'◎', camera:'85mm portrait lens',  detail:'sharp focus, skin texture, shallow depth of field' },
-  { id:'half_body',    label:'Half-body',   icon:'◑', camera:'50mm lens',            detail:'sharp focus, upper body detail' },
-  { id:'full_body',    label:'Full body',   icon:'▭', camera:'35mm lens',            detail:'full figure, environment context' },
-  { id:'landscape',    label:'Landscape',   icon:'⬟', camera:'wide angle lens',      detail:'sweeping depth, ultra detailed, rich atmosphere' },
-  { id:'urban',        label:'Urban',       icon:'⬡', camera:'35mm lens',            detail:'urban detail, street atmosphere' },
-  { id:'interior',     label:'Interior',    icon:'⬔', camera:'24mm wide lens',       detail:'architectural detail, ambient light' },
-  { id:'architecture', label:'Architect.',  icon:'◻', camera:'35mm tilt-shift',      detail:'structural precision, sharp geometry' },
-  { id:'macro',        label:'Macro',       icon:'◉', camera:'macro lens',           detail:'extreme close-up, fine surface detail, bokeh' },
-  { id:'animal',       label:'Animal',      icon:'◈', camera:'85mm portrait lens',   detail:'fur/feather texture, sharp eyes, bokeh' },
-  { id:'product',      label:'Product',     icon:'◇', camera:'85mm macro lens',      detail:'clean product shot, studio precision' },
-  { id:'concept',      label:'Concept',     icon:'◆', camera:'',                     detail:'painterly detail, dynamic composition' },
+  { id:'portrait',     label:'Portrait',    icon:'◎', camera:'85mm portrait lens',  detail:'a tight portrait framing focused on the face and head with minimal background presence' },
+  { id:'half_body',    label:'Half-body',   icon:'◑', camera:'50mm lens',            detail:'a medium shot showing the upper body with natural proportions and balanced composition' },
+  { id:'full_body',    label:'Full body',   icon:'▭', camera:'35mm lens',            detail:'a full body composition where the entire figure is visible within the surrounding environment' },
+  { id:'landscape',    label:'Landscape',   icon:'⬟', camera:'wide angle lens',      detail:'an expansive scene emphasizing layered depth with foreground, midground, and background separation' },
+  { id:'urban',        label:'Urban',       icon:'⬡', camera:'35mm lens',            detail:'a street-level view capturing urban structures, perspective lines, and environmental context' },
+  { id:'interior',     label:'Interior',    icon:'⬔', camera:'24mm wide lens',       detail:'an indoor composition showing spatial layout, depth, and object relationships within the environment' },
+  { id:'architecture', label:'Architect.',  icon:'◻', camera:'35mm tilt-shift',      detail:'a structured architectural view with corrected perspective and emphasis on geometry and vertical lines' },
+  { id:'macro',        label:'Macro',       icon:'◉', camera:'macro lens',           detail:'an extreme close-up focusing on fine surface details with the subject filling the frame' },
+  { id:'animal',       label:'Animal',      icon:'◈', camera:'85mm portrait lens',   detail:'a subject-focused framing where the animal is clearly visible and separated from the background' },
+  { id:'product',      label:'Product',     icon:'◇', camera:'85mm macro lens',      detail:'a clean and centered composition that isolates the product and presents its form clearly' },
+  { id:'concept',      label:'Concept',     icon:'◆', camera:'',                     detail:'a composition driven by visual concept and narrative, with flexible perspective and structure' },
   { id:'manual',       label:'Manual',      icon:'◌', camera:'',                     detail:'' },
 ];
 
 const STYLES = [
   { id:'photorealistic', label:'Photorealistic',  grp:'Real', icon:'◉',
-    detail:'natural light, realistic skin and material textures, accurate colors, sharp focus, high dynamic range',
+    detail:'rendered with realistic material response, accurate color reproduction, and natural surface detail with sharp focus',
     example:'красива жінка під дощем у Токіо' },
   { id:'cinematic',      label:'Cinematic',        grp:'Real', icon:'▶',
-    detail:'dramatic color grading, film still, shallow depth of field, anamorphic bokeh, moody atmosphere',
+    detail:'rendered as a cinematic film still with controlled depth of field, subtle anamorphic bokeh, and balanced color grading',
     example:'lone figure in a sunlit doorway, city at dusk' },
   { id:'documentary',    label:'Documentary',      grp:'Real', icon:'◎',
-    detail:'available light, candid unposed framing, raw realistic tones, minimal staging',
+    detail:'captured with candid unposed framing, preserving raw realistic tones and minimal staging',
     example:'street vendor at sunrise market, weathered face' },
   { id:'fashion',        label:'Fashion Editorial', grp:'Real', icon:'◈',
-    detail:'high-contrast studio lighting, glossy editorial finish, deliberate pose, magazine composition',
+    detail:'styled as a high-contrast editorial composition with deliberate posing and a polished magazine aesthetic',
     example:'model in geometric coat, dramatic studio shadows' },
   { id:'analog',         label:'Analog Film',      grp:'Real', icon:'◌',
-    detail:'film grain, subtle color shift, soft contrast, vintage tones, faint light leaks',
+    detail:'rendered with visible film grain, subtle color shifts, soft contrast, and vintage tonal characteristics',
     example:'teenagers in a summer park, grainy warm light' },
   { id:'monochrome',     label:'Monochrome',       grp:'Real', icon:'◑',
-    detail:'black and white, monochrome, grayscale, strictly no color, only neutral grayscale tones, strong tonal contrast, deep blacks and clean whites, lighting emphasizes texture and shadows',
+    detail:'rendered in strict black and white using only neutral grayscale tones with no color present, with strong tonal contrast, deep blacks, and clean whites',
     example:'street portrait in dramatic contrast light' },
   { id:'digital_art',    label:'Digital Art',      grp:'Illustrated', icon:'▣',
-    detail:'clean digital rendering, smooth gradients, stylized shading, crisp edges, vibrant color',
+    detail:'rendered with clean digital techniques featuring smooth gradients, stylized shading, crisp edges, and a controlled color palette',
     example:'neon city with flying vehicles at night' },
   { id:'concept_art',    label:'Concept Art',      grp:'Illustrated', icon:'◆',
-    detail:'painterly loose strokes, dynamic composition, atmospheric depth, design-driven, visual storytelling',
+    detail:'painted with loose expressive strokes, dynamic composition, and strong atmospheric depth focused on visual storytelling',
     example:'abandoned space station above a dying planet' },
   { id:'illustration',   label:'Illustration',     grp:'Illustrated', icon:'◇',
-    detail:'clear line art, stylized simplified forms, controlled palette, graphic clarity',
+    detail:'drawn with clear line art, simplified stylized forms, and strong graphic clarity',
     example:'cozy bookshop with sleeping cat on counter' },
   { id:'oil_painting',   label:'Oil Painting',     grp:'Illustrated', icon:'▲',
-    detail:'thick textured brushwork, visible impasto layers, rich saturated color, classical warm light',
+    detail:'painted with thick textured brushwork and visible impasto layers, using rich saturated color and traditional painterly techniques',
     example:'countryside valley in late autumn, moody light' },
   { id:'watercolor',     label:'Watercolor',       grp:'Illustrated', icon:'△',
-    detail:'soft wet-on-wet washes, pigment blooms, paper texture showing through, transparent layers',
+    detail:'painted with soft wet-on-wet washes, visible pigment diffusion, paper texture, and transparent layered color',
     example:'misty mountain forest with soft morning mist' },
   { id:'pencil_sketch',  label:'Pencil Sketch',    grp:'Illustrated', icon:'╱',
-    detail:'graphite lines, cross-hatching, light shading, raw sketchy quality, minimal fill',
+    detail:'drawn with graphite lines and cross-hatching, using light shading and a raw sketch-like quality with minimal fill',
     example:'hands holding an old photograph, fine detail' },
   { id:'impressionism',  label:'Impressionism',    grp:'Illustrated', icon:'≈',
-    detail:'loose dappled brushstrokes, soft edges, natural outdoor light, captured moment, painterly texture',
+    detail:'painted with loose dappled brushstrokes, soft edges, and a painterly texture that captures a fleeting moment',
     example:'flower garden in dappled afternoon light' },
   { id:'anime',          label:'Anime',            grp:'Stylized', icon:'✦',
-    detail:'cel shading, clean line art, expressive eyes, flat color fills, stylized proportions',
+    detail:'rendered with cel shading, clean line art, expressive eyes, flat color fills, and stylized character proportions',
     example:'дівчина на даху дивиться на захід сонця' },
   { id:'manga',          label:'Manga',            grp:'Stylized', icon:'✧',
-    detail:'black and white ink lines, screentone shading, high contrast, graphic storytelling',
+    detail:'drawn in black and white with ink lines and screentone shading, using high contrast and graphic storytelling composition',
     example:'detective in long coat, dark rainy alley' },
   { id:'comic',          label:'Comic Book',       grp:'Stylized', icon:'◉',
-    detail:'bold ink outlines, halftone dot shading, saturated colors, dynamic action pose',
+    detail:'illustrated with bold ink outlines, halftone shading, and dynamic composition with strong visual contrast',
     example:'hero landing pose over glowing city skyline' },
   { id:'ink_wash',       label:'Ink Wash',         grp:'Stylized', icon:'⬟',
-    detail:'sumi-e brushwork, diluted black ink, negative space, spontaneous strokes, Japanese aesthetic',
+    detail:'painted with diluted black ink using expressive brushwork, negative space, and spontaneous strokes in a traditional aesthetic',
     example:'misty mountain peak with lone pine tree' },
   { id:'ukiyo_e',        label:'Ukiyo-e',          grp:'Stylized', icon:'⬡',
-    detail:'Japanese woodblock print, flat bold outlines, limited color bands, decorative pattern, Edo aesthetic',
+    detail:'rendered in traditional woodblock print style with flat bold outlines, limited color bands, and decorative patterns',
     example:'geisha crossing wooden bridge, Mount Fuji' },
   { id:'3d_render',      label:'3D Render',        grp:'3D / Render', icon:'◫',
-    detail:'physically based rendering, global illumination, realistic reflections and materials, studio HDRI',
+    detail:'rendered using physically based rendering with global illumination, realistic reflections, and accurate material response',
     example:'product on dark surface with dramatic rim light' },
   { id:'low_poly',       label:'Low Poly 3D',      grp:'3D / Render', icon:'◬',
-    detail:'low polygon faceted geometry, flat shading per face, sharp edges, minimal detail',
+    detail:'modeled with low polygon geometry, flat shading per face, sharp edges, and simplified visual detail',
     example:'geometric fox in a forest clearing at dusk' },
   { id:'isometric',      label:'Isometric',        grp:'3D / Render', icon:'⬛',
-    detail:'strict isometric 2.5D perspective, clean geometry, even light, stylized environment',
+    detail:'constructed in strict isometric perspective with clean geometry, even spatial layout, and stylized structure',
     example:'cozy house with garden, isometric birds-eye view' },
   { id:'pixel_art',      label:'Pixel Art',        grp:'Digital', icon:'▪',
-    detail:'pixel grid visible, limited resolution, dithering, retro restricted palette',
+    detail:'rendered on a visible pixel grid with limited resolution, dithering patterns, and a restricted retro color palette',
     example:'retro hero in pixel dungeon, neon signs' },
   { id:'flat_design',    label:'Flat Design',      grp:'Digital', icon:'▬',
-    detail:'flat solid colors, no gradients or shadows, simple geometric shapes, bold contrast',
+    detail:'designed with flat solid colors, no gradients or shadows, and simple geometric shapes with strong contrast',
     example:'modern city poster with bold minimal shapes' },
   { id:'glitch',         label:'Glitch Art',       grp:'Digital', icon:'⚡',
-    detail:'RGB channel shift, digital noise bands, scanlines, compression artifacts, fragmented image',
+    detail:'distorted with RGB channel shifts, digital noise bands, scanlines, and fragmented image artifacts',
     example:'corrupted portrait with RGB shift and scanlines' },
 ];
 
 const SUBJECTS = [
-  { id:'none',        label:'None',        icon:'○',  tokens:[], tip:'' },
-  { id:'person',      label:'Human',       icon:'👤', tokens:['human facial detail', 'natural skin texture', 'expressive features'],            tip:'Focus on human features and anatomy' },
-  { id:'animal',      label:'Animal',      icon:'🐾', tokens:['fur or feather detail', 'sharp eyes', 'natural anatomy'],                        tip:'Enhance fur, eyes, and anatomy' },
-  { id:'product',     label:'Product',     icon:'📦', tokens:['clean product detail', 'material definition', 'precise edges'],                  tip:'Clean edges, materials, product detail' },
-  { id:'object',      label:'Object',      icon:'◻️', tokens:['clear shape definition', 'solid structure', 'surface detail'],                   tip:'Shape definition and structure' },
-  { id:'environment', label:'Environment', icon:'🏞️', tokens:['environmental depth', 'spatial composition', 'atmospheric perspective'],         tip:'Scene-focused composition' },
+  { id:'none',        label:'None',        icon:'○',  value:'', tip:'' },
+  { id:'person',      label:'Human',       icon:'👤', value:'a human subject with natural body proportions and a clear anatomical structure',                            tip:'Focus on anatomy, proportions, and facial structure' },
+  { id:'animal',      label:'Animal',      icon:'🐾', value:'an animal subject with species-specific anatomy and recognizable physical traits',                          tip:'Focus on species traits, anatomy, and posture' },
+  { id:'product',     label:'Product',     icon:'📦', value:'a product with a recognizable design, defined shape, and clear structural form',                            tip:'Focus on form, design identity, and structure' },
+  { id:'object',      label:'Object',      icon:'◻️', value:'a single object with a clear shape, solid structure, and identifiable form',                               tip:'Focus on shape and structural clarity' },
+  { id:'environment', label:'Environment', icon:'🏞️', value:'an environment composed of spatial elements with a defined layout and relationships between structures',    tip:'Focus on spatial layout and relationships between elements' },
 ];
 
 function buildSubjectTokens(subjectId, styleDetail) {
   var subj = SUBJECTS.find(function(x){ return x.id === subjectId; });
-  if (!subj || !subj.tokens || !subj.tokens.length) return '';
-  var base = subj.tokens.join(', ');
-  if (!styleDetail) return base;
-  var styleLower = styleDetail.toLowerCase();
-  var filtered = base.split(/,\s*/).filter(function(t) {
-    return !styleLower.includes(t.toLowerCase().trim());
-  });
-  return filtered.join(', ');
+  if (!subj || !subj.value) return '';
+  return subj.value;
 }
 
 function buildStyleTokens(styleObj) {
@@ -1310,46 +1304,46 @@ function getSceneCamera(sc) {
 
 const LIGHTINGS = [
   { label:'',                labelUa:'',                   value:'' },
-  { label:'Cinematic',       labelUa:'Кінематографічне',   value:'cinematic dramatic lighting, high contrast shadows' },
-  { label:'Soft Natural',    labelUa:'М\'яке природне',     value:'soft diffused natural daylight, even illumination' },
-  { label:'Golden Hour',     labelUa:'Золота година',       value:'warm golden hour sunlight, long soft shadows' },
-  { label:'Blue Hour',       labelUa:'Синя година',         value:'cool blue hour light, twilight tones' },
-  { label:'Overcast',        labelUa:'Похмуре небо',        value:'overcast sky, soft shadowless light' },
-  { label:'Rim Light',       labelUa:'Контурне світло',     value:'strong rim lighting, edge highlights, dark background' },
-  { label:'Neon / LED',      labelUa:'Неон / LED',          value:'neon lighting, colored LED glow, reflections' },
-  { label:'Volumetric Rays', labelUa:'Об\'ємні промені',    value:'volumetric light beams, atmospheric light shafts, diffused rays' },
-  { label:'Studio Softbox',  labelUa:'Студійний софтбокс',  value:'studio softbox lighting, controlled highlights, soft shadows' },
-  { label:'Candlelight',     labelUa:'Свічкове світло',     value:'warm candlelight, flickering shadows, low light' },
-  { label:'Moonlight',       labelUa:'Місячне світло',      value:'cold moonlight, blue tones, night atmosphere' },
-  { label:'Harsh Midday',    labelUa:'Жорстке полудення',   value:'harsh midday sunlight, strong shadows, high contrast' },
+  { label:'Cinematic',       labelUa:'Кінематографічне',   value:'lit with dramatic cinematic lighting that creates strong contrast and clearly defined shadows' },
+  { label:'Soft Natural',    labelUa:'М\'яке природне',     value:'lit with soft diffused natural daylight that produces even and gentle illumination' },
+  { label:'Golden Hour',     labelUa:'Золота година',       value:'lit by warm golden hour sunlight with long soft shadows and a subtle atmospheric glow' },
+  { label:'Blue Hour',       labelUa:'Синя година',         value:'lit by cool ambient blue hour light with soft twilight tones and low contrast' },
+  { label:'Overcast',        labelUa:'Похмуре небо',        value:'lit under an overcast sky with soft shadowless light and evenly distributed illumination' },
+  { label:'Rim Light',       labelUa:'Контурне світло',     value:'lit with strong rim lighting that creates bright edge highlights and clear subject separation from the background' },
+  { label:'Neon / LED',      labelUa:'Неон / LED',          value:'lit with neon and LED sources that create luminous colored glow and reflective highlights on surfaces' },
+  { label:'Volumetric Rays', labelUa:'Об\'ємні промені',    value:'lit with volumetric light beams that create visible atmospheric rays and enhance depth' },
+  { label:'Studio Softbox',  labelUa:'Студійний софтбокс',  value:'lit with studio softbox lighting that produces controlled highlights and soft directional shadows' },
+  { label:'Candlelight',     labelUa:'Свічкове світло',     value:'lit by warm candlelight that produces soft flickering shadows in a low-light environment' },
+  { label:'Moonlight',       labelUa:'Місячне світло',      value:'lit by cold moonlight that creates a quiet night atmosphere with subtle natural blue tones' },
+  { label:'Harsh Midday',    labelUa:'Жорстке полудення',   value:'lit by harsh midday sunlight that produces strong shadows, high contrast, and crisp highlights' },
 ];
 const GENRES = [
   { label:'',                 labelUa:'',                   value:'' },
-  { label:'Cyberpunk',        labelUa:'Кіберпанк',          value:'cyberpunk aesthetic, neon lights, futuristic city' },
-  { label:'Fantasy',          labelUa:'Фентезі',            value:'fantasy world, magical elements' },
-  { label:'Dark Fantasy',     labelUa:'Темне фентезі',      value:'dark fantasy, gothic elements, ominous tone' },
-  { label:'Sci-Fi',           labelUa:'Наукова фантастика', value:'science fiction, futuristic technology' },
-  { label:'Solarpunk',        labelUa:'Соларпанк',          value:'solarpunk, eco-futurism, greenery' },
-  { label:'Noir',             labelUa:'Нуар',               value:'film noir, high contrast shadows, 1940s style' },
-  { label:'Post-Apocalyptic', labelUa:'Постапокаліпсис',    value:'post-apocalyptic ruins, decay, survival' },
-  { label:'Historical',       labelUa:'Історичний',         value:'historical setting, period accurate' },
-  { label:'Mythological',     labelUa:'Міфологічний',       value:'mythological theme, ancient gods' },
-  { label:'Surreal',          labelUa:'Сюрреалізм',         value:'surreal imagery, dream logic' },
-  { label:'Horror',           labelUa:'Хоррор',             value:'horror atmosphere, unsettling mood' },
-  { label:'Contemporary',     labelUa:'Сучасний',           value:'modern contemporary setting' },
-  { label:'Futuristic',       labelUa:'Футуристичний',      value:'futuristic design, advanced technology' },
+  { label:'Cyberpunk',        labelUa:'Кіберпанк',          value:'in a cyberpunk world with advanced technology, dense urban environments, and a dystopian futuristic aesthetic' },
+  { label:'Fantasy',          labelUa:'Фентезі',            value:'in a fantasy world with magical elements and an otherworldly environment' },
+  { label:'Dark Fantasy',     labelUa:'Темне фентезі',      value:'in a dark fantasy world with gothic elements and stylized dark themes' },
+  { label:'Sci-Fi',           labelUa:'Наукова фантастика', value:'in a science fiction setting featuring advanced technology and futuristic concepts' },
+  { label:'Solarpunk',        labelUa:'Соларпанк',          value:'in a solarpunk world combining ecological design, sustainable technology, and harmonious environments' },
+  { label:'Noir',             labelUa:'Нуар',               value:'in a noir-inspired setting with a 1940s aesthetic and classic cinematic styling' },
+  { label:'Post-Apocalyptic', labelUa:'Постапокаліпсис',    value:'in a post-apocalyptic world with ruins, decay, and signs of survival' },
+  { label:'Historical',       labelUa:'Історичний',         value:'in a historically accurate environment reflecting a specific past time period' },
+  { label:'Mythological',     labelUa:'Міфологічний',       value:'based on mythological themes featuring ancient gods, legends, and symbolic elements' },
+  { label:'Surreal',          labelUa:'Сюрреалізм',         value:'presented with surreal visual logic and unconventional spatial relationships' },
+  { label:'Horror',           labelUa:'Хоррор',             value:'in a horror-themed environment with unsettling visual elements' },
+  { label:'Contemporary',     labelUa:'Сучасний',           value:'in a modern contemporary environment reflecting present-day reality' },
+  { label:'Futuristic',       labelUa:'Футуристичний',      value:'in a futuristic environment featuring advanced design and forward-looking technology' },
 ];
 const MOODS = [
   { label:'',                   labelUa:'',                        value:'' },
-  { label:'Moody & atmospheric', labelUa:'Похмурий і атмосферний', value:'moody atmosphere, soft shadows, cinematic tone' },
-  { label:'Ethereal & dreamy',   labelUa:'Ефемерний і мрійливий',  value:'ethereal soft glow, dreamlike haze' },
-  { label:'Tense & dramatic',    labelUa:'Напружений і драматичний',value:'tense dramatic mood, strong contrast' },
-  { label:'Serene & peaceful',   labelUa:'Спокійний і мирний',     value:'calm peaceful mood, soft light' },
-  { label:'Mysterious',          labelUa:'Загадковий',             value:'mysterious atmosphere, obscured details' },
-  { label:'Epic & grand',        labelUa:'Епічний і величний',     value:'epic dramatic atmosphere, grand composition' },
-  { label:'Melancholic',         labelUa:'Меланхолійний',          value:'melancholic tone, muted colors' },
-  { label:'Joyful & vibrant',    labelUa:'Радісний і яскравий',    value:'vibrant colors, lively atmosphere' },
-  { label:'Gritty & raw',        labelUa:'Суворий і сирий',        value:'gritty raw texture, harsh realism' },
+  { label:'Moody & atmospheric', labelUa:'Похмурий і атмосферний', value:'with a moody and atmospheric feeling that emphasizes depth and emotional weight' },
+  { label:'Ethereal & dreamy',   labelUa:'Ефемерний і мрійливий',  value:'with an ethereal and dreamlike feeling that softens reality and creates a sense of lightness' },
+  { label:'Tense & dramatic',    labelUa:'Напружений і драматичний',value:'with a tense and dramatic feeling that conveys intensity and emotional pressure' },
+  { label:'Serene & peaceful',   labelUa:'Спокійний і мирний',     value:'with a calm and peaceful feeling that conveys stillness and quiet balance' },
+  { label:'Mysterious',          labelUa:'Загадковий',             value:'with a mysterious feeling that obscures clarity and invites interpretation' },
+  { label:'Epic & grand',        labelUa:'Епічний і величний',     value:'with an epic and grand feeling that emphasizes scale and significance' },
+  { label:'Melancholic',         labelUa:'Меланхолійний',          value:'with a melancholic feeling that conveys quiet sadness and reflection' },
+  { label:'Joyful & vibrant',    labelUa:'Радісний і яскравий',    value:'with a joyful and lively feeling that conveys energy and positivity' },
+  { label:'Gritty & raw',        labelUa:'Суворий і сирий',        value:'with a gritty and raw feeling that emphasizes realism and rough intensity' },
 ];
 
 const RESOLUTIONS = [
@@ -1667,36 +1661,60 @@ function smartRandom(mode) {
    NEGATIVES
 ═══════════════════════════════════════════════════ */
 const SCENE_NEGATIVES_BASE = {
-  portrait:     'bad anatomy, deformed hands, extra fingers, distorted face, asymmetrical eyes',
-  half_body:    'bad anatomy, deformed hands, extra fingers, distorted face, asymmetrical eyes',
-  full_body:    'bad anatomy, deformed hands, extra fingers, mutated hands',
-  landscape:    'out of focus, noise, compression artifacts, overexposed',
+  portrait:     'distorted face, asymmetrical eyes, bad anatomy',
+  half_body:    'bad anatomy, deformed hands, distorted face',
+  full_body:    'bad anatomy, deformed hands, extra limbs',
+  landscape:    'out of focus, noise, compression artifacts',
   urban:        'noise, compression artifacts, overexposed',
   interior:     'out of focus, distortion, noise',
-  architecture: 'distortion, noise, compression artifacts, overexposed',
-  macro:        'out of focus, distortion, reflection artifacts, uneven lighting',
-  animal:       'bad anatomy, deformed, extra limbs',
-  product:      'distortion, reflection artifacts, uneven lighting, out of focus',
-  concept:      'bad anatomy, deformed hands, extra fingers',
-  manual:       'out of focus, bad anatomy, deformed hands',
+  architecture: 'distortion, misaligned geometry, overexposed',
+  macro:        'out of focus, distortion, reflection artifacts',
+  animal:       'bad anatomy, extra limbs, distorted features',
+  product:      'distortion, reflection artifacts, uneven lighting',
+  concept:      'bad anatomy, deformed hands',
+  manual:       'out of focus, distortion',
 };
+
+const SUBJECT_NEGATIVES = {
+  person:  ['deformed hands', 'extra fingers'],
+  animal:  ['extra limbs', 'incorrect anatomy'],
+  product: ['distorted shape'],
+};
+
 var UNIVERSAL_TAIL = ['blurry', 'text', 'watermark'];
+
+function getSubjectNeg(scene, subjectType) {
+  if (!subjectType || !SUBJECT_NEGATIVES[subjectType]) return [];
+  var base = SCENE_NEGATIVES_BASE[scene] || '';
+  var baseTokens = base.toLowerCase().split(/,\s*/).map(function(t){ return t.trim(); });
+  return SUBJECT_NEGATIVES[subjectType].filter(function(token) {
+    return !baseTokens.includes(token.toLowerCase());
+  });
+}
 
 function buildNegative() {
   if (S.customNeg && S.customNeg.trim()) return S.customNeg.trim();
   var base = SCENE_NEGATIVES_BASE[S.scene] || SCENE_NEGATIVES_BASE.manual;
-  var styleExtra = S.style === 'monochrome' ? ['color tint', 'oversaturated', 'warm tones', 'colorful'] : [];
-  var subjectLower = (S.subject || '').toLowerCase();
+  var subjectExtra = getSubjectNeg(S.scene, S.subjectType);
+  var styleExtra = S.style === 'monochrome' ? ['color tint', 'color'] : [];
+  var subjectLower = (S.subject || '').toString().toLowerCase();
   var tail = UNIVERSAL_TAIL.filter(function(token) {
     if (token === 'text'      && subjectLower.indexOf('text overlay') !== -1)    return false;
     if (token === 'blurry'    && subjectLower.indexOf('motion blur') !== -1)     return false;
     if (token === 'watermark' && subjectLower.indexOf('watermark effect') !== -1) return false;
     return true;
   });
-  var combined = base.split(/,\s*/).concat(styleExtra).concat(tail).map(function(t){ return t.trim(); }).filter(Boolean);
+  var combined = []
+    .concat(base.split(/,\s*/))
+    .concat(subjectExtra)
+    .concat(styleExtra)
+    .concat(tail);
   var seen = {};
-  var unique = combined.filter(function(t){ var k=t.toLowerCase(); if(seen[k]) return false; seen[k]=true; return true; });
-  return unique.join(', ');
+  var unique = combined
+    .map(function(t){ return t.trim(); })
+    .filter(Boolean)
+    .filter(function(t){ var k=t.toLowerCase(); if(seen[k]) return false; seen[k]=true; return true; });
+  return unique.slice(0, 14).join(', ');
 }
 
 /* ═══════════════════════════════════════════════════
@@ -2646,7 +2664,7 @@ function buildHeader(mob, keyOk) {
       '<div class="app-meta">ZIT · Lumina2 · Qwen3-4B</div>' +
       '<div class="app-title">' +
         '<span class="title-main">Prompt Generator</span>' +
-        '<span class="title-version">v3.7.3</span>' +
+        '<span class="title-version">v3.8.0</span>' +
       '</div>' +
     '</div>' +
     '<div class="hdr-acts">' +
