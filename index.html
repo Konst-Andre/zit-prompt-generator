@@ -164,7 +164,9 @@
     .col-l { border-right: 1px solid var(--bdr); }
 
     .field { margin-bottom: var(--s4); }
-    .f-hdr { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--s2); }
+    .f-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--s2); min-width: 0; }
+    .f-hdr .lbl { flex-shrink: 0; }
+    .f-hdr > div { display: flex; align-items: center; gap: 6px; flex-shrink: 0; overflow: visible; }
     .lbl {
       font-size: 13px; font-weight: 700; color: var(--t1); letter-spacing: .16em;
       text-transform: uppercase; position: relative; padding-bottom: 6px;
@@ -1710,6 +1712,7 @@ const I18N = {
     btnGenerate: '✦ Generate Prompt', btnOptimize: '✦ Improve Prompt',
     btnGenerating: 'Generating…', btnRegenerate: 'Regenerate',
     btnCopy: 'Copy All', btnAddLoRA: '+ Add LoRA',
+    btnCopied: 'Copied',
     outPositive: 'Positive Prompt', outNegative: 'Negative Prompt',
     outParams: 'ComfyUI Params', outChanged: 'What changed', outTip: 'ZIT tip',
     dbgEmpty: 'Press Generate — API request/response will appear here.',
@@ -1770,6 +1773,7 @@ const I18N = {
     btnGenerate: '✦ Створити промпт', btnOptimize: '✦ Покращити промпт',
     btnGenerating: 'Генерація…', btnRegenerate: 'Перегенерувати',
     btnCopy: 'Копіювати все', btnAddLoRA: '+ Додати LoRA',
+    btnCopied: 'Скопійовано',
     outPositive: 'Позитивний промпт', outNegative: 'Негативний промпт',
     outParams: 'Параметри ComfyUI', outChanged: 'Що змінилось', outTip: 'Порада ZIT',
     dbgEmpty: 'Натисніть Генерувати — запит/відповідь API зʼявиться тут.',
@@ -2441,7 +2445,7 @@ async function generate() {
 function copyText(text, btn) {
   navigator.clipboard.writeText(text).then(function() {
     var orig = btn.textContent;
-    btn.textContent='✓ Copied'; btn.classList.add('copied');
+    btn.textContent = '✓ ' + t('btnCopied'); btn.classList.add('copied');
     setTimeout(function(){ btn.textContent=orig; btn.classList.remove('copied'); }, 2000);
   });
 }
