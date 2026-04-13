@@ -109,6 +109,7 @@
     }
     .pill.btn { cursor: pointer; transition: border-color var(--tr), color var(--tr), background var(--tr); }
     .pill.btn:hover { border-color: var(--bdr2); color: var(--t2); }
+    .pill-lang { min-width: 72px; justify-content: center; }
     .pill.p-active { border-color: var(--amber-bdr); color: var(--amber-txt); background: var(--amber-bg); }
     .pill.p-ok     { border-color: var(--green-bdr); color: var(--green-txt); background: var(--green-bg); }
     .pill.p-miss   { border-color: var(--red-bdr);   color: var(--red-txt);   background: var(--red-bg); }
@@ -1215,7 +1216,7 @@ const STYLES = [
     detail:'film grain, subtle color shift, soft contrast, vintage tones, faint light leaks',
     example:'teenagers in a summer park, grainy warm light' },
   { id:'monochrome',     label:'Monochrome',       grp:'Real', icon:'◑',
-    detail:'black and white, monochromatic tones, grayscale, no color, tonal contrast',
+    detail:'black and white, monochrome, grayscale, strictly no color, only neutral grayscale tones, strong tonal contrast, deep blacks and clean whites, lighting emphasizes texture and shadows',
     example:'street portrait in dramatic contrast light' },
   { id:'digital_art',    label:'Digital Art',      grp:'Illustrated', icon:'▣',
     detail:'clean digital rendering, smooth gradients, stylized shading, crisp edges, vibrant color',
@@ -1684,6 +1685,7 @@ var UNIVERSAL_TAIL = ['blurry', 'text', 'watermark'];
 function buildNegative() {
   if (S.customNeg && S.customNeg.trim()) return S.customNeg.trim();
   var base = SCENE_NEGATIVES_BASE[S.scene] || SCENE_NEGATIVES_BASE.manual;
+  var styleExtra = S.style === 'monochrome' ? ['color tint', 'oversaturated', 'warm tones', 'colorful'] : [];
   var subjectLower = (S.subject || '').toLowerCase();
   var tail = UNIVERSAL_TAIL.filter(function(token) {
     if (token === 'text'      && subjectLower.indexOf('text overlay') !== -1)    return false;
@@ -1691,7 +1693,7 @@ function buildNegative() {
     if (token === 'watermark' && subjectLower.indexOf('watermark effect') !== -1) return false;
     return true;
   });
-  var combined = base.split(/,\s*/).concat(tail).map(function(t){ return t.trim(); }).filter(Boolean);
+  var combined = base.split(/,\s*/).concat(styleExtra).concat(tail).map(function(t){ return t.trim(); }).filter(Boolean);
   var seen = {};
   var unique = combined.filter(function(t){ var k=t.toLowerCase(); if(seen[k]) return false; seen[k]=true; return true; });
   return unique.join(', ');
@@ -2649,8 +2651,7 @@ function buildHeader(mob, keyOk) {
     '</div>' +
     '<div class="hdr-acts">' +
       '<div class="pill btn ' + (keyOk?'p-ok':'p-miss') + '" id="b-api"><span class="dot"></span>' + (keyOk?'Groq ✓':'API Key?') + '</div>' +
-      '<div class="pill btn" id="b-lang" title="Switch UI language">' + langLabel + '</div>' +
-      '<div class="pill btn' + (S.dbgOpen?' p-active':'') + '" id="b-dbg">🔬 Debug' + (S.dbgLog?(S.dbgLog.httpOk?' ✓':' ✗'):'') + '</div>' +
+      '<div class="pill btn pill-lang" id="b-lang" title="Switch UI language">' + langLabel + '</div>' +
     '</div>' +
   '</div>';
 }
@@ -2676,6 +2677,10 @@ function buildApiPanel() {
       '<div class="chk-row"><input type="checkbox" id="chk-rem"'+(S.rememberKey?' checked':'')+'><label for="chk-rem">'+t('apiRemember')+'</label></div>' +
     '</div>' +
     '<div class="field" style="margin-bottom:0"><div class="f-hdr"><label class="lbl">'+t('apiModelLabel')+'</label></div>' + mOpts + '</div>' +
+    '<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between">' +
+      '<span style="font-size:11px;color:var(--t4)">🔬 Debug Log' + (S.dbgLog?(S.dbgLog.httpOk?' <span style="color:var(--green-txt)">✓</span>':' <span style="color:var(--red-txt)">✗</span>'):'') + '</span>' +
+      '<button class="btn-ghost" id="b-dbg-open" style="font-size:11px;padding:3px 10px">' + (S.dbgOpen?'Hide ↑':'Open ↗') + '</button>' +
+    '</div>' +
   '</div>';
 }
 
@@ -2753,7 +2758,7 @@ function buildLeftCol(mob) {
         histHtml +
         visionStripHtml +
         '<div style="text-align:right;font-size:10px;margin-top:8px;opacity:.7">' +
-          '<span id="sub-count" style="color:' + (S.subject.length > 300 ? 'var(--amber)' : 'var(--t3)') + '">' + S.subject.length + ' chars</span>' +
+          '<span id="sub-count" style="color:' + (S.subject.length > 300 ? 'var(--amber)' : 'var(--t3)') + '">' + (S.subject.length || '') + '</span>' +
         '</div>' +
       '</div>' +
     '</div>';
@@ -2792,7 +2797,7 @@ function buildLeftCol(mob) {
     h += '<div class="secondary-section"><div class="sec-block">' +
       '<div class="three-col" style="grid-template-columns:1fr 1fr 1fr">' +
         '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lLighting')+'</label></div>' +
-        '<select id="sel-light">'+LIGHTINGS.map(function(l){return '<option value="'+esc(l.label)+'"'+(S.lighting===l.label?' selected':'')+'>'+esc(S.lang==='ua'?l.labelUa:l.label)+'</option>';}).join('')+'</select></div>' +
+        '<select id="sel-light">'+LIGHTINGS.map(function(l){return '<option value="'+esc(l.label)+'"'+(S.lighting===l.label?' selected':'')+'>'+(l.label?(S.lang==='ua'?esc(l.labelUa):esc(l.label)):t('noneOpt'))+'</option>';}).join('')+'</select></div>' +
         '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lMood')+'</label></div>' +
         '<select id="sel-mood">'+MOODS.map(function(m){return '<option value="'+esc(m.label)+'"'+(S.mood===m.label?' selected':'')+'>'+(m.label?(S.lang==='ua'?esc(m.labelUa):esc(m.label)):t('noneOpt'))+'</option>';}).join('')+'</select></div>' +
         '<div class="field"><div class="f-hdr"><label class="lbl">'+t('lGenre')+'</label></div>' +
@@ -3125,7 +3130,7 @@ function attachEvents() {
   document.addEventListener('keydown', _kbHandler);
 
   on('b-api',       'click', function(){ S.apiOpen=!S.apiOpen; render(); });
-  on('b-dbg',       'click', function(){ S.dbgOpen=!S.dbgOpen; render(); });
+  on('b-dbg-open',  'click', function(){ S.dbgOpen=!S.dbgOpen; render(); });
   on('b-api-close', 'click', function(){ S.apiOpen=false; S.dbgOpen=false; render(); });
   on('b-open-api',  'click', function(){ S.apiOpen=true; render(); });
   on('b-open-dbg',  'click', function(){ S.dbgOpen=true; render(); });
@@ -3289,7 +3294,7 @@ function attachEvents() {
         autoResize(ta);
         var cnt = document.getElementById('sub-count');
         if (cnt) {
-          cnt.textContent = ta.value.length + ' chars';
+          cnt.textContent = ta.value.length || '';
           cnt.style.color = ta.value.length > 300 ? 'var(--amber)' : 'var(--t3)';
         }
         var hasText = !!ta.value.trim();
