@@ -1214,6 +1214,9 @@ const STYLES = [
   { id:'analog',         label:'Analog Film',      grp:'Real', icon:'◌',
     detail:'film grain, subtle color shift, soft contrast, vintage tones, faint light leaks',
     example:'teenagers in a summer park, grainy warm light' },
+  { id:'monochrome',     label:'Monochrome',       grp:'Real', icon:'◑',
+    detail:'black and white, monochromatic tones, grayscale, no color, tonal contrast',
+    example:'street portrait in dramatic contrast light' },
   { id:'digital_art',    label:'Digital Art',      grp:'Illustrated', icon:'▣',
     detail:'clean digital rendering, smooth gradients, stylized shading, crisp edges, vibrant color',
     example:'neon city with flying vehicles at night' },
@@ -1305,6 +1308,7 @@ function getSceneCamera(sc) {
 }
 
 const LIGHTINGS = [
+  { label:'',                labelUa:'',                   value:'' },
   { label:'Cinematic',       labelUa:'Кінематографічне',   value:'cinematic dramatic lighting, high contrast shadows' },
   { label:'Soft Natural',    labelUa:'М\'яке природне',     value:'soft diffused natural daylight, even illumination' },
   { label:'Golden Hour',     labelUa:'Золота година',       value:'warm golden hour sunlight, long soft shadows' },
@@ -1638,7 +1642,7 @@ function getSceneGroups() {
 
 function getStyleGroups() {
   return [
-    { label: sl('style',0), icon: '◉', ids: ['photorealistic','cinematic','documentary','fashion','analog'] },
+    { label: sl('style',0), icon: '◉', ids: ['photorealistic','cinematic','documentary','fashion','analog','monochrome'] },
     { label: sl('style',1), icon: '◈', ids: ['digital_art','concept_art','illustration','oil_painting','watercolor','pencil_sketch','impressionism'] },
     { label: sl('style',2), icon: '❋', ids: ['anime','manga','comic','ink_wash','ukiyo_e'] },
     { label: sl('style',3), icon: '▣', ids: ['3d_render','low_poly','isometric','pixel_art','flat_design','glitch'] },
@@ -1762,7 +1766,7 @@ const I18N = {
     tabGenerate: 'Створити', tabOptimize: 'Покращити',
     tabOptimizeNote: '· адаптує для ZIT',
     lScene: 'Сцена', lSubjectType: 'Тип субʼєкта',
-    lSubjectHint: 'Деталі субʼєкта', lSceneHint: 'кадрування сцени',
+    lSubjectHint: 'деталі субʼєкта', lSceneHint: 'кадрування сцени',
     lStyle: 'Візуальний стиль', lStyleHint: 'деталі стилю',
     lPrompt: 'ПРОМПТ', lPromptHint: 'UA або EN',
     lLighting: 'Освітлення', lMood: 'Настрій',
@@ -2137,7 +2141,7 @@ function buildUser() {
     '\nScene: ' + (sc.label||S.scene) + ' | Detail: ' + (sc.detail||'high detail') +
     '\nStyle: ' + (st.label||S.style) + (styleTok?' — '+styleTok:'') +
     '\nCamera: ' + getSceneCamera(sc) +
-    '\nLighting: ' + (LIGHTINGS.find(function(x){return x.label===S.lighting;})||{value:S.lighting}).value +
+    '\nLighting: ' + (S.lighting ? (LIGHTINGS.find(function(x){return x.label===S.lighting;})||{value:S.lighting}).value : 'none') +
     ' | Mood: ' + ((MOODS.find(function(x){return x.label===S.mood;})||{value:''}).value||'neutral') +
     '\nGenre: ' + genreVal + ' | Genre modifier (integrate as prose phrase): ' + genreMod +
     '\nResolution: ' + w + '×' + h + ' (' + orient + ') | CFG: ' + S.cfg + ' | Steps: ' + S.steps +
@@ -2253,7 +2257,7 @@ var VISION_SYSTEM = [
   '  Allowed: portrait | half_body | full_body | landscape | urban | interior | architecture | macro | animal | product | concept',
   '',
   'style — visual rendering style of the image itself.',
-  '  Allowed: photorealistic | cinematic | documentary | fashion | analog | digital_art | concept_art | illustration | oil_painting | watercolor | pencil_sketch | impressionism | anime | manga | comic | ink_wash | ukiyo_e | 3d_render | low_poly | isometric | pixel_art | flat_design | glitch',
+  '  Allowed: photorealistic | cinematic | documentary | fashion | analog | monochrome | digital_art | concept_art | illustration | oil_painting | watercolor | pencil_sketch | impressionism | anime | manga | comic | ink_wash | ukiyo_e | 3d_render | low_poly | isometric | pixel_art | flat_design | glitch',
   '',
   'subjectType — category of the main subject.',
   '  person = any human | animal = any animal | product = manufactured object | object = natural/generic object | environment = no clear subject, scene itself',
@@ -2294,7 +2298,7 @@ var VISION_SYSTEM = [
   '  Do NOT assign Fantasy/Sci-Fi/Mythological unless fantastical elements are literally visible.',
   '  CRITICAL: if style is anime | manga | illustration | digital_art | concept_art → genre EMPTY',
   '    (these styles define the aesthetic, not the setting — do not add Historical or Fantasy by default).',
-  '  Allowed (exact label): Cyberpunk | Fantasy | Dark Fantasy | Sci-Fi | Solarpunk | Noir | Post-Apocalyptic | Historical | Mythological | Surreal | Horror | Contemporary | Futuristic',
+  '  Allowed (exact label): Cyberpunk | Fantasy | Dark Fantasy | Sci-Fi | Solarpunk | Noir | Post-Apocalyptic | Historical | Mythological | Surreal | Horror | Futuristic',
   '',
   'subject — detailed English description of the main subject. Word count depends on subjectType:',
   '  person:      60-70 words. Include: apparent age, gender, hair color/length/style, eye color if visible,',
@@ -2310,6 +2314,8 @@ var VISION_SYSTEM = [
   '',
   '=== STRICT RULES ===',
   'Use ONLY the exact id/label values listed above.',
+  'Always assign lighting — choose the closest matching label, never leave empty.',
+  'If image is black and white or grayscale → style=monochrome.',
   'Leave mood EMPTY unless the atmosphere is unmistakable — do not default to Ethereal & dreamy.',
   'Leave genre EMPTY for realistic photos, anime/illustration styles, and nature/portrait shots.',
   'scene must reflect camera framing of subject, not background type.',
@@ -2354,9 +2360,9 @@ function applyVisionResult(raw) {
   if (scene       && SCENES.find(function(x){return x.id===scene;}))          S.scene       = scene;
   if (style       && STYLES.find(function(x){return x.id===style;}))          S.style       = style;
   if (subjectType && SUBJECTS.find(function(x){return x.id===subjectType;}))  S.subjectType = subjectType;
-  if (lighting    && LIGHTINGS.find(function(x){return x.label===lighting;})) S.lighting    = lighting;
-  if (mood        && MOODS.find(function(x){return x.label===mood;}))         S.mood        = mood;
-  if (genre       && GENRES.find(function(x){return x.label===genre;}))       S.genre       = genre;
+  S.lighting = (lighting && LIGHTINGS.find(function(x){return x.label===lighting;})) ? lighting : '';
+  S.mood     = (mood     && MOODS.find(function(x){return x.label===mood;}))         ? mood     : '';
+  S.genre    = (genre    && GENRES.find(function(x){return x.label===genre;}))       ? genre    : '';
   if (subject)    S.subject = subject;
 }
 
@@ -2746,8 +2752,8 @@ function buildLeftCol(mob) {
         '<textarea id="inp-sub" rows="3" placeholder="e.g: '+esc(stPh)+'&#10;• your own idea here">'+esc(S.subject)+'</textarea>' +
         histHtml +
         visionStripHtml +
-        '<div style="text-align:right;font-size:10px;margin-top:3px">' +
-          '<span id="sub-count" style="color:' + (S.subject.length > 300 ? 'var(--amber)' : 'var(--t4)') + '">' + S.subject.length + '</span>' +
+        '<div style="text-align:right;font-size:10px;margin-top:8px;opacity:.7">' +
+          '<span id="sub-count" style="color:' + (S.subject.length > 300 ? 'var(--amber)' : 'var(--t3)') + '">' + S.subject.length + ' chars</span>' +
         '</div>' +
       '</div>' +
     '</div>';
@@ -2941,7 +2947,11 @@ function buildRightCol(mob, keyOk) {
     if (r.via !== 'xml') h += '<div class="warn-strip">⚠ Parsed via '+esc(r.via)+' — open Debug for details</div>';
 
     h += '<div class="sec-block" style="margin-bottom:var(--s3)">' +
-      '<div class="out-hdr"><span class="lbl">'+t('outPositive')+'</span><button class="btn-copy" id="b-cp-pos">'+t('btnCopySubject')+'</button></div>' +
+      '<div class="out-hdr"><span class="lbl">'+t('outPositive')+'</span>' +
+      '<div style="display:flex;align-items:center;gap:8px">' +
+      '<span style="font-size:10px;color:var(--t3);opacity:.8">~' + r.positive.trim().split(/\s+/).filter(Boolean).length + ' tokens</span>' +
+      '<button class="btn-copy" id="b-cp-pos">'+t('btnCopySubject')+'</button>' +
+      '</div></div>' +
       '<div class="out-txt accent" id="out-pos">'+esc(r.positive)+'</div></div>';
 
     h += '<div class="sec-block" style="margin-bottom:var(--s3)">' +
@@ -3279,8 +3289,8 @@ function attachEvents() {
         autoResize(ta);
         var cnt = document.getElementById('sub-count');
         if (cnt) {
-          cnt.textContent = ta.value.length;
-          cnt.style.color = ta.value.length > 300 ? 'var(--amber)' : 'var(--t4)';
+          cnt.textContent = ta.value.length + ' chars';
+          cnt.style.color = ta.value.length > 300 ? 'var(--amber)' : 'var(--t3)';
         }
         var hasText = !!ta.value.trim();
         var cpBtn = document.getElementById('b-cp-sub');
