@@ -776,6 +776,11 @@
     }
     .output-main.is-active {
       box-shadow: 0 0 0 1px rgba(47,129,247,.32), 0 10px 32px rgba(47,129,247,.16);
+      animation: resultAppear 320ms cubic-bezier(.22,.68,0,1.2) both;
+    }
+    @keyframes resultAppear {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
     .output-main .out-txt.accent { background: #05080C; border-color: rgba(47,129,247,.45); }
 
@@ -1920,7 +1925,7 @@ var PERSIST_KEYS = [
   'scene','style','subjectType',
   'lighting','mood','genre','resolution',
   'sampler','scheduler','steps','cfg',
-  'model','customNeg','loras','seed','improvePreset'
+  'model','customNeg','loras','seed','improvePreset','subject'
 ];
 
 function saveState() {
@@ -3324,6 +3329,12 @@ function attachEvents() {
   }); }
   live('inp-sub','subject');
 
+  var _subSaveTimer = null;
+  function saveSubjectDebounced() {
+    clearTimeout(_subSaveTimer);
+    _subSaveTimer = setTimeout(function(){ saveState(); }, 800);
+  }
+
   function liveAndSave(id, key){ var el=document.getElementById(id); if(el) el.addEventListener('input',function(){ S[key]=el.value; saveState(); }); }
   liveAndSave('inp-steps','steps'); liveAndSave('inp-cfg','cfg'); liveAndSave('inp-seed','seed');
   (function(){
@@ -3332,6 +3343,7 @@ function attachEvents() {
     ['input','paste','change'].forEach(function(ev){
       ta.addEventListener(ev, function(){
         S.subject = ta.value;
+        saveSubjectDebounced();
         patch('preview');
         autoResize(ta);
         var cnt = document.getElementById('sub-count');
