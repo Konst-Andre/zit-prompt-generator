@@ -768,6 +768,10 @@
       border: 1px solid rgba(47,129,247,.30);
       border-radius: var(--r-md);
       padding: var(--s4); margin-bottom: var(--s4);
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
     }
     .output-main::before {
       content: ''; position: absolute; inset: 0; border-radius: inherit;
@@ -776,11 +780,11 @@
     }
     .output-main.is-active {
       box-shadow: 0 0 0 1px rgba(47,129,247,.32), 0 10px 32px rgba(47,129,247,.16);
-      animation: resultAppear 320ms cubic-bezier(.22,.68,0,1.2) both;
+      animation: resultAppear 320ms cubic-bezier(.22,.68,0,1.2) forwards;
     }
     @keyframes resultAppear {
-      from { opacity: 0; transform: translateY(10px); }
-      to   { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translate3d(0, 10px, 0); }
+      to   { opacity: 1; transform: translate3d(0, 0, 0); }
     }
     .output-main .out-txt.accent { background: #05080C; border-color: rgba(47,129,247,.45); }
 
@@ -3327,8 +3331,6 @@ function attachEvents() {
   function live(id, key){ var el=document.getElementById(id); if(el) el.addEventListener('input',function(){
     S[key]=el.value;
   }); }
-  live('inp-sub','subject');
-
   var _subSaveTimer = null;
   function saveSubjectDebounced() {
     clearTimeout(_subSaveTimer);
