@@ -577,14 +577,15 @@
       font-size: 10px; color: var(--t4); font-family: 'JetBrains Mono', monospace;
     }
     .preview-token-row {
-      display: flex; align-items: baseline; gap: 0; margin-bottom: 3px; flex-wrap: wrap;
+      display: flex; align-items: baseline; gap: 0; margin-bottom: 6px; flex-wrap: wrap;
     }
+    .preview-token-row.is-prompt { margin-bottom: 10px; }
     .preview-token-key {
-      font-size: 9px; color: var(--t2); letter-spacing: .1em; text-transform: uppercase;
-      width: 72px; flex-shrink: 0; padding-top: 2px;
+      font-size: 9px; color: var(--t4); letter-spacing: .1em; text-transform: uppercase;
+      width: 72px; flex-shrink: 0; padding-top: 3px;
     }
     .preview-tokens {
-      display: flex; flex-wrap: wrap; gap: 4px; flex: 1;
+      display: flex; flex-wrap: wrap; gap: 4px; flex: 1; min-width: 0;
     }
     .preview-token {
       font-size: 11px; color: #A8C8FF;
@@ -592,24 +593,26 @@
       border: 1px solid rgba(47,129,247,.2);
       border-radius: 4px; padding: 2px 8px;
       font-family: 'JetBrains Mono', monospace;
-      white-space: nowrap;
-      opacity: 0.85;
+      white-space: normal; word-break: break-word;
+      opacity: 0.85; max-width: 100%;
     }
     .preview-token.sec {
       color: var(--t3); background: rgba(255,255,255,.04); border-color: var(--bdr);
       opacity: 0.65;
     }
     .preview-token.atmos {
+      font-size: 11px; font-family: 'JetBrains Mono', monospace;
       color: var(--t2);
       background: rgba(47,129,247,.08);
       border-color: rgba(47,129,247,.18);
       opacity: 0.8;
     }
     .preview-token.subject-tok {
-      color: #D0E8FF; background: rgba(47,129,247,.15); border-color: rgba(47,129,247,.35);
-      font-family: 'Outfit', sans-serif; font-size: 11px;
+      font-size: 12px; color: #D0E8FF;
+      background: rgba(47,129,247,.15); border-color: rgba(47,129,247,.35);
+      font-family: 'Outfit', sans-serif;
       white-space: normal; word-break: break-word;
-      opacity: 1;
+      opacity: 1; max-width: 100%;
     }
 
     /* ═══════════════════════════════════════
@@ -2251,6 +2254,9 @@ async function callGroqOnce(signal) {
 ═══════════════════════════════════════════════════ */
 var VISION_SYSTEM = [
   'You analyze images and extract visual parameters for a diffusion model prompt generator.',
+  'Use strict factual visual analysis.',
+  'Only describe what is clearly visible.',
+  'Avoid subjective or interpretive adjectives.',
   'Return ONLY a valid XML block — no prose, no markdown, no explanation before or after.',
   '',
   'Respond with this exact XML structure:',
@@ -2271,12 +2277,13 @@ var VISION_SYSTEM = [
   '    portrait  = only face, head, neck visible — shoulders barely or not at all',
   '    half_body = torso clearly visible, waist or hips in frame',
   '    full_body = knees or feet visible — entire body in shot',
-  '  CRITICAL: if a person fills most of the frame, do NOT choose interior/urban/landscape.',
+  '  If a person is clearly the main subject, do NOT choose interior, urban, or landscape.',
   '  If subjectType=animal → scene=animal (do not use portrait/half_body/full_body for animals).',
   '  Non-person scenes: landscape | urban | interior | architecture | macro | product | concept',
   '  Allowed: portrait | half_body | full_body | landscape | urban | interior | architecture | macro | animal | product | concept',
   '',
   'style — visual rendering style of the image itself.',
+  '  Choose style based only on clear visual rendering. Do not infer style.',
   '  Allowed: photorealistic | cinematic | documentary | fashion | analog | monochrome | digital_art | concept_art | illustration | oil_painting | watercolor | pencil_sketch | impressionism | anime | manga | comic | ink_wash | ukiyo_e | 3d_render | low_poly | isometric | pixel_art | flat_design | glitch',
   '',
   'subjectType — category of the main subject.',
@@ -2286,19 +2293,20 @@ var VISION_SYSTEM = [
   'lighting — dominant light source and quality visible in the image.',
   '  Golden Hour     = warm orange/yellow sun near horizon, long shadows',
   '  Blue Hour       = cool blue twilight, post-sunset or pre-dawn',
-  '  Cinematic       = high contrast dramatic shadows, film-like',
-  '  Soft Natural    = even diffused daylight, no harsh shadows',
+  '  Cinematic       = strong contrast with clearly stylized or film-like lighting, not normal daylight contrast',
+  '  Soft Natural    = diffused natural daylight with soft shadows, not fully overcast',
   '  Rim Light       = strong backlight creating edge glow, dark background',
   '  Neon / LED      = colored artificial light, neon signs or LED strips',
   '  Volumetric Rays = visible god-rays or light beams through air/dust',
   '  Studio Softbox  = controlled indoor studio light, soft and even',
   '  Candlelight     = warm flickering very low light, intimate',
   '  Moonlight       = cool blue-white night light',
-  '  Overcast        = flat cloudless or cloudy sky, shadowless',
+  '  Overcast        = cloudy sky with soft, shadowless light',
   '  Harsh Midday    = strong overhead sun, hard dark shadows',
   '  Allowed (exact label): Cinematic | Soft Natural | Golden Hour | Blue Hour | Overcast | Rim Light | Neon / LED | Volumetric Rays | Studio Softbox | Candlelight | Moonlight | Harsh Midday',
   '',
   'mood — emotional atmosphere. ONLY assign if CLEARLY AND STRONGLY present. Default = EMPTY.',
+  '  If unsure → leave EMPTY.',
   '  Ethereal & dreamy   = hazy soft glow, floating or weightless feel, overexposed soft tones.',
   '                        DO NOT assign just because the subject is a woman or the light is soft.',
   '  Moody & atmospheric = heavy shadow dominating the frame, tension, dark oppressive tones',
@@ -2313,6 +2321,7 @@ var VISION_SYSTEM = [
   '  Allowed (exact label): Moody & atmospheric | Ethereal & dreamy | Tense & dramatic | Serene & peaceful | Mysterious | Epic & grand | Melancholic | Joyful & vibrant | Gritty & raw',
   '',
   'genre — stylistic/thematic genre. ONLY assign if UNMISTAKABLY present in visual style or setting.',
+  '  If unsure → leave EMPTY.',
   '  Contemporary portrait, street photo, or nature photo = EMPTY.',
   '  Do NOT assign Historical unless clothing/architecture is clearly pre-1950s period.',
   '  Do NOT assign Fantasy/Sci-Fi/Mythological unless fantastical elements are literally visible.',
@@ -2320,17 +2329,20 @@ var VISION_SYSTEM = [
   '    (these styles define the aesthetic, not the setting — do not add Historical or Fantasy by default).',
   '  Allowed (exact label): Cyberpunk | Fantasy | Dark Fantasy | Sci-Fi | Solarpunk | Noir | Post-Apocalyptic | Historical | Mythological | Surreal | Horror | Futuristic',
   '',
-  'subject — detailed English description of the main subject. Word count depends on subjectType:',
-  '  person:      60-70 words. Include: apparent age, gender, hair color/length/style, eye color if visible,',
-  '               skin tone, specific clothing items with colors and textures (e.g. "dark brown cable-knit',
-  '               cardigan", "white lace-trimmed blouse"), pose, body language, facial expression,',
-  '               accessories, and key background elements.',
-  '  animal:      40-50 words. Include: species, breed if visible, fur/feather color and texture,',
-  '               eye color, pose, expression, and background.',
-  '  environment: 50-60 words. Describe the full scene: location type, time of day, dominant colors,',
-  '               architectural or natural elements, atmosphere, depth, and any notable details.',
-  '  object:      35-45 words. Describe: object type, material, color, texture, condition,',
-  '               orientation, and immediate surroundings.',
+  'subject — factual English description of the main subject. Only describe what is clearly visible.',
+  '  Do NOT describe lighting, style, mood, or atmosphere — these are separate fields.',
+  '  Do NOT infer materials, textures, or details that are not clearly visible.',
+  '  Use clear, neutral, factual language. Avoid subjective or interpretive adjectives.',
+  '  Word count by subjectType:',
+  '  person:      60-70 words. Include: apparent age, gender, hair (color, length, style),',
+  '               facial features, eye color if clearly visible, visible clothing (type and color),',
+  '               pose, facial expression only if explicitly visible, accessories.',
+  '  animal:      40-50 words. Include: species, visible physical traits (color, pattern),',
+  '               pose, posture, and immediate surroundings.',
+  '  environment: 50-60 words. Describe: location type, key elements, spatial layout,',
+  '               foreground and background structure, and clearly visible conditions.',
+  '  object:      35-45 words. Describe: object type, shape, color, clearly visible components,',
+  '               orientation, and immediate context.',
   '',
   '=== STRICT RULES ===',
   'Use ONLY the exact id/label values listed above.',
@@ -2364,18 +2376,28 @@ async function callVisionOnce(base64, mime) {
   return raw;
 }
 
+function extractVisionXML(raw) {
+  if (!raw || typeof raw !== 'string') return '';
+  var match = raw.match(/<vision>[\s\S]*<\/vision>/);
+  return match ? match[0] : raw;
+}
+
+function getVisionTag(raw, name) {
+  var safeName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  var m = raw.match(new RegExp('<' + safeName + '>([\\s\\S]*?)<\\/' + safeName + '>'));
+  return m ? m[1].trim() : '';
+}
+
 function applyVisionResult(raw) {
-  function tag(name) {
-    var m = raw.match(new RegExp('<' + name + '>([\\s\\S]*?)<\\/' + name + '>'));
-    return m ? m[1].trim() : '';
-  }
-  var scene       = tag('scene');
-  var style       = tag('style');
-  var subjectType = tag('subjectType');
-  var lighting    = tag('lighting');
-  var mood        = tag('mood');
-  var genre       = tag('genre');
-  var subject     = tag('subject');
+  raw = extractVisionXML(raw);
+
+  var scene       = getVisionTag(raw, 'scene');
+  var style       = getVisionTag(raw, 'style');
+  var subjectType = getVisionTag(raw, 'subjectType');
+  var lighting    = getVisionTag(raw, 'lighting');
+  var mood        = getVisionTag(raw, 'mood');
+  var genre       = getVisionTag(raw, 'genre');
+  var subject     = getVisionTag(raw, 'subject');
 
   if (scene       && SCENES.find(function(x){return x.id===scene;}))          S.scene       = scene;
   if (style       && STYLES.find(function(x){return x.id===style;}))          S.style       = style;
@@ -2383,7 +2405,7 @@ function applyVisionResult(raw) {
   S.lighting = (lighting && LIGHTINGS.find(function(x){return x.label===lighting;})) ? lighting : '';
   S.mood     = (mood     && MOODS.find(function(x){return x.label===mood;}))         ? mood     : '';
   S.genre    = (genre    && GENRES.find(function(x){return x.label===genre;}))       ? genre    : '';
-  if (subject)    S.subject = subject;
+  if (subject)    S.subject = subject.trim().slice(0, 500);
 }
 
 async function analyzeImage(file) {
@@ -2515,15 +2537,17 @@ function computePromptTokens() {
     totalCount++;
   }
   if (sc.label && sc.id !== 'manual' && sc.detail) {
-    var sceneToks = dedupArr(sc.detail.split(',').slice(0,2).map(function(t){ return t.trim(); }));
+    var sceneRaw = sc.detail.trim();
+    var sceneToks = dedupArr([sceneRaw]);
     if (sceneToks.length) { rows.push({ key: t('pvScene'), tokens: sceneToks, cls: '', rowCls: '' }); totalCount += sceneToks.length; }
   }
   if (subjTok) {
-    var detailToks = dedupArr(subjTok.split(',').slice(0,2).map(function(t){ return t.trim(); }));
+    var subjRaw = subjTok.trim();
+    var detailToks = dedupArr([subjRaw]);
     if (detailToks.length) { rows.push({ key: t('pvDetail'), tokens: detailToks, cls: '', rowCls: '' }); totalCount += detailToks.length; }
   }
   if (styleTok) {
-    var styleToks = dedupArr(styleTok.split(',').slice(0,3).map(function(t){ return t.trim(); }));
+    var styleToks = dedupArr(styleTok.split(',').slice(0,2).map(function(tok){ return tok.trim(); }));
     if (styleToks.length) { rows.push({ key: t('pvStyle'), tokens: styleToks, cls: '', rowCls: '' }); totalCount += styleToks.length; }
   }
   var atmoRaw = [];
